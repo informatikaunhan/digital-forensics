@@ -13,6 +13,10 @@
 </p>
 
 <p align="center">
+  <strong>Dosen Pengampu:</strong> Anindito, S.Kom., S.S., S.H., M.TI., CHFI
+</p>
+
+<p align="center">
   <a href="silabus.md"><img src="https://img.shields.io/badge/Silabus-Lengkap-1a3a5c?style=for-the-badge" alt="Silabus"></a>
   <a href="#slide-interaktif"><img src="https://img.shields.io/badge/Slide-GitHub%20Pages-c8a84e?style=for-the-badge" alt="Slide"></a>
   <a href="#prasyarat"><img src="https://img.shields.io/badge/Semester-5-8b1a1a?style=for-the-badge" alt="Semester 5"></a>
@@ -30,26 +34,26 @@ Setiap pertemuan memadukan **sesi teori (100 menit)** dan **praktikum hands-on (
 
 ## Materi Perkuliahan
 
-| Pertemuan | Topik | Modul | Slide | Latihan | Praktikum |
-|:---------:|-------|:-----:|:-----:|:-------:|:---------:|
-| 1 | Pengantar Forensik Digital dalam Konteks Militer | [📖](modul/modul01-pengantar-forensik-digital.md) | [🎬](slide/slide01-pengantar-forensik-digital.html) | [✏️](latihan/latihan01-pengantar-forensik-digital.md) | [🔬](praktikum/praktikum01-pengantar-forensik-digital.md) |
-| 2 | Proses Investigasi Forensik Digital | [📖](modul/modul02-proses-investigasi.md) | [🎬](slide/slide02-proses-investigasi.html) | [✏️](latihan/latihan02-proses-investigasi.md) | [🔬](praktikum/praktikum02-proses-investigasi.md) |
-| 3 | Hard Disk dan Sistem File | [📖](modul/modul03-hard-disk-sistem-file.md) | [🎬](slide/slide03-hard-disk-sistem-file.html) | [✏️](latihan/latihan03-hard-disk-sistem-file.md) | [🔬](praktikum/praktikum03-hard-disk-sistem-file.md) |
-| 4 | Akuisisi dan Duplikasi Data Forensik | [📖](modul/modul04-akuisisi-duplikasi-data.md) | [🎬](slide/slide04-akuisisi-duplikasi-data.html) | [✏️](latihan/latihan04-akuisisi-duplikasi-data.md) | [🔬](praktikum/praktikum04-akuisisi-duplikasi-data.md) |
-| 5 | Forensik Windows I — Volatile Data & Artefak Sistem | [📖](modul/modul05-forensik-windows-volatile.md) | [🎬](slide/slide05-forensik-windows-volatile.html) | [✏️](latihan/latihan05-forensik-windows-volatile.md) | [🔬](praktikum/praktikum05-forensik-windows-volatile.md) |
-| 6 | Forensik Windows II — Registry & Artefak Pengguna | [📖](modul/modul06-forensik-windows-registry.md) | [🎬](slide/slide06-forensik-windows-registry.html) | [✏️](latihan/latihan06-forensik-windows-registry.md) | [🔬](praktikum/praktikum06-forensik-windows-registry.md) |
-| 7 | Forensik Linux dan Pengenalan Mac OS | [📖](modul/modul07-forensik-linux.md) | [🎬](slide/slide07-forensik-linux.html) | [✏️](latihan/latihan07-forensik-linux.md) | [🔬](praktikum/praktikum07-forensik-linux.md) |
-| **8** | **Ujian Tengah Semester (UTS)** | — | — | — | — |
-| 9 | Teknik Recovery Data dan File Carving | [📖](modul/modul09-recovery-data-file-carving.md) | [🎬](slide/slide09-recovery-data-file-carving.html) | [✏️](latihan/latihan09-recovery-data-file-carving.md) | [🔬](praktikum/praktikum09-recovery-data-file-carving.md) |
-| 10 | Forensik Jaringan | [📖](modul/modul10-forensik-jaringan.md) | [🎬](slide/slide10-forensik-jaringan.html) | [✏️](latihan/latihan10-forensik-jaringan.md) | [🔬](praktikum/praktikum10-forensik-jaringan.md) |
-| 11 | Forensik Malware | [📖](modul/modul11-forensik-malware.md) | [🎬](slide/slide11-forensik-malware.html) | [✏️](latihan/latihan11-forensik-malware.md) | [🔬](praktikum/praktikum11-forensik-malware.md) |
-| 12 | Investigasi Serangan Web & Teknik Anti-Forensik | [📖](modul/modul12-serangan-web-anti-forensik.md) | [🎬](slide/slide12-serangan-web-anti-forensik.html) | [✏️](latihan/latihan12-serangan-web-anti-forensik.md) | [🔬](praktikum/praktikum12-serangan-web-anti-forensik.md) |
-| 13 | Forensik Dark Web dan Investigasi Email | [📖](modul/modul13-dark-web-email.md) | [🎬](slide/slide13-dark-web-email.html) | [✏️](latihan/latihan13-dark-web-email.md) | [🔬](praktikum/praktikum13-dark-web-email.md) |
-| 14 | Forensik Cloud Computing | [📖](modul/modul14-forensik-cloud.md) | [🎬](slide/slide14-forensik-cloud.html) | [✏️](latihan/latihan14-forensik-cloud.md) | [🔬](praktikum/praktikum14-forensik-cloud.md) |
-| 15 | Forensik Mobile dan Internet of Things (IoT) | [📖](modul/modul15-forensik-mobile-iot.md) | [🎬](slide/slide15-forensik-mobile-iot.html) | [✏️](latihan/latihan15-forensik-mobile-iot.md) | [🔬](praktikum/praktikum15-forensik-mobile-iot.md) |
-| **16** | **Ujian Akhir Semester (UAS)** | — | — | — | — |
+| Pertemuan | Topik | Modul | Slide | Latihan |
+|:---------:|-------|:-----:|:-----:|:-------:|
+| 1 | Pengantar Forensik Digital dalam Konteks Militer | [📖](modul/modul01-pengantar-forensik-digital.md) | [🎬](slide/slide01-pengantar-forensik-digital.html) | [✏️](latihan/latihan01-pengantar-forensik-digital.md) |
+| 2 | Proses Investigasi Forensik Digital | [📖](modul/modul02-proses-investigasi.md) | [🎬](slide/slide02-proses-investigasi.html) | [✏️](latihan/latihan02-proses-investigasi.md) |
+| 3 | Hard Disk dan Sistem File | [📖](modul/modul03-hard-disk-sistem-file.md) | [🎬](slide/slide03-hard-disk-sistem-file.html) | [✏️](latihan/latihan03-hard-disk-sistem-file.md) |
+| 4 | Akuisisi dan Duplikasi Data Forensik | [📖](modul/modul04-akuisisi-duplikasi-data.md) | [🎬](slide/slide04-akuisisi-duplikasi-data.html) | [✏️](latihan/latihan04-akuisisi-duplikasi-data.md) |
+| 5 | Forensik Windows I — Volatile Data & Artefak Sistem | [📖](modul/modul05-forensik-windows-volatile.md) | [🎬](slide/slide05-forensik-windows-volatile.html) | [✏️](latihan/latihan05-forensik-windows-volatile.md) |
+| 6 | Forensik Windows II — Registry & Artefak Pengguna | [📖](modul/modul06-forensik-windows-registry.md) | [🎬](slide/slide06-forensik-windows-registry.html) | [✏️](latihan/latihan06-forensik-windows-registry.md) |
+| 7 | Forensik Linux dan Pengenalan Mac OS | [📖](modul/modul07-forensik-linux.md) | [🎬](slide/slide07-forensik-linux.html) | [✏️](latihan/latihan07-forensik-linux.md) |
+| **8** | **Ujian Tengah Semester (UTS)** | — | — | — |
+| 9 | Teknik Recovery Data dan File Carving | [📖](modul/modul09-recovery-data-file-carving.md) | [🎬](slide/slide09-recovery-data-file-carving.html) | [✏️](latihan/latihan09-recovery-data-file-carving.md) |
+| 10 | Forensik Jaringan | [📖](modul/modul10-forensik-jaringan.md) | [🎬](slide/slide10-forensik-jaringan.html) | [✏️](latihan/latihan10-forensik-jaringan.md) |
+| 11 | Forensik Malware | [📖](modul/modul11-forensik-malware.md) | [🎬](slide/slide11-forensik-malware.html) | [✏️](latihan/latihan11-forensik-malware.md) |
+| 12 | Investigasi Serangan Web & Teknik Anti-Forensik | [📖](modul/modul12-serangan-web-anti-forensik.md) | [🎬](slide/slide12-serangan-web-anti-forensik.html) | [✏️](latihan/latihan12-serangan-web-anti-forensik.md) |
+| 13 | Forensik Dark Web dan Investigasi Email | [📖](modul/modul13-dark-web-email.md) | [🎬](slide/slide13-dark-web-email.html) | [✏️](latihan/latihan13-dark-web-email.md) |
+| 14 | Forensik Cloud Computing | [📖](modul/modul14-forensik-cloud.md) | [🎬](slide/slide14-forensik-cloud.html) | [✏️](latihan/latihan14-forensik-cloud.md) |
+| 15 | Forensik Mobile dan Internet of Things (IoT) | [📖](modul/modul15-forensik-mobile-iot.md) | [🎬](slide/slide15-forensik-mobile-iot.html) | [✏️](latihan/latihan15-forensik-mobile-iot.md) |
+| **16** | **Ujian Akhir Semester (UAS)** | — | — | — |
 
-> **Legenda:** 📖 Modul Pembelajaran &nbsp;|&nbsp; 🎬 Slide Presentasi &nbsp;|&nbsp; ✏️ Latihan Soal &nbsp;|&nbsp; 🔬 Panduan Praktikum
+> **Legenda:** 📖 Modul Pembelajaran &nbsp;|&nbsp; 🎬 Slide Presentasi &nbsp;|&nbsp; ✏️ Latihan Soal
 
 ---
 
@@ -90,12 +94,8 @@ digital-forensics/
 │   ├── slide01-pengantar-forensik-digital.html
 │   └── ...
 │
-├── latihan/                 # Soal latihan & studi kasus
-│   ├── latihan01-pengantar-forensik-digital.md
-│   └── ...
-│
-└── praktikum/               # Panduan praktikum hands-on
-    ├── praktikum01-pengantar-forensik-digital.md
+└── latihan/                 # Soal latihan & studi kasus
+    ├── latihan01-pengantar-forensik-digital.md
     └── ...
 ```
 
@@ -208,5 +208,6 @@ Dengan ketentuan:
 <p align="center">
   <strong>Universitas Pertahanan Republik Indonesia</strong><br>
   Fakultas Teknik dan Teknologi Pertahanan<br>
-  Program Studi Teknologi Informasi Pertahanan
+  Program Studi Teknologi Informasi Pertahanan<br><br>
+  <em>Dosen Pengampu: Anindito, S.Kom., S.S., S.H., M.TI., CHFI</em>
 </p>
