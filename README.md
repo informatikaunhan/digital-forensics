@@ -1,6 +1,6 @@
 # 🔍 Forensik Digital untuk Keperluan Militer
 
-Materi pembelajaran mata kuliah **Digital Forensic for Military Purposes** untuk Program Studi Teknologi Informasi Pertahanan, Universitas Pertahanan RI.
+Materi pembelajaran mata kuliah **Digital Forensic for Military Purposes** untuk Program Studi Informatika, Universitas Pertahanan RI.
 
 ---
 
