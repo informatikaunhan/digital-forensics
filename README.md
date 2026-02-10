@@ -1,213 +1,249 @@
-# Digital Forensic for Military Purposes
+# 🔍 Forensik Digital untuk Keperluan Militer
 
-### Forensik Digital untuk Keperluan Militer
-
-<p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Logo_of_Indonesia_Defense_University.svg/200px-Logo_of_Indonesia_Defense_University.svg.png" alt="Logo UNHAN" width="120">
-</p>
-
-<p align="center">
-  <strong>Universitas Pertahanan Republik Indonesia (UNHAN RI)</strong><br>
-  Program Studi Informatika<br>
-  <em>3 SKS | Semester 5 | Mata Kuliah Keahlian Program Studi</em>
-</p>
-
-<p align="center">
-  <strong>Dosen Pengampu:</strong> Anindito, S.Kom., S.S., S.H., M.TI., CHFI
-</p>
-
-<p align="center">
-  <a href="silabus.md"><img src="https://img.shields.io/badge/Silabus-Lengkap-1a3a5c?style=for-the-badge" alt="Silabus"></a>
-  <a href="#slide-interaktif"><img src="https://img.shields.io/badge/Slide-GitHub%20Pages-c8a84e?style=for-the-badge" alt="Slide"></a>
-  <a href="#prasyarat"><img src="https://img.shields.io/badge/Semester-5-8b1a1a?style=for-the-badge" alt="Semester 5"></a>
-</p>
+Materi pembelajaran mata kuliah **Digital Forensic for Military Purposes** untuk Program Studi Teknologi Informasi Pertahanan, Universitas Pertahanan RI.
 
 ---
 
-## Deskripsi
+## 📋 Informasi Mata Kuliah
 
-Mata kuliah ini memberikan pemahaman komprehensif tentang konsep, metodologi, dan teknik praktis dalam forensik digital dengan penekanan pada konteks operasi militer dan pertahanan. Mahasiswa mempelajari proses investigasi forensik digital, teknik akuisisi dan analisis bukti digital, serta penerapannya dalam mendukung **Operasi Informasi Militer** (*Information Operations*), **Intelijen Siber** (*Cyber Intelligence*), dan **Computer Network Operations (CNO)**.
-
-Setiap pertemuan memadukan **sesi teori (100 menit)** dan **praktikum hands-on (150 menit)** menggunakan tools forensik yang tersedia secara gratis dan dataset publik.
-
----
-
-## Materi Perkuliahan
-
-| Pertemuan | Topik | Modul | Slide | Latihan |
-|:---------:|-------|:-----:|:-----:|:-------:|
-| 1 | Pengantar Forensik Digital dalam Konteks Militer | [📖](modul/modul01-pengantar-forensik-digital.md) | [🎬](slide/slide01-pengantar-forensik-digital.html) | [✏️](latihan/latihan01-pengantar-forensik-digital.md) |
-| 2 | Proses Investigasi Forensik Digital | [📖](modul/modul02-proses-investigasi.md) | [🎬](slide/slide02-proses-investigasi.html) | [✏️](latihan/latihan02-proses-investigasi.md) |
-| 3 | Hard Disk dan Sistem File | [📖](modul/modul03-hard-disk-sistem-file.md) | [🎬](slide/slide03-hard-disk-sistem-file.html) | [✏️](latihan/latihan03-hard-disk-sistem-file.md) |
-| 4 | Akuisisi dan Duplikasi Data Forensik | [📖](modul/modul04-akuisisi-duplikasi-data.md) | [🎬](slide/slide04-akuisisi-duplikasi-data.html) | [✏️](latihan/latihan04-akuisisi-duplikasi-data.md) |
-| 5 | Forensik Windows I — Volatile Data & Artefak Sistem | [📖](modul/modul05-forensik-windows-volatile.md) | [🎬](slide/slide05-forensik-windows-volatile.html) | [✏️](latihan/latihan05-forensik-windows-volatile.md) |
-| 6 | Forensik Windows II — Registry & Artefak Pengguna | [📖](modul/modul06-forensik-windows-registry.md) | [🎬](slide/slide06-forensik-windows-registry.html) | [✏️](latihan/latihan06-forensik-windows-registry.md) |
-| 7 | Forensik Linux dan Pengenalan Mac OS | [📖](modul/modul07-forensik-linux.md) | [🎬](slide/slide07-forensik-linux.html) | [✏️](latihan/latihan07-forensik-linux.md) |
-| **8** | **Ujian Tengah Semester (UTS)** | — | — | — |
-| 9 | Teknik Recovery Data dan File Carving | [📖](modul/modul09-recovery-data-file-carving.md) | [🎬](slide/slide09-recovery-data-file-carving.html) | [✏️](latihan/latihan09-recovery-data-file-carving.md) |
-| 10 | Forensik Jaringan | [📖](modul/modul10-forensik-jaringan.md) | [🎬](slide/slide10-forensik-jaringan.html) | [✏️](latihan/latihan10-forensik-jaringan.md) |
-| 11 | Forensik Malware | [📖](modul/modul11-forensik-malware.md) | [🎬](slide/slide11-forensik-malware.html) | [✏️](latihan/latihan11-forensik-malware.md) |
-| 12 | Investigasi Serangan Web & Teknik Anti-Forensik | [📖](modul/modul12-serangan-web-anti-forensik.md) | [🎬](slide/slide12-serangan-web-anti-forensik.html) | [✏️](latihan/latihan12-serangan-web-anti-forensik.md) |
-| 13 | Forensik Dark Web dan Investigasi Email | [📖](modul/modul13-dark-web-email.md) | [🎬](slide/slide13-dark-web-email.html) | [✏️](latihan/latihan13-dark-web-email.md) |
-| 14 | Forensik Cloud Computing | [📖](modul/modul14-forensik-cloud.md) | [🎬](slide/slide14-forensik-cloud.html) | [✏️](latihan/latihan14-forensik-cloud.md) |
-| 15 | Forensik Mobile dan Internet of Things (IoT) | [📖](modul/modul15-forensik-mobile-iot.md) | [🎬](slide/slide15-forensik-mobile-iot.html) | [✏️](latihan/latihan15-forensik-mobile-iot.md) |
-| **16** | **Ujian Akhir Semester (UAS)** | — | — | — |
-
-> **Legenda:** 📖 Modul Pembelajaran &nbsp;|&nbsp; 🎬 Slide Presentasi &nbsp;|&nbsp; ✏️ Latihan Soal
+| Komponen | Keterangan |
+|----------|------------|
+| **Kode** | [Kode MK] |
+| **SKS** | 3 SKS (2 Teori + 1 Praktikum) |
+| **Semester** | 5 |
+| **Prasyarat** | Pengantar Keamanan Siber, Sistem Operasi, Jaringan Komputer, Basis Data |
+| **Pengampu** | Anindito, S.Kom., S.S., S.H., M.TI., CHFI. |
 
 ---
 
-## Slide Interaktif
+## 📄 Silabus
 
-Slide presentasi berbasis [Reveal.js](https://revealjs.com/) dapat diakses langsung di browser melalui **GitHub Pages**:
+[📥 Lihat Silabus Lengkap](silabus.md)
 
-```
-https://informatikaunhan.github.io/digital-forensics/slide/slide01-pengantar-forensik-digital.html
-```
+### Deskripsi Singkat
 
-**Navigasi slide:**
-- `→` / `←` — slide berikutnya / sebelumnya
-- `↓` / `↑` — sub-slide (jika ada)
-- `Space` — maju
-- `Esc` — tampilan overview
-- `F` — fullscreen
-- `S` — speaker notes
+Mata kuliah ini memberikan pemahaman komprehensif tentang konsep, metodologi, dan teknik praktis dalam forensik digital dengan penekanan pada konteks operasi militer dan pertahanan. Mahasiswa akan mempelajari proses investigasi forensik digital, teknik akuisisi dan analisis bukti digital, serta penerapannya dalam mendukung operasi informasi militer (Information Operations), intelijen siber (Cyber Intelligence), dan Computer Network Operations (CNO).
 
----
-
-## Struktur Repositori
-
-```
-digital-forensics/
-├── README.md               # Halaman ini
-├── LICENSE                  # CC BY-NC-SA 4.0
-├── silabus.md               # Silabus lengkap mata kuliah
-│
-├── modul/                   # Modul pembelajaran (Markdown)
-│   ├── modul01-pengantar-forensik-digital.md
-│   ├── modul02-proses-investigasi.md
-│   └── ...
-│
-├── slide/                   # Slide presentasi (HTML/Reveal.js)
-│   ├── css/
-│   │   └── unhan-theme.css  # Tema UNHAN
-│   ├── slide01-pengantar-forensik-digital.html
-│   └── ...
-│
-└── latihan/                 # Soal latihan & studi kasus
-    ├── latihan01-pengantar-forensik-digital.md
-    └── ...
-```
-
----
-
-## Prasyarat
-
-Mata kuliah ini mensyaratkan kelulusan dari:
-
-- **Pengantar Keamanan Siber** — Konsep dasar keamanan informasi
-- **Sistem Operasi** — Pemahaman Windows dan Linux
-- **Jaringan Komputer** — Protokol jaringan dan arsitektur
-- **Basis Data** — Konsep penyimpanan dan query data
-
----
-
-## Lingkungan Praktikum
-
-### Spesifikasi Minimum Laptop
-
-| Komponen | Minimum | Direkomendasikan |
-|----------|---------|------------------|
-| Prosesor | Intel Core i5 / AMD Ryzen 5 | Intel Core i7 / AMD Ryzen 7 |
-| RAM | 8 GB | 16 GB |
-| Penyimpanan | 256 GB SSD (50 GB ruang kosong) | 512 GB SSD |
-| OS | Windows 10/11 (64-bit) | Windows 11 (64-bit) |
-
-### Software yang Digunakan
-
-| Kategori | Tools |
-|----------|-------|
-| **Forensic Imaging** | FTK Imager, Arsenal Image Mounter |
-| **Analisis Forensik** | Autopsy, Eric Zimmerman Tools |
-| **Memory Forensics** | Volatility 3, Belkasoft RAM Capturer |
-| **Network Forensics** | Wireshark, NetworkMiner |
-| **Malware Analysis** | Sysinternals Suite, PE-bear, YARA |
-| **Virtualisasi** | VirtualBox / VMware Workstation Player |
-| **Platform** | Windows Subsystem for Linux (WSL2) |
-
-Semua tools yang digunakan tersedia secara **gratis** untuk keperluan pendidikan.
-
-### Dataset & Sample
-
-- [Digital Corpora](https://digitalcorpora.org/) — Disk images dan forensic datasets
-- [NIST CFReDS](https://cfreds.nist.gov/) — Computer Forensic Reference Data Sets
-- [MemLabs](https://github.com/stuxnet999/MemLabs) — Memory forensics challenges
-- [Malware Traffic Analysis](https://www.malware-traffic-analysis.net/) — PCAP samples
-
----
-
-## Capaian Pembelajaran
+### Capaian Pembelajaran
 
 Setelah menyelesaikan mata kuliah ini, mahasiswa mampu:
 
-| Kode | Capaian Pembelajaran | Bobot |
-|------|---------------------|:-----:|
-| CPMK-1 | Memahami prinsip dasar forensik digital dan relevansinya dalam operasi militer | 15% |
-| CPMK-2 | Menerapkan metodologi investigasi forensik sesuai standar militer | 20% |
-| CPMK-3 | Melakukan akuisisi, preservasi, dan analisis data forensik | 25% |
-| CPMK-4 | Menggunakan tools forensik untuk analisis artefak dan timeline | 20% |
-| CPMK-5 | Menerapkan teknik forensik pada berbagai platform | 10% |
-| CPMK-6 | Menyusun dokumentasi dan laporan investigasi forensik | 10% |
+1. Memahami prinsip dasar forensik digital, aspek hukum terkait, dan relevansinya dalam konteks operasi militer dan pertahanan nasional
+2. Menerapkan metodologi investigasi forensik digital yang sistematis sesuai standar militer dan prosedur operasional pertahanan
+3. Melakukan akuisisi, preservasi, dan analisis data forensik dari berbagai sumber dengan memperhatikan chain of custody dan integritas bukti
+4. Menggunakan tools forensik untuk pemulihan data, analisis artefak, dan rekonstruksi kejadian (timeline analysis)
+5. Menerapkan teknik forensik pada berbagai platform (Windows, Linux, mobile, network, cloud) dalam konteks investigasi insiden keamanan militer
+6. Menyusun dokumentasi dan laporan investigasi forensik yang komprehensif untuk mendukung pengambilan keputusan operasional dan legal
 
 ---
 
-## Penilaian
+## 🎯 Daftar Materi Pembelajaran
 
-| Komponen | Bobot |
-|----------|:-----:|
-| Partisipasi & Kehadiran | 10% |
-| Tugas & Laporan Praktikum | 20% |
-| Proyek / Studi Kasus | 15% |
-| Ujian Tengah Semester (UTS) | 25% |
-| Ujian Akhir Semester (UAS) | 30% |
+### Bagian 1: Fondasi dan Forensik Sistem (Pertemuan 1-8)
+
+| # | Topik | Modul | Slide | Latihan |
+|:-:|-------|:-----:|:-----:|:-------:|
+| 01 | Pengantar Forensik Digital dalam Konteks Militer | [📖](p01/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p01/slide.html) | [✏️](p01/latihan.md) |
+| 02 | Proses Investigasi Forensik Digital | [📖](p02/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p02/slide.html) | [✏️](p02/latihan.md) |
+| 03 | Hard Disk dan Sistem File | [📖](p03/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p03/slide.html) | [✏️](p03/latihan.md) |
+| 04 | Akuisisi dan Duplikasi Data Forensik | [📖](p04/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p04/slide.html) | [✏️](p04/latihan.md) |
+| 05 | Forensik Windows I - Volatile Data dan Artefak Sistem | [📖](p05/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p05/slide.html) | [✏️](p05/latihan.md) |
+| 06 | Forensik Windows II - Registry dan Artefak Pengguna | [📖](p06/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p06/slide.html) | [✏️](p06/latihan.md) |
+| 07 | Forensik Linux dan Pengenalan Mac OS | [📖](p07/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p07/slide.html) | [✏️](p07/latihan.md) |
+| 08 | **Ujian Tengah Semester (UTS)** | — | — | — |
 
 ---
 
-## Referensi Utama
+### Bagian 2: Forensik Lanjutan dan Spesialisasi (Pertemuan 9-16)
 
-1. Casey, E. (2022). *Digital Evidence and Computer Crime: Forensic Science, Computers, and the Internet*. 4th Edition. Academic Press.
-2. Phillips, A., et al. (2022). *Guide to Computer Forensics and Investigations*. 6th Edition. Cengage Learning.
+| # | Topik | Modul | Slide | Latihan |
+|:-:|-------|:-----:|:-----:|:-------:|
+| 09 | Teknik Recovery Data dan File Carving | [📖](p09/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p09/slide.html) | [✏️](p09/latihan.md) |
+| 10 | Forensik Jaringan | [📖](p10/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p10/slide.html) | [✏️](p10/latihan.md) |
+| 11 | Forensik Malware | [📖](p11/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p11/slide.html) | [✏️](p11/latihan.md) |
+| 12 | Investigasi Serangan Web dan Teknik Anti-Forensik | [📖](p12/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p12/slide.html) | [✏️](p12/latihan.md) |
+| 13 | Forensik Dark Web dan Investigasi Email | [📖](p13/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p13/slide.html) | [✏️](p13/latihan.md) |
+| 14 | Forensik Cloud Computing | [📖](p14/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p14/slide.html) | [✏️](p14/latihan.md) |
+| 15 | Forensik Mobile dan Internet of Things (IoT) | [📖](p15/modul.md) | [🎬](https://informatikaunhan.github.io/digital-forensics/p15/slide.html) | [✏️](p15/latihan.md) |
+| 16 | **Ujian Akhir Semester (UAS)** | — | — | — |
+
+---
+
+## 📖 Referensi
+
+### Referensi Utama
+
+1. Casey, E. (2022). *Digital Evidence and Computer Crime* (4th Ed.). Academic Press.
+2. Phillips, A., et al. (2022). *Guide to Computer Forensics and Investigations* (6th Ed.). Cengage.
 3. Carrier, B. (2005). *File System Forensic Analysis*. Addison-Wesley.
-4. Nikkel, B. (2021). *Practical Forensic Imaging: Securing Digital Evidence with Linux Tools*. 2nd Edition. No Starch Press.
-5. Johansen, G. (2020). *Digital Forensics and Incident Response*. 2nd Edition. Packt Publishing.
-6. NIST SP 800-86: *Guide to Integrating Forensic Techniques into Incident Response*.
+
+### Referensi Pendukung
+
+4. Ligh, M.H., et al. (2014). *The Art of Memory Forensics*. Wiley.
+5. Sikorski, M. & Honig, A. (2012). *Practical Malware Analysis*. No Starch Press.
+6. Johansen, G. (2020). *Digital Forensics and Incident Response* (2nd Ed.). Packt.
+7. Sanders, C. (2023). *Practical Packet Analysis* (4th Ed.). No Starch Press.
+8. Sammons, J. (2020). *The Basics of Digital Forensics* (2nd Ed.). Syngress.
+9. Easttom, C. (2021). *An In-Depth Guide to Mobile Device Forensics*. CRC Press.
+
+### Standar dan Guidelines
+
+- NIST SP 800-86: Guide to Integrating Forensic Techniques into Incident Response
+- NIST SP 800-101: Guidelines on Mobile Device Forensics
+- ISO/IEC 27037: Guidelines for Identification, Collection, Acquisition and Preservation of Digital Evidence
+
+### Sumber Online
+
+- [Digital Corpora - Forensic Disk Images](https://digitalcorpora.org/)
+- [NIST CFReDS - Computer Forensic Reference Data Sets](https://cfreds.nist.gov/)
+- [SANS Digital Forensics Blog](https://www.sans.org/blog/?focus-area=digital-forensics)
 
 ---
 
-## Lisensi
+## 🛠️ Tools yang Digunakan
 
-<p>
-  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
-    <img src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" alt="CC BY-NC-SA 4.0">
-  </a>
-</p>
+### Akuisisi dan Imaging
 
-Materi dalam repositori ini dilisensikan di bawah [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- [FTK Imager](https://www.exterro.com/ftk-imager) - Forensic imaging dan preview
+- [Autopsy](https://www.autopsy.com/) - Open source digital forensics platform
+
+### Analisis Windows
+
+- [Eric Zimmerman's Tools](https://ericzimmerman.github.io/) - Registry Explorer, MFTECmd, dll.
+- [Sysinternals Suite](https://docs.microsoft.com/en-us/sysinternals/) - Process Monitor, Autoruns, dll.
+
+### Memory Forensics
+
+- [Volatility 3](https://www.volatilityfoundation.org/) - Memory analysis framework
+
+### Network Forensics
+
+- [Wireshark](https://www.wireshark.org/) - Network protocol analyzer
+- [NetworkMiner](https://www.netresec.com/?page=NetworkMiner) - Network forensic analyzer
+
+### File Recovery
+
+- [PhotoRec](https://www.cgsecurity.org/wiki/PhotoRec) - File carving tool
+- [Foremost](http://foremost.sourceforge.net/) - Data recovery tool
+
+---
+
+## 🖥️ Persyaratan Sistem
+
+### Spesifikasi Minimum Laptop
+
+| Komponen | Minimum | Rekomendasi |
+|----------|---------|-------------|
+| **Prosesor** | Intel Core i5 Gen 8 | Intel Core i7 Gen 10+ |
+| **RAM** | 8 GB | 16 GB |
+| **Storage** | 256 GB SSD | 512 GB SSD |
+| **OS** | Windows 10/11 | Windows 11 Pro |
+
+### Software Wajib
+
+- VMware Workstation Player / VirtualBox
+- Windows Subsystem for Linux 2 (WSL2)
+- Python 3.x
+
+---
+
+## 📚 Cara Menggunakan Materi
+
+### 📖 Membaca Modul
+Klik link **📖** pada kolom Modul untuk membaca materi pembelajaran dalam format Schaum's Outlines.
+
+### 🎬 Melihat Slide Presentasi
+Klik link **🎬** untuk membuka slide presentasi interaktif.
+
+**Navigasi Slide:**
+
+| Tombol | Fungsi |
+|--------|--------|
+| `→` atau `Space` | Slide berikutnya |
+| `←` | Slide sebelumnya |
+| `Esc` | Overview semua slide |
+| `F` | Mode fullscreen |
+
+### ✏️ Mengerjakan Latihan
+Klik link **✏️** untuk mengakses soal latihan beserta kunci jawaban.
+
+---
+
+## 📂 Struktur Repository
+
+```
+digital-forensics/
+├── README.md              # Halaman ini
+├── LICENSE                # Lisensi CC BY 4.0
+├── silabus.md             # Silabus lengkap
+├── css/
+│   └── unhan-theme.css    # Tema slide UNHAN
+├── images/                # Gambar bersama
+│
+├── p01/                   # Pertemuan 01: Pengantar Forensik Digital
+│   ├── modul.md
+│   ├── slide.html
+│   ├── latihan.md
+│   └── images/
+│
+├── p02/                   # Pertemuan 02: Proses Investigasi
+│   └── ...
+│
+├── p03/ - p07/            # Pertemuan 03-07
+│   └── ...
+│
+├── p09/ - p15/            # Pertemuan 09-15
+│   └── ...
+│
+└── datasets/              # Sample data forensik (links)
+    └── README.md
+```
+
+---
+
+## 🔗 Tautan Penting
+
+| Tautan | Keterangan |
+|--------|------------|
+| [🏠 Portal Utama](https://informatikaunhan.github.io/portal/) | Daftar semua mata kuliah |
+| [🎬 Mulai Slide](https://informatikaunhan.github.io/digital-forensics/p01/slide.html) | Slide pertemuan pertama |
+
+---
+
+## ⚠️ Catatan Penting
+
+1. **Lingkungan Praktikum**: Seluruh praktikum dilaksanakan menggunakan PC berbasis Windows dengan dukungan Virtual Machine dan WSL untuk simulasi platform lain.
+
+2. **Ketersediaan Sample Data**: Mahasiswa diharapkan mengunduh sample forensic images dan datasets dari sumber yang telah ditentukan sebelum sesi praktikum.
+
+3. **Kerahasiaan dan Etika**: Materi dan teknik yang dipelajari harus digunakan secara etis dan bertanggung jawab sesuai dengan hukum yang berlaku dan kode etik militer.
+
+4. **Keamanan Laboratorium**: Semua aktivitas forensik dilakukan dalam lingkungan terisolasi (VM) untuk mencegah kontaminasi dan penyebaran malware.
+
+---
+
+## License / Lisensi
+
+This repository is licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
+
+You are free to:
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially
+
+Under the following terms:
+- **Attribution** — You must give appropriate credit to the author
+
+---
+
+Repositori ini dilisensikan di bawah **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
 
 Anda bebas untuk:
-- **Berbagi** — menyalin dan menyebarluaskan materi
-- **Adaptasi** — mengubah dan mengembangkan materi
+- **Berbagi** — menyalin dan menyebarluaskan materi dalam bentuk atau format apapun
+- **Adaptasi** — mengubah, menggubah, dan membuat turunan dari materi untuk tujuan apapun, termasuk komersial
 
 Dengan ketentuan:
-- **Atribusi** — mencantumkan kredit yang sesuai
-- **NonKomersial** — tidak untuk tujuan komersial
-- **ShareAlike** — distribusi turunan menggunakan lisensi yang sama
+- **Atribusi** — Anda harus mencantumkan kredit kepada penulis
 
----
+[![CC BY 4.0](https://licensebuttons.net/l/by/4.0/88x31.png)](https://creativecommons.org/licenses/by/4.0/)
 
-<p align="center">
-  <strong>Universitas Pertahanan Republik Indonesia</strong><br>
-  Fakultas Teknik dan Teknologi Pertahanan<br>
-  Program Studi Teknologi Informasi Pertahanan<br><br>
-  <em>Dosen Pengampu: Anindito, S.Kom., S.S., S.H., M.TI., CHFI</em>
-</p>
+© 2026 Anindito
