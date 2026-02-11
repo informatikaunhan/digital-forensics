@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 06: Forensik Windows II - Registry dan Artefak Pengguna</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 06</h3>
+                <h2>Forensik Windows II — Registry dan Artefak Pengguna</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan struktur dan lokasi Windows Registry hives</li>
+                    <li class="fragment">Menganalisis registry hives (NTUSER.DAT, SAM, SYSTEM, SOFTWARE)</li>
+                    <li class="fragment">Melakukan user account analysis dan profiling</li>
+                    <li class="fragment">Mengekstraksi riwayat perangkat USB dari registry</li>
+                    <li class="fragment">Menganalisis application execution artifacts (UserAssist, BAM, ShimCache, AmCache)</li>
+                    <li class="fragment">Menginterpretasikan Shell Bags dan MRU lists</li>
+                    <li class="fragment">Melakukan timeline reconstruction menggunakan data registry</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1 — Struktur Registry</h4>
+                        <ul class="medium-text">
+                            <li>Pengenalan Windows Registry</li>
+                            <li>Registry Hive Files</li>
+                            <li>SAM Hive (User Accounts)</li>
+                            <li>SYSTEM Hive (USB, Config)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2 — Artefak Pengguna</h4>
+                        <ul class="medium-text">
+                            <li>SOFTWARE Hive (Network)</li>
+                            <li>NTUSER.DAT (UserAssist, MRU, ShellBags)</li>
+                            <li>Application Execution Artifacts</li>
+                            <li>Timeline Reconstruction</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WHAT IS REGISTRY ==================== -->
+            <section>
+                <h2>🗄️ Apa itu Windows Registry?</h2>
+                <div class="box-definition">
+                    <strong>Windows Registry</strong> adalah database hierarkis terpusat yang menyimpan informasi konfigurasi sistem operasi, hardware, software, dan preferensi pengguna.
+                </div>
+                <p class="fragment content-margin">Mengapa penting untuk forensik militer?</p>
+                <ul class="medium-text">
+                    <li class="fragment">Merekonstruksi aktivitas pengguna yang dicurigai</li>
+                    <li class="fragment">Mengidentifikasi perangkat USB di workstation pertahanan</li>
+                    <li class="fragment">Mendeteksi instalasi software tidak sah</li>
+                    <li class="fragment">Melacak koneksi jaringan tidak terotorisasi</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 5: REGISTRY STRUCTURE ==================== -->
+            <section>
+                <h2>🌳 Struktur Hierarki Registry</h2>
+                <p class="medium-text">Lima Root Keys utama:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Root Key</th>
+                        <th>Singkatan</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HKEY_LOCAL_MACHINE</strong></td>
+                        <td>HKLM</td>
+                        <td>Konfigurasi sistem & hardware</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HKEY_CURRENT_USER</strong></td>
+                        <td>HKCU</td>
+                        <td>Preferensi user aktif</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HKEY_USERS</strong></td>
+                        <td>HKU</td>
+                        <td>Profil semua pengguna</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HKEY_CLASSES_ROOT</strong></td>
+                        <td>HKCR</td>
+                        <td>Asosiasi file & COM objects</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HKEY_CURRENT_CONFIG</strong></td>
+                        <td>HKCC</td>
+                        <td>Profil hardware aktif</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: KEY TIMESTAMP ==================== -->
+            <section>
+                <h2>⏱️ Registry Timestamps</h2>
+                <div class="box-warning">
+                    <strong>Penting:</strong> Setiap registry key memiliki <em>Last Write Time</em> yang merekam kapan key terakhir dimodifikasi — berlaku untuk <strong>key</strong>, bukan individual <strong>value</strong>.
+                </div>
+                <p class="fragment content-margin medium-text">Setiap key terdiri dari:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Subkeys</strong> — cabang di bawah key utama</li>
+                    <li class="fragment"><strong>Values</strong> — data (nama, tipe, data)</li>
+                    <li class="fragment"><strong>Last Write Time</strong> — timestamp modifikasi terakhir</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 7: REGISTRY DATA TYPES ==================== -->
+            <section>
+                <h2>📊 Tipe Data Registry</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tipe</th>
+                        <th>Deskripsi</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>REG_SZ</code></td>
+                        <td>String teks biasa</td>
+                        <td><code>C:\Windows\notepad.exe</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>REG_EXPAND_SZ</code></td>
+                        <td>String + variabel environment</td>
+                        <td><code>%SystemRoot%\notepad.exe</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>REG_BINARY</code></td>
+                        <td>Data biner mentah</td>
+                        <td><code>48 65 6C 6C 6F</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>REG_DWORD</code></td>
+                        <td>Integer 32-bit</td>
+                        <td><code>0x00000001</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>REG_MULTI_SZ</code></td>
+                        <td>Array string</td>
+                        <td><code>["val1", "val2"]</code></td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 Banyak artefak forensik penting (UserAssist, ShimCache) disimpan sebagai REG_BINARY</p>
+            </section>
+
+            <!-- ==================== SLIDE 8: HIVE FILES ==================== -->
+            <section>
+                <h2>📁 Registry Hive Files</h2>
+                <div class="box-definition">
+                    <strong>Registry Hive</strong> = file fisik yang menyimpan bagian-bagian registry di disk.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Hive</th>
+                        <th>Lokasi File</th>
+                        <th>Registry Path</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SAM</strong></td>
+                        <td><code>System32\config\SAM</code></td>
+                        <td>HKLM\SAM</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SYSTEM</strong></td>
+                        <td><code>System32\config\SYSTEM</code></td>
+                        <td>HKLM\SYSTEM</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SOFTWARE</strong></td>
+                        <td><code>System32\config\SOFTWARE</code></td>
+                        <td>HKLM\SOFTWARE</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SECURITY</strong></td>
+                        <td><code>System32\config\SECURITY</code></td>
+                        <td>HKLM\SECURITY</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>NTUSER.DAT</strong></td>
+                        <td><code>C:\Users\&lt;user&gt;\NTUSER.DAT</code></td>
+                        <td>HKCU / HKU\&lt;SID&gt;</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>UsrClass.dat</strong></td>
+                        <td><code>...\AppData\Local\...\UsrClass.dat</code></td>
+                        <td>HKCU\Software\Classes</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: TRANSACTION LOGS ==================== -->
+            <section>
+                <h2>📋 Transaction Logs</h2>
+                <p class="medium-text">Setiap hive memiliki file log perubahan:</p>
+                <pre><code class="plaintext">SAM.LOG1, SAM.LOG2
+SYSTEM.LOG1, SYSTEM.LOG2
+SOFTWARE.LOG1, SOFTWARE.LOG2
+NTUSER.DAT.LOG1, NTUSER.DAT.LOG2</code></pre>
+                <div class="box-warning fragment content-margin">
+                    <strong>⚠️ Signifikansi Forensik:</strong> Transaction logs dapat mengandung data yang <em>belum di-flush</em> ke hive utama — terutama jika sistem crash atau shutdown tidak normal!
+                </div>
+                <p class="fragment small">💡 Registry Explorer (Eric Zimmerman) dapat melakukan <em>replay</em> transaction logs</p>
+            </section>
+
+            <!-- ==================== SLIDE 10: HIVE EXTRACTION ==================== -->
+            <section>
+                <h2>🔧 Ekstraksi Hive Files</h2>
+                <p class="medium-text">Hive files <span class="text-red">locked</span> saat Windows berjalan!</p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Metode</th>
+                        <th>Tool</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Dari Forensic Image</td>
+                        <td>FTK Imager, Autopsy</td>
+                        <td>Navigasi ke lokasi, extract</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Live Extraction</td>
+                        <td>FTK Imager (live)</td>
+                        <td>Bypass file system lock</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Registry Backup</td>
+                        <td><code>reg save</code></td>
+                        <td>Export via Windows API</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Volume Shadow Copy</td>
+                        <td>vssadmin</td>
+                        <td>Akses snapshot historis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 11: SAM HIVE ==================== -->
+            <section>
+                <h2>👤 SAM Hive — User Account Analysis</h2>
+                <div class="box-definition">
+                    <strong>SAM (Security Account Manager)</strong> menyimpan informasi akun pengguna lokal: nama, SID, password hashes, dan metadata akun.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Nama Pengguna + SID</td>
+                        <td>Identifikasi akun</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Last Login Time</td>
+                        <td>Kapan terakhir login</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Account Creation Time</td>
+                        <td>Kapan akun dibuat</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Login Count</td>
+                        <td>Frekuensi penggunaan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Account Flags</td>
+                        <td>Aktif/disabled/locked</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Password Hashes</td>
+                        <td>NT/LM hash untuk analisis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 12: SID ==================== -->
+            <section>
+                <h2>🔑 Security Identifier (SID)</h2>
+                <p class="medium-text">Identifier unik untuk setiap akun Windows:</p>
+                <pre><code class="plaintext">Format: S-1-5-21-&lt;Domain/Machine ID&gt;-&lt;RID&gt;
+Contoh: S-1-5-21-3623811015-3361044348-30300820-1013</code></pre>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>RID</th>
+                        <th>Akun</th>
+                    </tr>
+                    <tr>
+                        <td><strong>500</strong></td>
+                        <td>Administrator (built-in)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>501</strong></td>
+                        <td>Guest</td>
+                    </tr>
+                    <tr>
+                        <td><strong>1000+</strong></td>
+                        <td>Akun pengguna yang dibuat</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 Konteks Militer: Analisis SAM mengungkap akun mencurigakan, anomali login, dan akun backdoor di workstation pertahanan</p>
+            </section>
+
+            <!-- ==================== SLIDE 13: SYSTEM HIVE ==================== -->
+            <section>
+                <h2>⚙️ SYSTEM Hive — Konfigurasi Sistem</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi Registry</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Computer Name</strong></td>
+                        <td><code>...\ComputerName</code></td>
+                        <td>Identifikasi sistem</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Time Zone</strong></td>
+                        <td><code>...\TimeZoneInformation</code></td>
+                        <td>Koreksi timestamp</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>USB History</strong></td>
+                        <td><code>...\Enum\USBSTOR</code></td>
+                        <td>Riwayat USB devices</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ShimCache</strong></td>
+                        <td><code>...\AppCompatCache</code></td>
+                        <td>Execution history</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Shutdown Time</strong></td>
+                        <td><code>...\Windows\ShutdownTime</code></td>
+                        <td>Waktu shutdown terakhir</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Services</strong></td>
+                        <td><code>...\Services</code></td>
+                        <td>Layanan terinstal</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 14: USB HISTORY ==================== -->
+            <section>
+                <h2>🔌 USB Device History</h2>
+                <p class="medium-text">Lokasi: <code>SYSTEM\ControlSet001\Enum\USBSTOR</code></p>
+                <pre><code class="plaintext">USBSTOR\
+├── Disk&Ven_SanDisk&Prod_Cruzer&Rev_8.01\
+│   └── 4C530000270816105372&0\
+│       ├── FriendlyName = "SanDisk Cruzer USB Device"
+│       └── Properties\ (timestamps)</code></pre>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Informasi</th>
+                        <th>Sumber</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Vendor, Product, Revision</td>
+                        <td>Key name parsing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Serial Number</td>
+                        <td>Subkey name</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>First Connect</td>
+                        <td>Key timestamp / setupapi.dev.log</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Last Connect / Last Removal</td>
+                        <td>Properties subkeys</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 15: USB CORRELATION ==================== -->
+            <section>
+                <h2>🔗 Korelasi USB — Profil Lengkap</h2>
+                <p class="medium-text">Membangun profil USB memerlukan data dari <strong>multiple sumber</strong>:</p>
+                <div class="grid-2x2 medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong>1. USBSTOR</strong><br>
+                        <span class="small">Vendor, Product, Serial Number</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>2. MountedDevices</strong><br>
+                        <span class="small">Drive letter (E:, F:, ...)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>3. MountPoints2</strong><br>
+                        <span class="small">User yang mengakses volume</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>4. ShellBags</strong><br>
+                        <span class="small">Folder yang di-browse</span>
+                    </div>
+                </div>
+                <p class="fragment small box-info content-margin">💡 Korelasi ini menjawab: <em>Apa</em> perangkatnya, <em>siapa</em> yang mengakses, <em>kapan</em> dihubungkan, dan <em>apa</em> yang dilakukan</p>
+            </section>
+
+            <!-- ==================== SLIDE 16: SOFTWARE HIVE ==================== -->
+            <section>
+                <h2>💿 SOFTWARE Hive — Artefak Software</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi</th>
+                        <th>Informasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>OS Version</strong></td>
+                        <td><code>...\CurrentVersion</code></td>
+                        <td>Build, install date, owner</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Installed Programs</strong></td>
+                        <td><code>...\Uninstall\</code></td>
+                        <td>Nama, versi, tanggal install</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>Network Profiles</strong></td>
+                        <td><code>...\NetworkList\Profiles</code></td>
+                        <td>SSID, timestamps koneksi</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>Network Signatures</strong></td>
+                        <td><code>...\NetworkList\Signatures</code></td>
+                        <td>MAC address access point</td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger small content-margin">
+                    ⚠️ <strong>Konteks Militer:</strong> Mendeteksi software tidak sah (hacking tools, RATs) dan koneksi ke jaringan non-militer!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 17: NETWORK PROFILES ==================== -->
+            <section>
+                <h2>📶 Wireless Network Profiles</h2>
+                <p class="medium-text">Windows merekam <strong>setiap jaringan</strong> yang pernah terhubung:</p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Value</th>
+                        <th>Informasi</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ProfileName</strong></td>
+                        <td>SSID jaringan</td>
+                        <td>Jaringan yang pernah terhubung</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DateCreated</strong></td>
+                        <td>First connect</td>
+                        <td>Timeline koneksi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DateLastConnected</strong></td>
+                        <td>Last connect</td>
+                        <td>Aktivitas terkini</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DefaultGatewayMac</strong></td>
+                        <td>MAC address AP</td>
+                        <td>Geolokasi via WiGLE.net</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-danger content-margin">🎖️ MAC address AP → Geolokasi → Verifikasi keberadaan personel militer</p>
+            </section>
+
+            <!-- ==================== SLIDE 18: NTUSER.DAT INTRO ==================== -->
+            <section>
+                <h2>👤 NTUSER.DAT — Artefak Pengguna</h2>
+                <div class="box-definition">
+                    <strong>NTUSER.DAT</strong> = Registry hive per-pengguna yang menyimpan semua preferensi dan artefak aktivitas spesifik user.
+                </div>
+                <p class="medium-text content-margin">Artefak kunci di NTUSER.DAT:</p>
+                <div class="grid-2x2 small content-margin">
+                    <div class="step-box fragment">
+                        <strong>UserAssist</strong><br>
+                        Program GUI yang dijalankan
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>MRU Lists</strong><br>
+                        File/perintah yang baru diakses
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Shell Bags</strong><br>
+                        Folder yang pernah dibrowse
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>MountPoints2</strong><br>
+                        Volume yang pernah di-mount
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 19: USERASSIST ==================== -->
+            <section>
+                <h2>🖱️ UserAssist</h2>
+                <div class="box-definition">
+                    <strong>UserAssist</strong> merekam program yang dijalankan via Windows Explorer (GUI), termasuk jumlah eksekusi dan waktu terakhir.
+                </div>
+                <p class="medium-text content-margin">Lokasi: <code>NTUSER.DAT\...\Explorer\UserAssist\{GUID}\Count</code></p>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Data</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Run Count</strong></td>
+                        <td>Berapa kali program dijalankan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Focus Count</strong></td>
+                        <td>Berapa kali window mendapat focus</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Focus Time</strong></td>
+                        <td>Total waktu focus (ms)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Last Execution</strong></td>
+                        <td>Timestamp terakhir dijalankan</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: USERASSIST ROT13 ==================== -->
+            <section>
+                <h2>🔐 UserAssist — ROT13 Encoding</h2>
+                <p class="medium-text">Data UserAssist di-encode menggunakan <strong>ROT13 cipher</strong>:</p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>ROT13 (Encoded)</th>
+                        <th>→</th>
+                        <th>Decoded</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>Pnyphyngbe</code></td>
+                        <td>→</td>
+                        <td>Calculator</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>P:\Hfref\Nqzva\Qrfxgbc\JvaFPC.rkr</code></td>
+                        <td>→</td>
+                        <td><code>C:\Users\Admin\Desktop\WinSCP.exe</code></td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger content-margin small">
+                    🎖️ <strong>Studi Kasus:</strong> WinSCP.exe (file transfer tool) dijalankan 5x dari Desktop, 30 menit sebelum kebocoran data → indikasi kuat eksfiltrasi data!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 21: MRU LISTS ==================== -->
+            <section>
+                <h2>📝 MRU (Most Recently Used) Lists</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak MRU</th>
+                        <th>Lokasi (NTUSER.DAT)</th>
+                        <th>Merekam</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>RecentDocs</strong></td>
+                        <td><code>...\Explorer\RecentDocs</code></td>
+                        <td>File yang baru dibuka</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>RunMRU</strong></td>
+                        <td><code>...\Explorer\RunMRU</code></td>
+                        <td>Perintah dari Run dialog (Win+R)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>TypedPaths</strong></td>
+                        <td><code>...\Explorer\TypedPaths</code></td>
+                        <td>Path yang diketik di Explorer</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>TypedURLs</strong></td>
+                        <td><code>...\Internet Explorer\TypedURLs</code></td>
+                        <td>URL yang diketik</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>OpenSaveMRU</strong></td>
+                        <td><code>...\ComDlg32\OpenSavePidlMRU</code></td>
+                        <td>File yang dibuka/disimpan via dialog</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 22: MRU CASE STUDY ==================== -->
+            <section>
+                <h2>🔍 Studi Kasus: Korelasi MRU</h2>
+                <p class="medium-text">Temuan dari investigasi workstation Kodam:</p>
+                <div class="box-info medium-text">
+                    <strong>RecentDocs:</strong> <code>Laporan_Rahasia_Pertahanan_2025.docx</code>
+                </div>
+                <div class="box-danger medium-text content-margin">
+                    <strong>OpenSaveMRU:</strong> <code>E:\Exfil\Laporan_Rahasia_Pertahanan_2025.docx</code>
+                </div>
+                <div class="fragment content-margin">
+                    <p class="medium-text"><strong>Analisis:</strong></p>
+                    <ul class="small">
+                        <li class="fragment">Drive <code>E:</code> → kemungkinan removable media (USB)</li>
+                        <li class="fragment">Folder "Exfil" → istilah umum eksfiltrasi data 🚨</li>
+                        <li class="fragment">File rahasia pertahanan disalin ke USB drive</li>
+                        <li class="fragment">Langkah: korelasi <code>E:</code> dengan USBSTOR + MountedDevices</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 23: SHELLBAGS ==================== -->
+            <section>
+                <h2>📂 Shell Bags</h2>
+                <div class="box-definition">
+                    <strong>Shell Bags</strong> merekam pengaturan tampilan folder Windows Explorer untuk <em>setiap folder yang pernah dibuka</em> pengguna.
+                </div>
+                <p class="fragment content-margin medium-text">Lokasi:</p>
+                <ul class="small">
+                    <li class="fragment"><code>NTUSER.DAT\...\Shell\BagMRU</code> dan <code>Bags</code></li>
+                    <li class="fragment"><code>UsrClass.dat\...\Shell\BagMRU</code> dan <code>Bags</code></li>
+                </ul>
+                <div class="fragment box-success content-margin small">
+                    ✅ <strong>Mengapa Sangat Berharga:</strong> Shell Bags merekam akses folder <strong>bahkan setelah drive dicabut atau folder dihapus!</strong>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 24: SHELLBAGS VALUE ==================== -->
+            <section>
+                <h2>📂 Shell Bags — Data yang Terekam</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Data</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Folder Path</strong></td>
+                        <td>Setiap folder yang pernah dibuka</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>First Accessed</strong></td>
+                        <td>Kapan folder pertama kali diakses</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Last Accessed</strong></td>
+                        <td>Kapan folder terakhir diakses</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Network Paths</strong></td>
+                        <td>Share paths yang pernah diakses</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>Removable Media</strong></td>
+                        <td>Folder di USB/external drive yang pernah dibrowse</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-danger content-margin">
+                    🎖️ <strong>Contoh:</strong> ShellBags menunjukkan <code>E:\ProjectX\Classified\Intel_Reports\</code> — meskipun USB sudah dicabut!
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 25: APP EXECUTION OVERVIEW ==================== -->
+            <section>
+                <h2>⚡ Application Execution Artifacts</h2>
+                <p class="medium-text">Empat artefak utama yang merekam eksekusi program:</p>
+                <div class="grid-2x2 small content-margin">
+                    <div class="step-box fragment">
+                        <strong>UserAssist</strong><br>
+                        NTUSER.DAT | Per-User<br>
+                        <span class="text-gold">Run Count + GUI Only</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>ShimCache</strong><br>
+                        SYSTEM | System-wide<br>
+                        <span class="text-gold">Broad Coverage + Modified Time</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>AmCache</strong><br>
+                        Amcache.hve | System-wide<br>
+                        <span class="text-gold">SHA-1 Hash + First Run</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>BAM/DAM</strong><br>
+                        SYSTEM | Per-User (SID)<br>
+                        <span class="text-gold">Last Execution + Win10+</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 26: SHIMCACHE ==================== -->
+            <section>
+                <h2>📋 ShimCache (AppCompatCache)</h2>
+                <div class="box-definition">
+                    <strong>ShimCache</strong> merekam metadata executable yang dijalankan/diakses untuk application compatibility.
+                </div>
+                <p class="medium-text content-margin">Lokasi: <code>SYSTEM\...\Session Manager\AppCompatCache</code></p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Data</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>File Path</td>
+                        <td>Full path executable</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Last Modified Time</td>
+                        <td>Timestamp modifikasi file</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Execution Flag</td>
+                        <td>Apakah dieksekusi (Win7 only)</td>
+                    </tr>
+                </table>
+                <div class="fragment box-warning small content-margin">
+                    ⚠️ <strong>Perhatian:</strong> Di Windows 8+, entry di ShimCache <strong>TIDAK selalu berarti</strong> file dieksekusi! Gunakan artefak lain untuk konfirmasi.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: AMCACHE ==================== -->
+            <section>
+                <h2>🗃️ AmCache</h2>
+                <div class="box-definition">
+                    <strong>AmCache</strong> merekam informasi eksekusi aplikasi termasuk <span class="text-gold">SHA-1 hash</span> file.
+                </div>
+                <p class="medium-text content-margin">Lokasi: <code>C:\Windows\AppCompat\Programs\Amcache.hve</code></p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Data</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SHA-1 Hash</strong></td>
+                        <td>Identifikasi malware via VirusTotal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>First Execution</strong></td>
+                        <td>Timeline kapan pertama dijalankan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Publisher</strong></td>
+                        <td>Verifikasi legitimasi via digital signature</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Link Date</strong></td>
+                        <td>PE compile time → deteksi timestomping</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-success">✅ Keunggulan: SHA-1 hash memungkinkan identifikasi malware bahkan setelah file dihapus!</p>
+            </section>
+
+            <!-- ==================== SLIDE 28: BAM/DAM ==================== -->
+            <section>
+                <h2>📊 BAM/DAM</h2>
+                <div class="box-definition">
+                    <strong>BAM (Background Activity Moderator)</strong> merekam path executable + timestamp eksekusi per pengguna (via SID).
+                </div>
+                <p class="medium-text content-margin">Lokasi: <code>SYSTEM\...\Services\bam\State\UserSettings\&lt;SID&gt;</code></p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Value</th>
+                        <th>Konten</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Value Name</td>
+                        <td>Full path executable</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Value Data</td>
+                        <td>Windows FILETIME (last execution)</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info content-margin">💡 <strong>Keunggulan:</strong> Langsung mengasosiasikan eksekusi dengan SID pengguna spesifik — tersedia di Windows 10+</p>
+            </section>
+
+            <!-- ==================== SLIDE 29: COMPARISON TABLE ==================== -->
+            <section>
+                <h2>📊 Perbandingan 4 Artefak Eksekusi</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Hive</th>
+                        <th>Per-User?</th>
+                        <th>Hash?</th>
+                        <th>Run Count?</th>
+                        <th>Best For</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>UserAssist</strong></td>
+                        <td>NTUSER</td>
+                        <td class="text-success">Ya</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-success">Ya</td>
+                        <td>GUI execution frequency</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ShimCache</strong></td>
+                        <td>SYSTEM</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-red">Tidak</td>
+                        <td>Broad coverage, deleted files</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>AmCache</strong></td>
+                        <td>Amcache.hve</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-success">SHA-1</td>
+                        <td class="text-red">Tidak</td>
+                        <td>Malware identification</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>BAM/DAM</strong></td>
+                        <td>SYSTEM</td>
+                        <td class="text-success">Ya (SID)</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-red">Tidak</td>
+                        <td>Per-user last execution</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info content-margin">💡 Investigasi menyeluruh harus mengkorelasikan <strong>keempat</strong> artefak!</p>
+            </section>
+
+            <!-- ==================== SLIDE 30: CASE STUDY MIMIKATZ ==================== -->
+            <section>
+                <h2>🚨 Studi Kasus: Korelasi Eksekusi</h2>
+                <p class="small">Investigasi di Markas Besar TNI — temuan artefak <code>mimikatz.exe</code>:</p>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Temuan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ShimCache</strong></td>
+                        <td><code>C:\Temp\mimikatz.exe</code> — Modified: 02:30</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>AmCache</strong></td>
+                        <td>SHA-1: a1b2c3d4... — First Run: 02:35</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>BAM</strong></td>
+                        <td>SID-1001 → mimikatz.exe — Last: 02:45</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>UserAssist</strong></td>
+                        <td>❌ Tidak ada entry → dijalankan via CMD, bukan GUI</td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger small content-margin">
+                    <strong>Kesimpulan:</strong> Tool credential dumping dijalankan via command line pada dini hari oleh user RID 1001 — indikasi kuat serangan lateral movement!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: TIMELINE RECONSTRUCTION ==================== -->
+            <section>
+                <h2>⏰ Timeline Reconstruction</h2>
+                <p class="medium-text">Sumber timestamp dari registry:</p>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Tipe Timestamp</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Key Last Write Time</td>
+                        <td>Modifikasi key</td>
+                        <td>Semua hive</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>UserAssist</td>
+                        <td>Last execution</td>
+                        <td>NTUSER.DAT</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>USBSTOR</td>
+                        <td>Connect/disconnect</td>
+                        <td>SYSTEM</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Network Profiles</td>
+                        <td>Created/last connected</td>
+                        <td>SOFTWARE</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>BAM/DAM</td>
+                        <td>Last execution</td>
+                        <td>SYSTEM</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>SAM</td>
+                        <td>Last login, creation</td>
+                        <td>SAM</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-warning content-margin">⚠️ Semua registry timestamps dalam <strong>UTC</strong> — periksa TimeZoneInformation di SYSTEM!</p>
+            </section>
+
+            <!-- ==================== SLIDE 32: TIMELINE CASE ==================== -->
+            <section>
+                <h2>📅 Studi Kasus: Timeline Eksfiltrasi</h2>
+                <table class="small">
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Artefak</th>
+                        <th>Kejadian</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>22:00</td>
+                        <td>SAM</td>
+                        <td>Login "operator1" (luar jam kerja)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>22:10</td>
+                        <td>USBSTOR</td>
+                        <td>USB SanDisk Ultra terhubung</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>22:15</td>
+                        <td>OpenSaveMRU</td>
+                        <td><code>secret_ops.xlsx</code> dibuka</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>22:20</td>
+                        <td>BAM</td>
+                        <td><code>xcopy.exe</code> dijalankan → salin data!</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>22:30</td>
+                        <td>USBSTOR</td>
+                        <td>USB disconnected</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>22:32</td>
+                        <td>Network</td>
+                        <td>Terhubung ke "AndroidAP" hotspot</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>22:35</td>
+                        <td>BAM</td>
+                        <td><code>curl.exe</code> → upload via internet!</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 33: TIMELINE ANALYSIS ==================== -->
+            <section>
+                <h2>📅 Analisis Timeline</h2>
+                <div class="box-danger medium-text">
+                    <strong>Skenario: Eksfiltrasi Data Dua Tahap</strong>
+                </div>
+                <div class="two-columns content-margin">
+                    <div>
+                        <h4>Fase 1: USB Copy</h4>
+                        <ul class="small">
+                            <li class="fragment">Login malam hari (anomali)</li>
+                            <li class="fragment">USB terhubung</li>
+                            <li class="fragment">File rahasia dibuka</li>
+                            <li class="fragment"><code>xcopy</code> → salin ke USB</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Fase 2: Upload Internet</h4>
+                        <ul class="small">
+                            <li class="fragment">Hotspot personal (bypass monitoring)</li>
+                            <li class="fragment"><code>curl</code> → upload data</li>
+                            <li class="fragment">Disconnected</li>
+                            <li class="fragment">Account locked 🔒</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment small box-warning content-margin">🎖️ <strong>Rekomendasi:</strong> Sita USB (SN dari USBSTOR), periksa handphone, audit log curl.exe</p>
+            </section>
+
+            <!-- ==================== SLIDE 34: TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Forensik Registry</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Fungsi</th>
+                        <th>Output</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Registry Explorer</strong></td>
+                        <td>GUI browsing + auto decode</td>
+                        <td>Interactive</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ShellBags Explorer</strong></td>
+                        <td>Shell Bags analysis</td>
+                        <td>GUI + CSV</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>AmcacheParser</strong></td>
+                        <td>AmCache parsing + SHA-1</td>
+                        <td>CSV / Timeline</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>RegRipper</strong></td>
+                        <td>Plugin-based extraction</td>
+                        <td>Text reports</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>USBDeview</strong></td>
+                        <td>USB device history</td>
+                        <td>GUI + CSV</td>
+                    </tr>
+                </table>
+                <p class="fragment small">Semua tools gratis! Download: <code>ericzimmerman.github.io</code>, <code>nirsoft.net</code></p>
+            </section>
+
+            <!-- ==================== SLIDE 35: REG EXPLORER ADVANTAGES ==================== -->
+            <section>
+                <h2>🏆 Registry Explorer vs Regedit</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Fitur</th>
+                        <th>Regedit</th>
+                        <th>Registry Explorer</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Offline Analysis</td>
+                        <td class="text-red">❌ Live only</td>
+                        <td class="text-success">✅ Load hive offline</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Transaction Logs</td>
+                        <td class="text-red">❌ Tidak</td>
+                        <td class="text-success">✅ Replay LOG1/LOG2</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Auto Decode</td>
+                        <td class="text-red">❌ Tidak</td>
+                        <td class="text-success">✅ ROT13, FILETIME</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Forensic Bookmarks</td>
+                        <td class="text-red">❌ Tidak</td>
+                        <td class="text-success">✅ Artefak penting</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Integritas Bukti</td>
+                        <td class="text-red">❌ Mengubah live</td>
+                        <td class="text-success">✅ Read-only</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 36: ANTI-FORENSICS ==================== -->
+            <section>
+                <h2>🛡️ Anti-Forensik dan Mitigasi</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4 class="text-red">Teknik Anti-Forensik</h4>
+                        <ul class="small">
+                            <li class="fragment">Registry wiping</li>
+                            <li class="fragment">Timestamp manipulation</li>
+                            <li class="fragment">UserAssist clearing</li>
+                            <li class="fragment">Privacy cleaners (CCleaner)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-success">Mitigasi</h4>
+                        <ul class="small">
+                            <li class="fragment">Replay transaction logs</li>
+                            <li class="fragment">Volume Shadow Copies</li>
+                            <li class="fragment">RegBack folder backup</li>
+                            <li class="fragment">Cross-reference non-registry</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment small box-info content-margin">
+                    💡 Kehadiran privacy cleaner tools sendiri merupakan artefak yang harus dilaporkan!
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 37: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>File registry hive manakah yang menyimpan artefak UserAssist dan MRU Lists?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. SAM</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. SYSTEM</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. NTUSER.DAT ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. SOFTWARE</div>
+                <p class="fragment small box-info">💡 NTUSER.DAT menyimpan semua artefak aktivitas per-pengguna!</p>
+            </section>
+
+            <!-- ==================== SLIDE 38: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>Artefak manakah yang menyediakan SHA-1 hash untuk identifikasi malware?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. UserAssist</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. ShimCache</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. AmCache ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. BAM/DAM</div>
+                <p class="fragment small box-info">💡 AmCache menyimpan SHA-1 hash — query ke VirusTotal untuk identifikasi malware!</p>
+            </section>
+
+            <!-- ==================== SLIDE 39: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Mengapa Shell Bags sangat berharga untuk investigasi USB?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Merekam serial number USB</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. Merekam folder yang dibrowse meskipun USB sudah dicabut ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Merekam file yang disalin</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Merekam password USB</div>
+                <p class="fragment small box-warning">⚠️ Shell Bags tetap menyimpan catatan folder meskipun drive sudah tidak terhubung!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: QUIZ 4 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 4:</strong></p>
+                <p>Data UserAssist di-encode menggunakan cipher apa?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. AES-256</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. ROT13 ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Base64</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. XOR</div>
+                <p class="fragment small box-info">💡 ROT13 adalah substitution cipher sederhana — <code>Pnyphyngbe</code> = <code>Calculator</code></p>
+            </section>
+
+            <!-- ==================== SLIDE 41: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Registry Hives</strong></td>
+                        <td>SAM, SYSTEM, SOFTWARE, NTUSER.DAT, UsrClass.dat</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SAM</strong></td>
+                        <td>User accounts, SID, login history</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SYSTEM</strong></td>
+                        <td>USB (USBSTOR), ShimCache, config</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SOFTWARE</strong></td>
+                        <td>Installed programs, network profiles</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NTUSER.DAT</strong></td>
+                        <td>UserAssist, MRU, ShellBags, MountPoints2</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Execution Artifacts</strong></td>
+                        <td>UserAssist + ShimCache + AmCache + BAM</td>
+                    </tr>
+                    <tr>
+                        <td><strong>USB Forensik</strong></td>
+                        <td>USBSTOR + MountedDevices + MountPoints2 + ShellBags</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tools</strong></td>
+                        <td>Registry Explorer, ShellBags Explorer, AmcacheParser</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 42: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 07: Forensik Linux dan Pengenalan Mac OS</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Arsitektur filesystem Linux (ext4, XFS)</li>
+                    <li class="fragment">Artefak forensik Linux (logs, bash history, cron)</li>
+                    <li class="fragment">Pengenalan APFS dan artefak Mac OS</li>
+                    <li class="fragment">Praktikum menggunakan WSL (Windows Subsystem for Linux)</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 43: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Carvey, H. (2022). <em>Windows Forensic Analysis</em> (5th Ed.). Elsevier. <strong>Chapter 6-8</strong></li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. Chapter 9.</li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (6th Ed.). Cengage. Chapter 6-7.</li>
+                    <li>SANS Institute. (2023). <em>Windows Forensic Analysis Poster</em>.</li>
+                    <li>Eric Zimmerman Tools: <a href="https://ericzimmerman.github.io/">ericzimmerman.github.io</a></li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 44: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 06: Forensik Windows II — Registry dan Artefak Pengguna</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
