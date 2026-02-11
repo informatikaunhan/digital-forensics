@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 14: Forensik Cloud Computing</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 14</h3>
+                <h2>Forensik Cloud Computing</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan model layanan cloud (IaaS, PaaS, SaaS) dan implikasi forensiknya</li>
+                    <li class="fragment">Mengidentifikasi tantangan forensik di lingkungan cloud</li>
+                    <li class="fragment">Menganalisis artefak cloud storage (Dropbox, Google Drive, OneDrive)</li>
+                    <li class="fragment">Melakukan forensik pada virtual machine dan disk image</li>
+                    <li class="fragment">Memahami container forensics (Docker, Kubernetes)</li>
+                    <li class="fragment">Menganalisis cloud logging dan monitoring services</li>
+                    <li class="fragment">Menjelaskan isu jurisdiksi hukum dalam cloud forensics</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Pengantar Cloud Computing</li>
+                            <li>Model Layanan Cloud</li>
+                            <li>Tantangan Forensik Cloud</li>
+                            <li>Isu Hukum & Jurisdiksi</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>Cloud Storage Forensics</li>
+                            <li>Virtual Machine Forensics</li>
+                            <li>Container Forensics</li>
+                            <li>Cloud Logging & Monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WHAT IS CLOUD COMPUTING ==================== -->
+            <section>
+                <h2>☁️ Apa itu Cloud Computing?</h2>
+                <div class="box-definition">
+                    <strong>Cloud Computing</strong> adalah model penyediaan layanan komputasi (server, storage, database, jaringan, software) melalui internet yang memungkinkan akses on-demand dengan skalabilitas fleksibel.
+                </div>
+                <p class="fragment medium-text">Mengubah paradigma penyimpanan data secara fundamental — bukti digital tidak lagi tersimpan di lokasi fisik yang dapat dikontrol langsung.</p>
+            </section>
+
+            <!-- ==================== SLIDE 5: TRADITIONAL VS CLOUD ==================== -->
+            <section>
+                <h2>Komputasi Tradisional vs Cloud</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Tradisional</th>
+                        <th>Cloud</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Lokasi Data</strong></td>
+                        <td>Server lokal, on-premise</td>
+                        <td>Data center tersebar global</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Kontrol Fisik</strong></td>
+                        <td>Penuh oleh organisasi</td>
+                        <td>Bergantung pada provider</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Skalabilitas</strong></td>
+                        <td>Terbatas kapasitas fisik</td>
+                        <td>Elastis dan on-demand</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Forensik</strong></td>
+                        <td>Akses langsung ke hardware</td>
+                        <td>Perlu kerjasama provider</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: CLOUD SERVICE MODELS ==================== -->
+            <section>
+                <h2>📊 Model Layanan Cloud</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment" style="grid-column: 1 / -1;">
+                        <strong>🏗️ IaaS — Infrastructure as a Service</strong><br>
+                        <span class="small">Server, storage, jaringan virtual | Contoh: AWS EC2, Azure VM, GCE</span>
+                    </div>
+                    <div class="step-box fragment" style="grid-column: 1 / -1;">
+                        <strong>⚙️ PaaS — Platform as a Service</strong><br>
+                        <span class="small">Platform pengembangan aplikasi | Contoh: Google App Engine, Heroku</span>
+                    </div>
+                    <div class="step-box fragment" style="grid-column: 1 / -1;">
+                        <strong>📱 SaaS — Software as a Service</strong><br>
+                        <span class="small">Aplikasi siap pakai via internet | Contoh: Google Workspace, Microsoft 365</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 7: FORENSIC IMPLICATIONS PER MODEL ==================== -->
+            <section>
+                <h2>🔍 Implikasi Forensik Per Model</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Model</th>
+                        <th>Kontrol User</th>
+                        <th>Artefak Forensik</th>
+                        <th>Tantangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>IaaS</strong></td>
+                        <td>OS, aplikasi, data</td>
+                        <td>VM image, memory, OS logs</td>
+                        <td>Akses hypervisor</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PaaS</strong></td>
+                        <td>Aplikasi, data</td>
+                        <td>App logs, database</td>
+                        <td>Akses terbatas ke OS</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SaaS</strong></td>
+                        <td>Data saja</td>
+                        <td>Activity logs, export data</td>
+                        <td>Bergantung provider</td>
+                    </tr>
+                </table>
+                <p class="fragment small" style="color: var(--unhan-gold);">⚠️ Semakin tinggi abstraksi → semakin terbatas kemampuan forensik</p>
+            </section>
+
+            <!-- ==================== SLIDE 8: DEPLOYMENT MODELS ==================== -->
+            <section>
+                <h2>🌐 Model Deployment Cloud</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>Public Cloud</strong><br>
+                        <span class="small">Shared infrastructure, multi-tenant</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Private Cloud</strong><br>
+                        <span class="small">Eksklusif satu organisasi, kontrol penuh</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Hybrid Cloud</strong><br>
+                        <span class="small">Kombinasi public + private</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Community Cloud</strong><br>
+                        <span class="small">Dibagi organisasi sejenis (misal: GovCloud)</span>
+                    </div>
+                </div>
+                <p class="fragment small">🎖️ Konteks militer: Private/Community Cloud → menjaga kedaulatan data pertahanan</p>
+            </section>
+
+            <!-- ==================== SLIDE 9: SECTION DIVIDER - CHALLENGES ==================== -->
+            <section class="center">
+                <h1>⚡ Tantangan Forensik Cloud</h1>
+                <p>Teknis, Hukum, dan Operasional</p>
+            </section>
+
+            <!-- ==================== SLIDE 10: TECHNICAL CHALLENGES ==================== -->
+            <section>
+                <h2>🔧 Tantangan Teknis</h2>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Multi-Tenancy:</strong> Data beberapa tenant di infrastruktur fisik sama — sulit mengisolasi bukti</li>
+                    <li class="fragment"><strong>Volatilitas & Elastisitas:</strong> VM dapat dibuat/dihancurkan dalam menit, auto-scaling menghapus instance otomatis</li>
+                    <li class="fragment"><strong>Distributed Architecture:</strong> Data tersebar di beberapa data center lintas negara</li>
+                    <li class="fragment"><strong>Encryption:</strong> Data at-rest dan in-transit terenkripsi, memerlukan key management access</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 11: MULTI-TENANCY DETAIL ==================== -->
+            <section>
+                <h2>🏢 Risiko Multi-Tenancy</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>Shared Storage</strong><br>
+                        <span class="small">Data tenant berbeda di disk fisik sama</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Memory Residue</strong><br>
+                        <span class="small">RAM bekas tenant lain masih ada</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Network Co-mingling</strong><br>
+                        <span class="small">Traffic tercampur di infra yang sama</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Cached Data</strong><br>
+                        <span class="small">Cache dari tenant sebelumnya</span>
+                    </div>
+                </div>
+                <p class="fragment small" style="color: var(--unhan-gold);">🔑 Strategi: Verifikasi tenant ID pada setiap artefak, cross-reference timestamps</p>
+            </section>
+
+            <!-- ==================== SLIDE 12: LEGAL CHALLENGES ==================== -->
+            <section>
+                <h2>⚖️ Tantangan Hukum & Jurisdiksi</h2>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Cross-Border Data:</strong> Data mungkin tersimpan di negara berbeda dari lokasi investigasi</li>
+                    <li class="fragment"><strong>Regulasi Berbeda:</strong> GDPR (Eropa), UU PDP (Indonesia), dll.</li>
+                    <li class="fragment"><strong>MLAT:</strong> Mutual Legal Assistance Treaty — proses panjang untuk akses lintas batas</li>
+                    <li class="fragment"><strong>SLA & ToS:</strong> Kontrak provider menentukan hak akses data oleh penegak hukum</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 13: INDONESIAN REGULATIONS ==================== -->
+            <section>
+                <h2>🇮🇩 Regulasi Indonesia</h2>
+                <div class="medium-text">
+                    <div class="step-box fragment">
+                        <strong>PP No. 71 Tahun 2019</strong><br>
+                        <span class="small">Kewajiban penyelenggara sistem elektronik menyediakan akses data bagi penegak hukum</span>
+                    </div>
+                    <br>
+                    <div class="step-box fragment">
+                        <strong>UU No. 27 Tahun 2022 (UU PDP)</strong><br>
+                        <span class="small">Mengatur transfer data pribadi lintas batas</span>
+                    </div>
+                    <br>
+                    <div class="step-box fragment">
+                        <strong>Permenhan Keamanan Informasi</strong><br>
+                        <span class="small">Pengelolaan data pertahanan dan kedaulatan data</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: SECTION DIVIDER - CLOUD STORAGE ==================== -->
+            <section class="center">
+                <h1>📂 Cloud Storage Forensics</h1>
+                <p>Dropbox, Google Drive, OneDrive</p>
+            </section>
+
+            <!-- ==================== SLIDE 15: DROPBOX ARTIFACTS ==================== -->
+            <section>
+                <h2>📦 Artefak Dropbox di Windows</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Database konfigurasi</td>
+                        <td><code>%APPDATA%\Dropbox\instance1\config.dbx</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Sync history</td>
+                        <td><code>%APPDATA%\Dropbox\instance1\sync_history.db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>File cache DB</td>
+                        <td><code>%APPDATA%\Dropbox\instance1\filecache.db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Deleted file cache</td>
+                        <td><code>%USERPROFILE%\Dropbox\.dropbox.cache\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Cache files</td>
+                        <td><code>%LOCALAPPDATA%\Dropbox\</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 16: DROPBOX FORENSIC INFO ==================== -->
+            <section>
+                <h2>📦 Informasi Forensik Dropbox</h2>
+                <p class="medium-text">Database Dropbox mengandung:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Account Info:</strong> Email, display name, user ID</li>
+                    <li class="fragment"><strong>File Metadata:</strong> Nama, ukuran, hash, timestamps</li>
+                    <li class="fragment"><strong>Sync History:</strong> Riwayat sinkronisasi termasuk file terhapus</li>
+                    <li class="fragment"><strong>Shared Links:</strong> File yang dibagikan dan penerima</li>
+                    <li class="fragment"><strong>Device Info:</strong> Nama perangkat, OS, last connect</li>
+                </ul>
+                <p class="fragment small" style="color: var(--unhan-gold);">💡 .dropbox.cache menyimpan file terhapus beberapa hari sebelum purge otomatis</p>
+            </section>
+
+            <!-- ==================== SLIDE 17: GOOGLE DRIVE ARTIFACTS ==================== -->
+            <section>
+                <h2>📁 Artefak Google Drive di Windows</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Metadata database</td>
+                        <td><code>%LOCALAPPDATA%\Google\DriveFS\&lt;hash&gt;\metadata_sqlite_db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Content cache</td>
+                        <td><code>%LOCALAPPDATA%\Google\DriveFS\&lt;hash&gt;\content_cache\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Log files</td>
+                        <td><code>%LOCALAPPDATA%\Google\DriveFS\Logs\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Mirror folder</td>
+                        <td><code>%USERPROFILE%\My Drive\</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 18: GOOGLE DRIVE STREAM VS MIRROR ==================== -->
+            <section>
+                <h2>📁 Google Drive: Stream vs Mirror</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Stream</th>
+                        <th>Mirror</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Penyimpanan</strong></td>
+                        <td>File di cloud, download on-demand</td>
+                        <td>File penuh di lokal + cloud</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Disk Usage</strong></td>
+                        <td>Minimal (hanya cache)</td>
+                        <td>Sesuai ukuran semua file</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Forensik</strong></td>
+                        <td>Hanya file yang pernah dibuka</td>
+                        <td>Semua file tersedia lokal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Kelengkapan Bukti</strong></td>
+                        <td>⚠️ Tidak lengkap</td>
+                        <td>✅ Lengkap</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 19: ONEDRIVE ARTIFACTS ==================== -->
+            <section>
+                <h2>💼 Artefak OneDrive di Windows</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Database utama</td>
+                        <td><code>%LOCALAPPDATA%\Microsoft\OneDrive\settings\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Sync logs</td>
+                        <td><code>%LOCALAPPDATA%\Microsoft\OneDrive\logs\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Sync folder</td>
+                        <td><code>%USERPROFILE%\OneDrive\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Files On-Demand</td>
+                        <td>NTFS reparse points (placeholder)</td>
+                    </tr>
+                </table>
+                <p class="fragment small" style="color: var(--unhan-gold);">⚠️ Files On-Demand: file "online-only" tidak memiliki konten lokal saat forensic imaging!</p>
+            </section>
+
+            <!-- ==================== SLIDE 20: FILES ON-DEMAND FORENSICS ==================== -->
+            <section>
+                <h2>💼 OneDrive Files On-Demand</h2>
+                <div class="medium-text">
+                    <p>Status file ditandai dengan ikon:</p>
+                    <div class="step-box fragment">
+                        <strong>☁️ Cloud Only</strong> — Konten hanya di cloud, tidak tersimpan lokal
+                    </div>
+                    <br>
+                    <div class="step-box fragment">
+                        <strong>✅ Locally Available</strong> — File tersinkronisasi penuh ke lokal
+                    </div>
+                    <br>
+                    <div class="step-box fragment">
+                        <strong>🟢 Always Keep</strong> — File selalu tersedia di device
+                    </div>
+                </div>
+                <p class="fragment small">Forensic imaging standar hanya mengambil placeholder untuk file cloud-only</p>
+            </section>
+
+            <!-- ==================== SLIDE 21: SECTION DIVIDER - VM FORENSICS ==================== -->
+            <section class="center">
+                <h1>🖥️ Virtual Machine Forensics</h1>
+                <p>VMDK, VHD, Snapshots, Hypervisor</p>
+            </section>
+
+            <!-- ==================== SLIDE 22: VM DISK FORMATS ==================== -->
+            <section>
+                <h2>💾 Format Disk Virtual Machine</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Format</th>
+                        <th>Platform</th>
+                        <th>Ekstensi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>VMDK</strong></td>
+                        <td>VMware</td>
+                        <td>.vmdk</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>VHD/VHDX</strong></td>
+                        <td>Microsoft Hyper-V</td>
+                        <td>.vhd, .vhdx</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>QCOW2</strong></td>
+                        <td>KVM/QEMU</td>
+                        <td>.qcow2</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>VDI</strong></td>
+                        <td>VirtualBox</td>
+                        <td>.vdi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>OVA/OVF</strong></td>
+                        <td>Multi-platform</td>
+                        <td>.ova, .ovf</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 23: FTK IMAGER WITH VMDK ==================== -->
+            <section>
+                <h2>🔍 Analisis VMDK dengan FTK Imager</h2>
+                <ol class="medium-text">
+                    <li class="fragment">Buka FTK Imager → <strong>File → Add Evidence Item</strong></li>
+                    <li class="fragment">Pilih "<strong>Image File</strong>" sebagai source type</li>
+                    <li class="fragment">Browse ke lokasi file <strong>.vmdk</strong></li>
+                    <li class="fragment">Klik <strong>Finish</strong> — FTK Imager mount VMDK</li>
+                    <li class="fragment">Analisis: browse file system, keyword search, file recovery</li>
+                </ol>
+                <p class="fragment small" style="color: var(--unhan-gold);">✅ FTK Imager mendukung VMDK, VHD, VHDX, dan E01</p>
+            </section>
+
+            <!-- ==================== SLIDE 24: SNAPSHOTS AND MEMORY ==================== -->
+            <section>
+                <h2>📸 VM Snapshots & Memory</h2>
+                <p class="medium-text">Snapshot menyimpan state lengkap VM:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Disk State:</strong> Perubahan disk sejak snapshot (delta disk)</li>
+                    <li class="fragment"><strong>Memory State:</strong> Isi RAM VM → file <code>.vmem</code> atau <code>.vsv</code></li>
+                    <li class="fragment"><strong>Configuration:</strong> Pengaturan hardware virtual</li>
+                </ul>
+                <pre class="fragment"><code class="bash"># Analisis memory snapshot VMware dengan Volatility 3
+python3 vol.py -f snapshot.vmem windows.pslist
+python3 vol.py -f snapshot.vmem windows.netscan
+python3 vol.py -f snapshot.vmem windows.filescan</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 25: VMWARE FILE COMPONENTS ==================== -->
+            <section>
+                <h2>📁 Komponen File VMware</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>File</th>
+                        <th>Fungsi</th>
+                        <th>Info Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>.vmx</code></td>
+                        <td>Konfigurasi VM</td>
+                        <td>Hardware, network, nama VM</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>.vmdk</code></td>
+                        <td>Base disk image</td>
+                        <td>File system guest OS</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>-s00x.vmdk</code></td>
+                        <td>Delta / split disk</td>
+                        <td>Perubahan sejak snapshot</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>.vmsn</code></td>
+                        <td>Snapshot metadata</td>
+                        <td>Timestamp, description</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>.vmem</code></td>
+                        <td>Memory snapshot</td>
+                        <td>RAM: proses, koneksi, credentials</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 26: HYPERVISOR FORENSICS ==================== -->
+            <section>
+                <h2>🏗️ Hypervisor Forensics</h2>
+                <p class="medium-text">Hypervisor menyediakan informasi forensik tambahan:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Hypervisor Logs:</strong> Event creation, deletion, modification VM</li>
+                    <li class="fragment"><strong>Performance Metrics:</strong> Resource usage → deteksi anomali</li>
+                    <li class="fragment"><strong>Virtual Switch Logs:</strong> Traffic antar VM</li>
+                    <li class="fragment"><strong>Storage Controller:</strong> I/O operations pada virtual disk</li>
+                </ul>
+                <div class="fragment small">
+                    <p>📍 VMware ESXi: <code>/var/log/vmkernel.log</code>, <code>/var/log/hostd.log</code></p>
+                    <p>📍 Hyper-V: Windows Event Log → source "Hyper-V-*"</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: SECTION DIVIDER - CONTAINER ==================== -->
+            <section class="center">
+                <h1>🐳 Container Forensics</h1>
+                <p>Docker dan Kubernetes</p>
+            </section>
+
+            <!-- ==================== SLIDE 28: DOCKER ARTIFACTS ==================== -->
+            <section>
+                <h2>🐳 Artefak Docker (Linux)</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Container metadata & logs</td>
+                        <td><code>/var/lib/docker/containers/</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Image layers (filesystem)</td>
+                        <td><code>/var/lib/docker/overlay2/</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Persistent volumes</td>
+                        <td><code>/var/lib/docker/volumes/</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Network config</td>
+                        <td><code>/var/lib/docker/network/</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Container logs</td>
+                        <td><code>/var/lib/docker/containers/&lt;id&gt;/&lt;id&gt;-json.log</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 29: DOCKER FORENSIC COMMANDS ==================== -->
+            <section>
+                <h2>🐳 Docker Forensic Commands</h2>
+                <pre><code class="bash"># List semua container (termasuk stopped)
+docker ps -a
+
+# Inspect detail container
+docker inspect &lt;container_id&gt;
+
+# Export container filesystem
+docker export &lt;container_id&gt; > evidence.tar
+
+# Lihat perubahan dari base image
+docker diff &lt;container_id&gt;
+
+# Lihat logs container
+docker logs &lt;container_id&gt;
+
+# Copy file spesifik dari container
+docker cp &lt;container_id&gt;:/path /local</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 30: DOCKER STATUS FORENSICS ==================== -->
+            <section>
+                <h2>🐳 Forensik Berdasarkan Status Container</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Status</th>
+                        <th>Artefak Tersedia</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Running</strong></td>
+                        <td>Filesystem, logs, memory, network, proses aktif</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Stopped</strong></td>
+                        <td>Filesystem, logs, metadata (tanpa memory/network)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Deleted</strong></td>
+                        <td>Residual di overlay2, volumes yang masih ada</td>
+                    </tr>
+                </table>
+                <p class="fragment small" style="color: var(--unhan-gold);">⚡ Prioritas: Akuisisi SEGERA sebelum container dihapus!</p>
+            </section>
+
+            <!-- ==================== SLIDE 31: KUBERNETES FORENSICS ==================== -->
+            <section>
+                <h2>☸️ Kubernetes Forensics</h2>
+                <p class="medium-text">Artefak forensik pada Kubernetes cluster:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>etcd database:</strong> Seluruh state cluster tersimpan di sini</li>
+                    <li class="fragment"><strong>Pod logs:</strong> Log dari setiap container dalam pod</li>
+                    <li class="fragment"><strong>Audit logs:</strong> Semua API request ke cluster</li>
+                    <li class="fragment"><strong>Events:</strong> Kejadian penting (create, delete, error)</li>
+                    <li class="fragment"><strong>ConfigMaps & Secrets:</strong> Konfigurasi dan credentials</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 32: SECTION DIVIDER - CLOUD LOGGING ==================== -->
+            <section class="center">
+                <h1>📊 Cloud Logging & Monitoring</h1>
+                <p>AWS CloudTrail, Azure Activity Log, GCP Audit Logs</p>
+            </section>
+
+            <!-- ==================== SLIDE 33: AWS CLOUDTRAIL ==================== -->
+            <section>
+                <h2>🔶 AWS CloudTrail</h2>
+                <p class="medium-text">Mencatat semua API calls dalam akun AWS:</p>
+                <pre><code class="json">{
+  "eventTime": "2025-01-15T08:30:00Z",
+  "eventName": "RunInstances",
+  "sourceIPAddress": "203.0.113.50",
+  "userIdentity": {
+    "type": "IAMUser",
+    "userName": "admin-user"
+  },
+  "requestParameters": {
+    "instanceType": "t2.micro"
+  }
+}</code></pre>
+                <p class="fragment small">Info forensik: <strong>siapa</strong> (userIdentity), <strong>apa</strong> (eventName), <strong>kapan</strong> (eventTime), <strong>dari mana</strong> (sourceIPAddress)</p>
+            </section>
+
+            <!-- ==================== SLIDE 34: AZURE & GCP LOGS ==================== -->
+            <section>
+                <h2>🔵 Azure & GCP Logging</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4>Microsoft Azure</h4>
+                        <ul class="small">
+                            <li class="fragment"><strong>Activity Log</strong> — operasi resource</li>
+                            <li class="fragment"><strong>Sign-in Logs</strong> — autentikasi user</li>
+                            <li class="fragment"><strong>Audit Logs</strong> — perubahan Azure AD</li>
+                            <li class="fragment"><strong>Resource Logs</strong> — detail per-resource</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Google Cloud</h4>
+                        <ul class="small">
+                            <li class="fragment"><strong>Admin Activity</strong> — config changes</li>
+                            <li class="fragment"><strong>Data Access</strong> — read/write data</li>
+                            <li class="fragment"><strong>System Event</strong> — aksi otomatis</li>
+                            <li class="fragment"><strong>Policy Denied</strong> — request ditolak</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 35: LOG ANALYSIS WITH JQ ==================== -->
+            <section>
+                <h2>🔧 Analisis Log dengan jq</h2>
+                <pre><code class="bash"># Filter event berdasarkan nama
+cat cloudtrail.json | jq '.Records[] | \
+  select(.eventName == "CreateAccessKey")'
+
+# Cari aktivitas dari IP tertentu
+cat cloudtrail.json | jq '.Records[] | \
+  select(.sourceIPAddress == "185.220.101.45")'
+
+# List semua user dan event unik
+cat cloudtrail.json | jq \
+  '[.Records[] | {user: .userIdentity.userName, \
+  event: .eventName}] | unique'</code></pre>
+                <p class="fragment small">jq = command-line JSON processor → tool wajib untuk cloud log analysis</p>
+            </section>
+
+            <!-- ==================== SLIDE 36: CASE STUDY - ATTACK TIMELINE ==================== -->
+            <section>
+                <h2>🎖️ Studi Kasus: Serangan pada Cloud Militer</h2>
+                <table class="small">
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Event CloudTrail</th>
+                        <th>Fase Serangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:00</td>
+                        <td>ConsoleLogin (IP Indonesia)</td>
+                        <td>Initial Access</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:15</td>
+                        <td>CreateUser "temp-admin"</td>
+                        <td>Persistence</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:16</td>
+                        <td>AttachUserPolicy (AdminAccess)</td>
+                        <td>Privilege Escalation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>23:45</td>
+                        <td>ConsoleLogin (Tor exit node)</td>
+                        <td>Lateral Movement</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>23:55</td>
+                        <td>GetObject (S3: classified-docs)</td>
+                        <td>Data Exfiltration</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>02:35</td>
+                        <td>DeleteUser "temp-admin"</td>
+                        <td>Covering Tracks</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 37: SECTION DIVIDER - ACQUISITION ==================== -->
+            <section class="center">
+                <h1>📥 Akuisisi Data Cloud</h1>
+                <p>Metode dan Chain of Custody</p>
+            </section>
+
+            <!-- ==================== SLIDE 38: ACQUISITION METHODS ==================== -->
+            <section>
+                <h2>📥 Metode Akuisisi Cloud</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Metode</th>
+                        <th>Deskripsi</th>
+                        <th>Kelengkapan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Snapshot-based</strong></td>
+                        <td>Snapshot VM/disk</td>
+                        <td>✅ Paling lengkap</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>API-based</strong></td>
+                        <td>Ekstrak via API provider</td>
+                        <td>⚠️ Terbatas pada API</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Client-based</strong></td>
+                        <td>Artefak pada client lokal</td>
+                        <td>⚠️ Mungkin tidak lengkap</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Provider-assisted</strong></td>
+                        <td>Request data dari provider</td>
+                        <td>⏳ Proses hukum panjang</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 39: CHAIN OF CUSTODY CLOUD ==================== -->
+            <section>
+                <h2>📋 Chain of Custody untuk Cloud Evidence</h2>
+                <p class="medium-text">Elemen tambahan dokumentasi:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Cloud Service Info:</strong> Provider, region, account ID</li>
+                    <li class="fragment"><strong>Acquisition Method:</strong> API, snapshot, atau client-side</li>
+                    <li class="fragment"><strong>Timestamp Sync:</strong> Verifikasi sinkronisasi waktu antar source</li>
+                    <li class="fragment"><strong>Hash Verification:</strong> Hash setiap file/snapshot yang diakuisisi</li>
+                    <li class="fragment"><strong>Access Logs:</strong> Siapa mengakses cloud account dan kapan</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 40: MILITARY CONTEXT ==================== -->
+            <section>
+                <h2>🎖️ Forensik Cloud dalam Konteks Militer</h2>
+                <div class="medium-text">
+                    <p>Pertimbangan khusus pertahanan Indonesia:</p>
+                    <ul>
+                        <li class="fragment"><strong>Kedaulatan Data:</strong> Data pertahanan harus di data center Indonesia</li>
+                        <li class="fragment"><strong>Klasifikasi Data:</strong> Data rahasia/sangat rahasia → infrastruktur terpisah</li>
+                        <li class="fragment"><strong>Shadow IT:</strong> Penggunaan cloud komersial tidak sah oleh personel</li>
+                        <li class="fragment"><strong>Insider Threat:</strong> Eksfiltrasi data via cloud storage pribadi</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 41: PRAKTIKUM PREVIEW ==================== -->
+            <section>
+                <h2>💻 Preview Praktikum</h2>
+                <p class="medium-text">Kegiatan hands-on hari ini (150 menit):</p>
+                <ol class="medium-text">
+                    <li class="fragment">Analisis artefak Dropbox, Google Drive, OneDrive</li>
+                    <li class="fragment">Parsing database cloud storage dengan DB Browser for SQLite</li>
+                    <li class="fragment">Analisis virtual machine disk image (VMDK) dengan FTK Imager</li>
+                    <li class="fragment">Analisis sample AWS CloudTrail logs dengan jq</li>
+                    <li class="fragment">Dokumentasi chain of custody untuk cloud evidence</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 42: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Rangkuman</h2>
+                <table class="small">
+                    <tr>
+                        <th>Topik</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloud Models</strong></td>
+                        <td>IaaS → forensik terluas; SaaS → paling terbatas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tantangan</strong></td>
+                        <td>Multi-tenancy, volatilitas, jurisdiksi</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloud Storage</strong></td>
+                        <td>Dropbox, GDrive, OneDrive → artefak lokal bernilai</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VM Forensics</strong></td>
+                        <td>VMDK/VHD + FTK Imager; .vmem + Volatility</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Container</strong></td>
+                        <td>docker export, inspect, logs, diff</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloud Logs</strong></td>
+                        <td>CloudTrail, Activity Log, Audit Logs → sumber utama</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 43: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). <strong>Chapter 15</strong></li>
+                    <li>Johansen, G. (2020). <em>Digital Forensics and Incident Response</em>. Chapter 11</li>
+                    <li>NIST SP 800-144: Guidelines on Security and Privacy in Public Cloud Computing</li>
+                    <li>Cloud Security Alliance. (2020). <em>Cloud Forensics Guidance</em></li>
+                    <li>Dykstra, J. & Sherman, A. (2012). "Acquiring forensic evidence from IaaS cloud computing"</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 44: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 14: Forensik Cloud Computing</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
