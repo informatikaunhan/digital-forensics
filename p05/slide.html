@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 05: Forensik Windows I - Volatile Data dan Artefak Sistem</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 05</h3>
+                <h2>Forensik Windows I — Volatile Data dan Artefak Sistem</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan order of volatility dan prioritas pengumpulan bukti</li>
+                    <li class="fragment">Menganalisis memory dump menggunakan Volatility 3</li>
+                    <li class="fragment">Mengekstrak dan menganalisis Windows Event Logs</li>
+                    <li class="fragment">Menganalisis Prefetch files dan SuperFetch</li>
+                    <li class="fragment">Mengidentifikasi Jump Lists, Recent Documents, dan LNK files</li>
+                    <li class="fragment">Mengekstrak dan menganalisis browser artifacts</li>
+                    <li class="fragment">Melakukan analisis Recycle Bin, Thumbnail Cache, dan Windows Timeline</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Order of Volatility</li>
+                            <li>Live vs Dead Forensics</li>
+                            <li>Memory Forensics</li>
+                            <li>Volatility 3 Framework</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>Windows Event Logs</li>
+                            <li>Prefetch & SuperFetch</li>
+                            <li>Jump Lists & LNK Files</li>
+                            <li>Browser, Recycle Bin, Timeline</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: ORDER OF VOLATILITY INTRO ==================== -->
+            <section>
+                <h2>⏱️ Order of Volatility</h2>
+                <div class="box-definition">
+                    <strong>Order of Volatility</strong> adalah urutan prioritas pengumpulan bukti digital berdasarkan tingkat kemudahan data hilang atau berubah. Didefinisikan dalam <strong>RFC 3227</strong>.
+                </div>
+                <p class="fragment medium-text">Prinsip utama:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Kumpulkan data <span class="text-red">paling volatile</span> terlebih dahulu</li>
+                    <li class="fragment">Data di RAM hilang dalam <span class="text-gold">hitungan detik</span> saat power off</li>
+                    <li class="fragment">Data di disk <span class="text-success">bertahan</span> hingga di-overwrite</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 5: VOLATILITY PYRAMID ==================== -->
+            <section>
+                <h2>⏱️ Piramida Volatilitas</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Urutan</th>
+                        <th>Sumber Data</th>
+                        <th>Volatilitas</th>
+                        <th>Persistensi</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>1</td>
+                        <td>CPU Register & Cache</td>
+                        <td>Sangat Tinggi</td>
+                        <td>Nanoseconds</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>2</td>
+                        <td><strong>RAM / Memory</strong></td>
+                        <td>Tinggi</td>
+                        <td>Hilang saat power off</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>3</td>
+                        <td>Network State</td>
+                        <td>Tinggi</td>
+                        <td>Real-time</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>4</td>
+                        <td>Running Processes</td>
+                        <td>Tinggi</td>
+                        <td>Hilang saat power off</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>5</td>
+                        <td>Disk (Temporary)</td>
+                        <td>Sedang</td>
+                        <td>Dapat di-overwrite</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>6–8</td>
+                        <td>Disk / Logs / Backup</td>
+                        <td>Rendah</td>
+                        <td>Persisten</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-warning">💡 Kumpulkan bukti dari yang paling volatile terlebih dahulu!</p>
+            </section>
+
+            <!-- ==================== SLIDE 6: LIVE VS DEAD FORENSICS ==================== -->
+            <section>
+                <h2>🔄 Live vs Dead Forensics</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Live Forensics</th>
+                        <th>Dead Forensics</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Kondisi</strong></td>
+                        <td>Sistem masih berjalan</td>
+                        <td>Sistem sudah dimatikan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Volatile Data</strong></td>
+                        <td class="text-success">Dapat diakses ✅</td>
+                        <td class="text-red">Hilang permanen ❌</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Risiko</strong></td>
+                        <td>Mengubah state sistem</td>
+                        <td>Kehilangan volatile data</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Konteks Militer</strong></td>
+                        <td>Sistem C2 aktif</td>
+                        <td>Workstation sitaan</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">🎖️ Sistem C2 militer sering tidak boleh dimatikan — live forensics wajib!</p>
+            </section>
+
+            <!-- ==================== SLIDE 7: MEMORY FORENSICS INTRO ==================== -->
+            <section>
+                <h2>🧠 Memory Forensics</h2>
+                <div class="box-definition">
+                    <strong>Memory Forensics</strong> adalah teknik investigasi yang menganalisis konten RAM untuk mengekstrak bukti digital yang hanya tersedia saat sistem berjalan.
+                </div>
+                <p class="fragment medium-text">Mengapa penting?</p>
+                <ul class="medium-text">
+                    <li class="fragment"><span class="text-red">Fileless malware</span> hanya beroperasi di memori</li>
+                    <li class="fragment"><span class="text-gold">Encryption keys</span> tersimpan di RAM saat drive terbuka</li>
+                    <li class="fragment"><span class="text-success">Serangan APT</span> canggih menghindari jejak di disk</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 8: WHAT'S IN RAM ==================== -->
+            <section>
+                <h2>🧠 Apa yang Tersimpan di RAM?</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Contoh Data</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Proses</strong></td>
+                        <td>PID, parent process</td>
+                        <td>Identifikasi malware</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Koneksi Jaringan</strong></td>
+                        <td>IP tujuan, port, status</td>
+                        <td>Deteksi C2 communication</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Loaded Modules</strong></td>
+                        <td>DLL, kernel modules</td>
+                        <td>Deteksi rootkit, injected code</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Encryption Keys</strong></td>
+                        <td>BitLocker, passwords</td>
+                        <td>Membuka data terenkripsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Command History</strong></td>
+                        <td>CMD, PowerShell</td>
+                        <td>Rekonstruksi aktivitas penyerang</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: MEMORY ACQUISITION TOOLS ==================== -->
+            <section>
+                <h2>🧠 Tools Akuisisi Memori</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Platform</th>
+                        <th>Format</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Belkasoft RAM Capturer</strong></td>
+                        <td>Windows</td>
+                        <td>.mem</td>
+                        <td>Gratis, GUI sederhana</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DumpIt</strong></td>
+                        <td>Windows</td>
+                        <td>.raw</td>
+                        <td>Gratis, CLI, sangat ringan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WinPmem</strong></td>
+                        <td>Windows</td>
+                        <td>.raw, .aff4</td>
+                        <td>Open source (Rekall)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>FTK Imager</strong></td>
+                        <td>Windows</td>
+                        <td>.mem</td>
+                        <td>Memory capture terintegrasi</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 DumpIt ideal untuk first responder — cukup double-click!</p>
+            </section>
+
+            <!-- ==================== SLIDE 10: VOLATILITY 3 ==================== -->
+            <section>
+                <h2>🔬 Volatility 3 Framework</h2>
+                <div class="box-definition">
+                    <strong>Volatility 3</strong> — Framework open-source Python 3 untuk analisis memory forensics dengan auto-detection profil OS.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div>
+                        <h4>Keunggulan</h4>
+                        <ul>
+                            <li class="fragment">Python 3 (aktif)</li>
+                            <li class="fragment">Auto-detect OS profile</li>
+                            <li class="fragment">Support Windows 10/11</li>
+                            <li class="fragment">Arsitektur modular</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>vs Volatility 2</h4>
+                        <ul>
+                            <li class="fragment">Python 2 (deprecated)</li>
+                            <li class="fragment">Profile manual</li>
+                            <li class="fragment">Terbatas Win10 awal</li>
+                            <li class="fragment">Monolitik</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 11: VOLATILITY 3 PLUGINS ==================== -->
+            <section>
+                <h2>🔬 Plugin Volatility 3 Penting</h2>
+                <table class="small">
+                    <tr>
+                        <th>Plugin</th>
+                        <th>Fungsi</th>
+                        <th>Penggunaan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.pslist</code></td>
+                        <td>Daftar proses berjalan</td>
+                        <td>Identifikasi proses mencurigakan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.pstree</code></td>
+                        <td>Hierarki parent-child</td>
+                        <td>Deteksi parent anomali</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.netscan</code></td>
+                        <td>Koneksi jaringan</td>
+                        <td>Deteksi koneksi ke C2</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.malfind</code></td>
+                        <td>Injected code</td>
+                        <td>Identifikasi fileless malware</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.cmdline</code></td>
+                        <td>Command line args</td>
+                        <td>Rekonstruksi perintah</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.hashdump</code></td>
+                        <td>Password hashes</td>
+                        <td>Ekstraksi kredensial</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 12: VOLATILITY COMMANDS ==================== -->
+            <section>
+                <h2>🔬 Contoh Perintah Volatility 3</h2>
+                <pre><code class="language-bash"># Daftar proses
+python vol.py -f memory.dmp windows.pslist
+
+# Hierarki proses (parent-child)
+python vol.py -f memory.dmp windows.pstree
+
+# Koneksi jaringan aktif
+python vol.py -f memory.dmp windows.netscan
+
+# Deteksi malware injection
+python vol.py -f memory.dmp windows.malfind
+
+# Command line arguments per proses
+python vol.py -f memory.dmp windows.cmdline
+
+# Dump password hashes
+python vol.py -f memory.dmp windows.hashdump</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 13: PROCESS ANOMALY ==================== -->
+            <section>
+                <h2>🔍 Deteksi Anomali Proses</h2>
+                <p class="medium-text">Hierarki proses <span class="text-success">NORMAL</span> Windows:</p>
+                <pre><code class="language-plaintext">System → smss.exe → wininit.exe → services.exe → svchost.exe
+System → smss.exe → csrss.exe
+                        → winlogon.exe → explorer.exe</code></pre>
+                <div class="fragment box-danger content-margin">
+                    <strong>⚠️ Red Flags:</strong>
+                    <ul class="small">
+                        <li><code>svchost.exe</code> dengan parent <strong>bukan</strong> <code>services.exe</code></li>
+                        <li><code>csrss.exe</code> berjalan dari lokasi <strong>bukan</strong> <code>System32</code></li>
+                        <li>Proses sistem dengan koneksi jaringan keluar yang tidak biasa</li>
+                        <li>Jumlah instance proses sistem yang abnormal</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: DKOM ATTACK ==================== -->
+            <section>
+                <h2>🛡️ DKOM — Menyembunyikan Proses</h2>
+                <div class="box-definition">
+                    <strong>DKOM</strong> (Direct Kernel Object Manipulation) — teknik rootkit yang memanipulasi linked list kernel untuk menyembunyikan proses.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong><code>pslist</code></strong><br>
+                        <span class="small">Menelusuri linked list EPROCESS</span><br>
+                        <span class="text-red small">❌ Proses tersembunyi tidak terlihat</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong><code>psscan</code></strong><br>
+                        <span class="small">Scan pola di seluruh memori</span><br>
+                        <span class="text-success small">✅ Menemukan proses tersembunyi</span>
+                    </div>
+                </div>
+                <p class="fragment small box-warning content-margin">💡 Bandingkan output pslist vs psscan — perbedaan = proses tersembunyi!</p>
+            </section>
+
+            <!-- ==================== SLIDE 15: EVENT LOGS INTRO ==================== -->
+            <section>
+                <h2>📋 Windows Event Logs</h2>
+                <div class="box-definition">
+                    <strong>Windows Event Logs</strong> — mekanisme pencatatan aktivitas sistem, keamanan, dan aplikasi secara otomatis. Salah satu sumber bukti forensik <strong>paling berharga</strong>.
+                </div>
+                <p class="fragment medium-text">Lokasi:</p>
+                <pre class="fragment"><code class="language-plaintext">C:\Windows\System32\winevt\Logs\</code></pre>
+                <p class="fragment medium-text">Format: <strong>EVTX</strong> (sejak Windows Vista)</p>
+            </section>
+
+            <!-- ==================== SLIDE 16: EVENT LOG TYPES ==================== -->
+            <section>
+                <h2>📋 Jenis Event Log Utama</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Log</th>
+                        <th>Fungsi</th>
+                        <th>Contoh Event</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong class="text-red">Security</strong></td>
+                        <td>Audit keamanan: login, akses, policy</td>
+                        <td>4624 (logon), 4625 (failed)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>System</strong></td>
+                        <td>Aktivitas sistem: service, driver</td>
+                        <td>7045 (service installed)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Application</strong></td>
+                        <td>Aktivitas aplikasi: error, info</td>
+                        <td>App crash, update events</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong class="text-gold">PowerShell</strong></td>
+                        <td>Eksekusi script PowerShell</td>
+                        <td>4104 (script block logging)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong class="text-success">Sysmon</strong></td>
+                        <td>Monitoring proses &amp; jaringan</td>
+                        <td>1 (process create), 3 (network)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 17: CRITICAL EVENT IDS ==================== -->
+            <section>
+                <h2>📋 Event ID Kritis untuk Investigasi</h2>
+                <table class="small">
+                    <tr>
+                        <th>Event ID</th>
+                        <th>Log</th>
+                        <th>Deskripsi</th>
+                        <th>Relevansi</th>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>4624</strong></td>
+                        <td>Security</td>
+                        <td>Successful Logon</td>
+                        <td>Identifikasi akses & lateral movement</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>4625</strong></td>
+                        <td>Security</td>
+                        <td>Failed Logon</td>
+                        <td>Deteksi brute force</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>4672</strong></td>
+                        <td>Security</td>
+                        <td>Special Privileges</td>
+                        <td>Eskalasi hak akses</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>4720</strong></td>
+                        <td>Security</td>
+                        <td>User Account Created</td>
+                        <td>Pembuatan akun backdoor</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td><strong>7045</strong></td>
+                        <td>System</td>
+                        <td>New Service Installed</td>
+                        <td>Service backdoor</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>1102</strong></td>
+                        <td>Security</td>
+                        <td>Audit Log Cleared</td>
+                        <td>Anti-forensik!</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 18: EVENT LOG SCENARIO ==================== -->
+            <section>
+                <h2>📋 Skenario: Deteksi Intrusi</h2>
+                <p class="medium-text">Temuan di workstation pangkalan militer:</p>
+                <div class="step-box fragment">
+                    <strong>Event ID 1102</strong> — Security log cleared<br>
+                    <span class="small text-red">⚠️ Anti-forensik: penyerang menghapus jejak</span>
+                </div>
+                <div class="step-box fragment content-margin">
+                    <strong>Event ID 4720</strong> — User account created: <code>admin$</code><br>
+                    <span class="small text-red">⚠️ Persistence: hidden account (suffix $ = tidak terlihat di daftar user)</span>
+                </div>
+                <div class="fragment box-danger content-margin">
+                    <strong>Kesimpulan:</strong> Intrusi aktif — penyerang menghapus log, lalu membuat backdoor account tersembunyi. <span class="text-gold">Incident response segera!</span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 19: EVENT LOG TOOLS ==================== -->
+            <section>
+                <h2>📋 Tools Analisis Event Log</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Pengembang</th>
+                        <th>Kelebihan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>FullEventLogView</strong></td>
+                        <td>NirSoft</td>
+                        <td>Gratis, GUI intuitif, filter powerful</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>EvtxECmd</strong></td>
+                        <td>Eric Zimmerman</td>
+                        <td>CLI, output CSV untuk analisis massal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Event Log Explorer</strong></td>
+                        <td>FSPro Labs</td>
+                        <td>GUI profesional, timeline view</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Windows Event Viewer</strong></td>
+                        <td>Microsoft</td>
+                        <td>Built-in di semua Windows</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: PREFETCH ==================== -->
+            <section>
+                <h2>⚡ Prefetch Files</h2>
+                <div class="box-definition">
+                    <strong>Prefetch</strong> — mekanisme Windows yang merekam informasi tentang program yang dijalankan. Artefak forensik berharga untuk <strong>riwayat eksekusi program</strong>.
+                </div>
+                <p class="fragment medium-text">Lokasi: <code>C:\Windows\Prefetch\</code></p>
+                <p class="fragment medium-text">Format: <code>[NAMA_PROGRAM]-[HASH].pf</code></p>
+                <div class="fragment box-info content-margin">
+                    <strong>Contoh:</strong> <code>MIMIKATZ.EXE-A234B567.pf</code> → Bukti tool credential dumping dijalankan!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 21: PREFETCH DATA ==================== -->
+            <section>
+                <h2>⚡ Informasi dalam Prefetch</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Data</th>
+                        <th>Deskripsi</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Nama executable</strong></td>
+                        <td>Program yang dijalankan</td>
+                        <td>Identifikasi program</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Run count</strong></td>
+                        <td>Jumlah eksekusi</td>
+                        <td>Frekuensi penggunaan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Timestamps</strong></td>
+                        <td>Waktu eksekusi (8 di Win10)</td>
+                        <td>Timeline aktivitas</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Referenced files</strong></td>
+                        <td>File/folder yang diakses</td>
+                        <td>Konteks penggunaan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Volume info</strong></td>
+                        <td>Volume saat eksekusi</td>
+                        <td>Identifikasi media eksternal</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-warning">⚠️ Win 10/11: hingga 1024 file prefetch & 8 timestamps per file</p>
+            </section>
+
+            <!-- ==================== SLIDE 22: JUMP LISTS ==================== -->
+            <section>
+                <h2>📑 Jump Lists</h2>
+                <div class="box-definition">
+                    <strong>Jump Lists</strong> — fitur Windows (sejak Win 7) yang menyimpan daftar file, folder, dan task yang baru digunakan untuk setiap aplikasi.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong>Automatic</strong><br>
+                        <span class="small">Dibuat otomatis saat file dibuka</span><br>
+                        <code class="small">AutomaticDestinations\</code>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Custom</strong><br>
+                        <span class="small">Dibuat oleh aplikasi (pinned items)</span><br>
+                        <code class="small">CustomDestinations\</code>
+                    </div>
+                </div>
+                <p class="fragment small box-info content-margin">💡 Jump Lists menyimpan path file bahkan setelah file asli dihapus!</p>
+            </section>
+
+            <!-- ==================== SLIDE 23: LNK FILES ==================== -->
+            <section>
+                <h2>🔗 LNK Files (Shortcut)</h2>
+                <p class="medium-text">Windows otomatis membuat LNK file saat pengguna membuka dokumen.</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Data dalam LNK</th>
+                        <th>Contoh</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Target path</strong></td>
+                        <td>E:\Classified\doc.xlsx</td>
+                        <td>File yang diakses</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Timestamps</strong></td>
+                        <td>Created, Modified, Accessed</td>
+                        <td>Timeline penggunaan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Volume serial</strong></td>
+                        <td>A1B2-C3D4</td>
+                        <td>Identifikasi USB drive</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Machine ID</strong></td>
+                        <td>SRV-KODAM-05</td>
+                        <td>Komputer asal file</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Network path</strong></td>
+                        <td>\\192.168.10.50\Share</td>
+                        <td>Akses jaringan</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 24: LNK SCENARIO ==================== -->
+            <section>
+                <h2>🔗 Skenario: Akses File Rahasia</h2>
+                <p class="medium-text">Analisis LNK file menunjukkan:</p>
+                <pre><code class="language-plaintext">Target Path  : \\192.168.10.50\CLASSIFIED\intel_brief_q4.xlsx
+Accessed     : 2026-01-12 23:45:00  ← Di luar jam kerja!
+Machine ID   : SRV-KODAM-05
+Volume Serial: A1B2-C3D4</code></pre>
+                <div class="fragment box-danger content-margin">
+                    <strong>Temuan Kritis:</strong>
+                    <ul class="small">
+                        <li>File intelijen di folder <strong>CLASSIFIED</strong> diakses via network share</li>
+                        <li>Akses pukul <span class="text-red">23:45</span> — di luar jam kerja</li>
+                        <li>Server sumber teridentifikasi: <span class="text-gold">SRV-KODAM-05</span></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 25: ERIC ZIMMERMAN TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Eric Zimmerman Tools</h2>
+                <p class="medium-text">Paket tool forensik gratis yang sangat populer:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PECmd</strong></td>
+                        <td>Parsing Prefetch files</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>JLECmd</strong></td>
+                        <td>Parsing Jump Lists</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>LECmd</strong></td>
+                        <td>Parsing LNK files</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>EvtxECmd</strong></td>
+                        <td>Parsing Event Logs</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WxTCmd</strong></td>
+                        <td>Parsing Windows Timeline</td>
+                    </tr>
+                </table>
+                <p class="fragment small">🔗 Download: <a href="https://ericzimmerman.github.io/">ericzimmerman.github.io</a></p>
+            </section>
+
+            <!-- ==================== SLIDE 26: BROWSER ARTIFACTS ==================== -->
+            <section>
+                <h2>🌐 Browser Artifacts</h2>
+                <div class="box-definition">
+                    <strong>Browser Forensics</strong> — analisis artefak web browser untuk merekonstruksi aktivitas browsing. Browser merekam hampir <strong>semua aktivitas online</strong>.
+                </div>
+                <div class="three-columns medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong>Chrome</strong><br>
+                        <span class="small"><code>%LocalAppData%\<br>Google\Chrome\<br>User Data\Default\</code></span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Firefox</strong><br>
+                        <span class="small"><code>%AppData%\<br>Mozilla\Firefox\<br>Profiles\[profile]\</code></span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Edge</strong><br>
+                        <span class="small"><code>%LocalAppData%\<br>Microsoft\Edge\<br>User Data\Default\</code></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: BROWSER DATA TYPES ==================== -->
+            <section>
+                <h2>🌐 Jenis Artefak Browser</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Deskripsi</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>History</strong></td>
+                        <td>URL + timestamp</td>
+                        <td>Aktivitas browsing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cookies</strong></td>
+                        <td>Data sesi website</td>
+                        <td>Identifikasi akun</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cache</strong></td>
+                        <td>Salinan halaman web</td>
+                        <td>Konten yang diakses</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Downloads</strong></td>
+                        <td>File yang diunduh</td>
+                        <td>File dari internet</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Login Data</strong></td>
+                        <td>Kredensial tersimpan</td>
+                        <td>Username & password</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Autofill</strong></td>
+                        <td>Data formulir</td>
+                        <td>Informasi pribadi</td>
+                    </tr>
+                </table>
+                <p class="fragment small">💡 Format database: <strong>SQLite</strong> — buka dengan DB Browser for SQLite</p>
+            </section>
+
+            <!-- ==================== SLIDE 28: RECYCLE BIN ==================== -->
+            <section>
+                <h2>🗑️ Recycle Bin Forensics</h2>
+                <p class="medium-text">Lokasi: <code>C:\$Recycle.Bin\[SID]\</code></p>
+                <div class="two-columns medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong>$I[ID] File</strong><br>
+                        <span class="small">📄 Metadata</span><br>
+                        <ul class="small">
+                            <li>Path asli file</li>
+                            <li>Ukuran file</li>
+                            <li>Timestamp penghapusan</li>
+                        </ul>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>$R[ID] File</strong><br>
+                        <span class="small">📦 Konten Asli</span><br>
+                        <ul class="small">
+                            <li>File asli yang dihapus</li>
+                            <li>Konten lengkap</li>
+                            <li>Dapat dipulihkan</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment small box-warning content-margin">⚠️ Recycle Bin dikosongkan? File masih bisa di-carve dari unallocated space (HDD)!</p>
+            </section>
+
+            <!-- ==================== SLIDE 29: WINDOWS TIMELINE ==================== -->
+            <section>
+                <h2>📅 Windows Timeline</h2>
+                <div class="box-definition">
+                    <strong>Windows Timeline</strong> — fitur Windows 10 yang merekam aktivitas pengguna secara kronologis dalam database SQLite.
+                </div>
+                <p class="fragment medium-text">Database:</p>
+                <pre class="fragment"><code class="language-plaintext">C:\Users\[user]\AppData\Local\
+  ConnectedDevicesPlatform\L.[user]\ActivitiesCache.db</code></pre>
+                <p class="fragment medium-text">Data yang tersimpan:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Aplikasi yang dibuka + <span class="text-gold">timestamp</span></li>
+                    <li class="fragment">Dokumen yang diedit</li>
+                    <li class="fragment">Website yang dikunjungi</li>
+                    <li class="fragment">Durasi aktivitas</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 30: THUMBNAIL CACHE ==================== -->
+            <section>
+                <h2>🖼️ Thumbnail Cache</h2>
+                <div class="box-definition">
+                    <strong>Thumbnail Cache</strong> — database thumbnail gambar, video, dan dokumen yang pernah ditampilkan di Windows Explorer. <span class="text-gold">Bertahan setelah file asli dihapus!</span>
+                </div>
+                <p class="fragment medium-text">Lokasi:</p>
+                <pre class="fragment"><code class="language-plaintext">C:\Users\[user]\AppData\Local\Microsoft\Windows\Explorer\
+  thumbcache_16.db / _32.db / _96.db / _256.db / _1024.db</code></pre>
+                <div class="fragment box-danger content-margin">
+                    <strong>Nilai Forensik:</strong> Membuktikan keberadaan gambar/video/dokumen secara visual — meskipun file asli sudah dihapus dan Recycle Bin dikosongkan!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: MULTI-ARTIFACT CORRELATION ==================== -->
+            <section>
+                <h2>🔄 Korelasi Multi-Artefak</h2>
+                <table class="small">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Menjawab Pertanyaan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Event Logs</strong></td>
+                        <td>Siapa login? Kapan? Dari mana?</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Prefetch</strong></td>
+                        <td>Program apa dijalankan? Berapa kali?</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Jump Lists</strong></td>
+                        <td>File apa dibuka? Dari drive mana?</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>LNK Files</strong></td>
+                        <td>File apa diakses? Di komputer mana?</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Browser</strong></td>
+                        <td>Website dikunjungi? Apa yang diunduh?</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Recycle Bin</strong></td>
+                        <td>File apa dihapus? Kapan?</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Memory</strong></td>
+                        <td>Proses apa berjalan? Koneksi ke mana?</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 32: CASE STUDY - USB EXFILTRATION ==================== -->
+            <section>
+                <h2>🎖️ Studi Kasus: Eksfiltrasi via USB</h2>
+                <p class="medium-text">Skenario: Personel Kodam diduga menyalin data rahasia ke USB</p>
+                <pre><code class="language-plaintext">[08:00] Event 4624  → Login user: TNI_Officer_X
+[08:20] Event 7045  → USB Mass Storage service installed
+[08:22] LNK File    → E:\Backup\ (Volume: XXXX-YYYY)
+[08:25] Jump Lists  → D:\Classified\operasi.docx dibuka
+[08:30] Jump Lists  → E:\Backup\operasi.docx ← FILE DISALIN
+[08:35] Recycle Bin  → D:\Classified\temp_copy.docx dihapus
+[08:40] Event Logs  → USB device disconnected
+[09:00] Prefetch    → CCLEANER.EXE ← UPAYA HAPUS JEJAK</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 33: CASE STUDY ANALYSIS ==================== -->
+            <section>
+                <h2>🎖️ Analisis Studi Kasus</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Event Logs</strong><br>
+                        <span class="small">Login & USB service → Identitas dan waktu</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">LNK + Jump Lists</strong><br>
+                        <span class="small">Path file → Bukti akses & penyalinan</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Recycle Bin</strong><br>
+                        <span class="small">File dihapus → Upaya menghilangkan jejak</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Prefetch</strong><br>
+                        <span class="small">CCleaner → Konfirmasi anti-forensik</span>
+                    </div>
+                </div>
+                <div class="fragment box-danger content-margin">
+                    <strong>Kesimpulan:</strong> Bukti multi-artefak mengkonfirmasi eksfiltrasi data — setiap artefak saling memperkuat!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 34: SUPER TIMELINE ==================== -->
+            <section>
+                <h2>📊 Super Timeline</h2>
+                <div class="box-definition">
+                    <strong>Super Timeline</strong> — timeline terintegrasi yang menggabungkan timestamps dari <strong>semua sumber artefak</strong> ke satu format kronologis terpadu.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>KAPE</strong></td>
+                        <td>Koleksi & parsing artefak otomatis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>log2timeline / plaso</strong></td>
+                        <td>Menggabungkan semua timestamps</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Timeline Explorer</strong></td>
+                        <td>GUI viewer interaktif (Eric Zimmerman)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: APT SCENARIO ==================== -->
+            <section>
+                <h2>🎖️ Skenario: Serangan APT</h2>
+                <p class="medium-text">Memory dump menunjukkan:</p>
+                <pre><code class="language-plaintext">Process : csrss.exe
+Path    : C:\Users\Public\csrss.exe  ← ANOMALI!
+Parent  : explorer.exe               ← ANOMALI!
+Network : 185.x.x.x:443 (ESTABLISHED)</code></pre>
+                <div class="fragment box-danger content-margin">
+                    <strong>3 Red Flags:</strong>
+                    <ul class="small">
+                        <li><code>csrss.exe</code> asli <strong>hanya</strong> di <code>C:\Windows\System32\</code></li>
+                        <li><code>csrss.exe</code> asli <strong>tidak</strong> melakukan koneksi jaringan keluar</li>
+                        <li>Port 443 = komunikasi <span class="text-red">C2 terenkripsi</span></li>
+                    </ul>
+                </div>
+                <p class="fragment small">🏷️ MITRE ATT&amp;CK: Masquerading (T1036) + C2 Communication</p>
+            </section>
+
+            <!-- ==================== SLIDE 36: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>Berdasarkan order of volatility, data mana yang harus dikumpulkan PERTAMA?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Hard Disk Image</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. RAM / Memory Dump ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Event Logs</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Browser History</div>
+                <p class="fragment small box-info">💡 RAM hilang saat power off — harus di-capture terlebih dahulu!</p>
+            </section>
+
+            <!-- ==================== SLIDE 37: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>Event ID berapa yang menunjukkan Security log dihapus (anti-forensik)?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. 4624</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. 4625</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. 1102 ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. 7045</div>
+                <p class="fragment small box-warning">⚠️ Event ID 1102 = Security audit log cleared — tanda anti-forensik!</p>
+            </section>
+
+            <!-- ==================== SLIDE 38: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Proses <code>svchost.exe</code> yang sah selalu memiliki parent process:</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. explorer.exe</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. csrss.exe</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. winlogon.exe</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="4">D. services.exe ✅</div>
+                <p class="fragment small box-info">💡 Parent lain = kemungkinan malware menyamar sebagai svchost!</p>
+            </section>
+
+            <!-- ==================== SLIDE 39: QUIZ 4 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 4:</strong></p>
+                <p>Artefak mana yang tetap menyimpan bukti visual file <strong>setelah file asli dihapus</strong>?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Prefetch Files</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Event Logs</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. Thumbnail Cache ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Browser History</div>
+                <p class="fragment small box-info">💡 Thumbnail tidak ikut terhapus saat file dihapus atau Recycle Bin dikosongkan!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Order of Volatility</strong></td>
+                        <td>CPU Reg → RAM → Network → Disk → Backup</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory Forensics</strong></td>
+                        <td>Volatility 3: pslist, pstree, netscan, malfind</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Event Logs</strong></td>
+                        <td>4624 (login), 4625 (failed), 1102 (cleared)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Prefetch</strong></td>
+                        <td>Riwayat eksekusi, run count, 8 timestamps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Jump Lists & LNK</strong></td>
+                        <td>Path file, volume serial, timestamps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Browser</strong></td>
+                        <td>History, cache, downloads — SQLite DB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recycle Bin</strong></td>
+                        <td>$I (metadata) + $R (konten asli)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Super Timeline</strong></td>
+                        <td>KAPE + log2timeline + Timeline Explorer</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 41: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 06: Forensik Windows II — Registry dan Artefak Pengguna</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Struktur dan lokasi Windows Registry hives</li>
+                    <li class="fragment">Registry forensics: NTUSER.DAT, SAM, SYSTEM, SOFTWARE</li>
+                    <li class="fragment">USB device history dan mounted devices</li>
+                    <li class="fragment">ShimCache, AmCache, dan UserAssist analysis</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 42: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Carvey, H. (2022). <em>Windows Forensic Analysis</em> (5th Ed.). Academic Press. <strong>Chapter 3-5</strong></li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. Chapter 9.</li>
+                    <li>Ligh, M.H., et al. (2014). <em>The Art of Memory Forensics</em>. Wiley. Chapter 1-5.</li>
+                    <li>Volatility Foundation. (2024). <em>Volatility 3 Documentation</em>.</li>
+                    <li>Zimmerman, E. (2024). <em>Eric Zimmerman's Tools</em>. ericzimmerman.github.io</li>
+                    <li>SANS Institute. (2023). <em>Windows Forensic Analysis Poster</em>.</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 43: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 05: Forensik Windows I — Volatile Data dan Artefak Sistem</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
