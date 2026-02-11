@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 01: Pengantar Forensik Digital dalam Konteks Militer</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 01</h3>
+                <h2>Pengantar Forensik Digital dalam Konteks Militer</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan definisi dan ruang lingkup forensik digital</li>
+                    <li class="fragment">Menguraikan evolusi kejahatan siber dan ancaman terhadap pertahanan</li>
+                    <li class="fragment">Membedakan jenis kejahatan siber (internal vs eksternal)</li>
+                    <li class="fragment">Mengidentifikasi karakteristik dan sumber bukti digital</li>
+                    <li class="fragment">Menjelaskan forensic readiness dalam konteks militer</li>
+                    <li class="fragment">Memahami hubungan forensik digital dengan Cyber Intelligence</li>
+                    <li class="fragment">Menerapkan prinsip etika dan regulasi forensik digital</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Definisi Forensik Digital</li>
+                            <li>Sejarah & Perkembangan</li>
+                            <li>Prinsip Dasar</li>
+                            <li>Kejahatan Siber</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>Bukti Digital</li>
+                            <li>Forensic Readiness</li>
+                            <li>Cyber Intelligence & Info Ops</li>
+                            <li>Regulasi & Etika</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WHAT IS DIGITAL FORENSICS ==================== -->
+            <section>
+                <h2>🔍 Apa itu Forensik Digital?</h2>
+                <div class="box-definition">
+                    <strong>Forensik Digital</strong> adalah cabang ilmu forensik yang berfokus pada identifikasi, pengumpulan, preservasi, analisis, dan penyajian bukti digital dalam format yang dapat diterima secara hukum.
+                </div>
+                <p class="fragment">Perpaduan antara:</p>
+                <ul class="medium-text">
+                    <li class="fragment">💻 Ilmu Komputer</li>
+                    <li class="fragment">⚖️ Hukum dan Regulasi</li>
+                    <li class="fragment">🔎 Teknik Investigasi</li>
+                    <li class="fragment">🎖️ Konteks Operasi Militer</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 5: FORENSICS COMPARISON ==================== -->
+            <section>
+                <h2>Forensik Tradisional vs Digital</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Tradisional</th>
+                        <th>Digital</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Objek</strong></td>
+                        <td>Sidik jari, DNA</td>
+                        <td>File, log, metadata</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Lokasi</strong></td>
+                        <td>TKP fisik</td>
+                        <td>Komputer, jaringan, cloud</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Preservasi</strong></td>
+                        <td>Penyegelan fisik</td>
+                        <td>Imaging dan hashing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Volatilitas</strong></td>
+                        <td>Relatif stabil</td>
+                        <td>Sangat mudah berubah</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: SCOPE ==================== -->
+            <section>
+                <h2>📊 Ruang Lingkup Forensik Digital</h2>
+                <img src="images/p01-01-digital-forensics-scope.png" alt="Ruang Lingkup Forensik Digital">
+                <p class="small">Gambar 1.1: Subdisiplin forensik digital</p>
+            </section>
+
+            <!-- ==================== SLIDE 7: SUBDISCIPLINES ==================== -->
+            <section>
+                <h2>Enam Subdisiplin Utama</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>Computer Forensics</strong><br>
+                        <span class="small">Analisis komputer & media penyimpanan</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Network Forensics</strong><br>
+                        <span class="small">Investigasi lalu lintas jaringan (Prt. 10)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Mobile Forensics</strong><br>
+                        <span class="small">Analisis perangkat mobile (Prt. 15)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Memory Forensics</strong><br>
+                        <span class="small">Analisis volatile data/RAM (Prt. 5)</span>
+                    </div>
+                </div>
+                <div class="two-columns medium-text" style="margin-top: 20px;">
+                    <div class="step-box fragment">
+                        <strong>Malware Forensics</strong><br>
+                        <span class="small">Analisis malware (Prt. 11)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Cloud Forensics</strong><br>
+                        <span class="small">Investigasi cloud (Prt. 14)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 8: HISTORY ==================== -->
+            <section>
+                <h2>📜 Sejarah Forensik Digital</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Era</th>
+                        <th>Periode</th>
+                        <th>Perkembangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Awal</td>
+                        <td>1980-an</td>
+                        <td>Virus komputer pertama, investigasi ad-hoc</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Formalisasi</td>
+                        <td>1990-an</td>
+                        <td>Unit forensik komputer kepolisian</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Standarisasi</td>
+                        <td>2000-an</td>
+                        <td>Tools dan metodologi standar</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Modern</td>
+                        <td>2010-sekarang</td>
+                        <td>Cloud, IoT, AI-assisted forensics</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: MILESTONES ==================== -->
+            <section>
+                <h2>🏆 Milestone Penting</h2>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>1984:</strong> FBI membentuk CART (Computer Analysis and Response Team)</li>
+                    <li class="fragment"><strong>1998:</strong> SWGDE (Scientific Working Group on Digital Evidence) didirikan</li>
+                    <li class="fragment"><strong>2004:</strong> ISO/IEC 27037 dikembangkan</li>
+                    <li class="fragment"><strong>2016:</strong> NIST SP 800-86 dirilis</li>
+                </ul>
+                <div class="fragment box-info">
+                    <strong>Di Indonesia:</strong> Pemberlakuan UU ITE No. 11/2008 → Pembaruan UU No. 1/2024
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 10: FUNDAMENTAL PRINCIPLES ==================== -->
+            <section>
+                <h2>⚖️ Lima Prinsip Fundamental</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Tidak Mengubah Bukti</strong><br>
+                        <span class="small">Setiap tindakan tidak boleh mengubah data asli</span></li>
+                    <li class="fragment"><strong>Chain of Custody</strong><br>
+                        <span class="small">Dokumentasi penuh penanganan bukti</span></li>
+                    <li class="fragment"><strong>Kompetensi</strong><br>
+                        <span class="small">Investigator harus terlatih dan kompeten</span></li>
+                    <li class="fragment"><strong>Dokumentasi</strong><br>
+                        <span class="small">Semua aktivitas harus didokumentasikan</span></li>
+                    <li class="fragment"><strong>Hukum dan Etika</strong><br>
+                        <span class="small">Kepatuhan terhadap hukum yang berlaku</span></li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 11: LOCARD PRINCIPLE ==================== -->
+            <section>
+                <h2>🔬 Prinsip Locard</h2>
+                <div class="box-definition">
+                    <strong>Locard's Exchange Principle:</strong> "Setiap kontak meninggalkan jejak"
+                </div>
+                <p class="fragment">Dalam forensik digital:</p>
+                <ul class="medium-text">
+                    <li class="fragment">📱 Mengakses website → cache, cookies, history</li>
+                    <li class="fragment">🗑️ Menghapus file → entry di file system journal</li>
+                    <li class="fragment">🌐 Koneksi jaringan → log di firewall/router</li>
+                    <li class="fragment">💾 Menjalankan program → prefetch, registry</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 12: CYBERCRIME DEFINITION ==================== -->
+            <section>
+                <h2>💀 Kejahatan Siber</h2>
+                <div class="box-definition">
+                    <strong>Cybercrime</strong> adalah aktivitas kriminal yang melibatkan komputer atau jaringan sebagai target, alat, atau tempat terjadinya kejahatan.
+                </div>
+                <img src="images/p01-02-cybercrime-classification.png" alt="Klasifikasi Cybercrime" style="max-height: 300px;">
+            </section>
+
+            <!-- ==================== SLIDE 13: CYBERCRIME CLASSIFICATION ==================== -->
+            <section>
+                <h2>Klasifikasi Kejahatan Siber</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Deskripsi</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Computer as Target</strong></td>
+                        <td>Komputer adalah sasaran</td>
+                        <td>Hacking, DDoS, Malware</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Computer as Tool</strong></td>
+                        <td>Komputer untuk kejahatan</td>
+                        <td>Penipuan online, Phishing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Computer Incidental</strong></td>
+                        <td>Komputer menyimpan bukti</td>
+                        <td>Catatan transaksi ilegal</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 14: INTERNAL VS EXTERNAL ==================== -->
+            <section>
+                <h2>🔐 Internal vs External Threats</h2>
+                <div class="two-columns">
+                    <div class="fragment">
+                        <div class="box-warning">
+                            <h4>Insider Threat</h4>
+                            <ul class="small">
+                                <li>Memiliki akses sah</li>
+                                <li>Memahami sistem internal</li>
+                                <li>Sulit dideteksi</li>
+                                <li>Motivasi: finansial, balas dendam</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>External Threat</h4>
+                            <ul class="small">
+                                <li>Harus mendapatkan akses</li>
+                                <li>Perlu reconnaissance</li>
+                                <li>Relatif lebih mudah dideteksi</li>
+                                <li>Motivasi: finansial, ideologis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 15: INSIDER THREAT TYPES ==================== -->
+            <section>
+                <h2>Jenis Insider Threat</h2>
+                <div class="three-columns medium-text">
+                    <div class="step-box fragment">
+                        <h4 class="warning">Malicious</h4>
+                        <p class="small">Sengaja melakukan tindakan berbahaya</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 style="color: #f59e0b;">Negligent</h4>
+                        <p class="small">Kelalaian menyebabkan kerusakan</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 style="color: #3b82f6;">Compromised</h4>
+                        <p class="small">Akun/kredensial dicuri pihak luar</p>
+                    </div>
+                </div>
+                <div class="fragment box-info" style="margin-top: 30px;">
+                    ⚠️ <strong>Statistik:</strong> 60% insiden keamanan melibatkan insider threat
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 16: APT ==================== -->
+            <section>
+                <h2>🎯 Advanced Persistent Threat (APT)</h2>
+                <div class="box-definition">
+                    <strong>APT</strong> adalah serangan siber oleh aktor berkemampuan tinggi dengan tujuan spesifik dan persisten dalam jangka panjang.
+                </div>
+                <div class="fragment">
+                    <p>Karakteristik:</p>
+                    <ul class="medium-text">
+                        <li><strong>Advanced:</strong> Teknik canggih, zero-day exploits</li>
+                        <li><strong>Persistent:</strong> Bertahan dalam sistem lama</li>
+                        <li><strong>Threat:</strong> Niat dan kemampuan merusak</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 17: THREAT ACTORS ==================== -->
+            <section>
+                <h2>Kategori Aktor Ancaman</h2>
+                <table class="small">
+                    <tr>
+                        <th>Aktor</th>
+                        <th>Motivasi</th>
+                        <th>Kemampuan</th>
+                        <th>Target</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Script Kiddies</td>
+                        <td>Kesenangan</td>
+                        <td>Rendah</td>
+                        <td>Oportunistik</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Hacktivists</td>
+                        <td>Ideologis</td>
+                        <td>Sedang</td>
+                        <td>Organisasi tertentu</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Cybercriminals</td>
+                        <td>Finansial</td>
+                        <td>Tinggi</td>
+                        <td>Data berharga</td>
+                    </tr>
+                    <tr class="fragment" style="background-color: rgba(239, 68, 68, 0.3);">
+                        <td><strong>Nation-State</strong></td>
+                        <td>Spionase, sabotase</td>
+                        <td>Sangat tinggi</td>
+                        <td>Infrastruktur kritis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 18: CYBER KILL CHAIN ==================== -->
+            <section>
+                <h2>🔗 Cyber Kill Chain</h2>
+                <img src="images/p01-03-cyber-kill-chain.png" alt="Cyber Kill Chain" style="max-height: 400px;">
+                <p class="small">Model tahapan serangan siber oleh Lockheed Martin</p>
+            </section>
+
+            <!-- ==================== SLIDE 19: KILL CHAIN STAGES ==================== -->
+            <section>
+                <h2>Tahapan Cyber Kill Chain</h2>
+                <table class="small">
+                    <tr>
+                        <th>Tahap</th>
+                        <th>Aktivitas</th>
+                        <th>Bukti Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>1. Reconnaissance</td>
+                        <td>Pengumpulan info target</td>
+                        <td>Log DNS, social traces</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>2. Weaponization</td>
+                        <td>Pembuatan payload</td>
+                        <td>-</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>3. Delivery</td>
+                        <td>Pengiriman ke target</td>
+                        <td>Email logs, downloads</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>4. Exploitation</td>
+                        <td>Eksploitasi kerentanan</td>
+                        <td>Event logs, crash dumps</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>5. Installation</td>
+                        <td>Instalasi backdoor</td>
+                        <td>File system, registry</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>6. C2</td>
+                        <td>Command & Control</td>
+                        <td>Network traffic</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>7. Actions</td>
+                        <td>Tujuan akhir</td>
+                        <td>Data exfiltration logs</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: DIGITAL EVIDENCE ==================== -->
+            <section>
+                <h2>📁 Bukti Digital</h2>
+                <div class="box-definition">
+                    <strong>Bukti Digital</strong> adalah informasi yang disimpan atau ditransmisikan dalam format digital yang dapat digunakan dalam investigasi atau peradilan.
+                </div>
+                <img src="images/p01-04-digital-evidence-sources.png" alt="Sumber Bukti Digital" style="max-height: 300px;">
+            </section>
+
+            <!-- ==================== SLIDE 21: EVIDENCE CHARACTERISTICS ==================== -->
+            <section>
+                <h2>Karakteristik Bukti Digital</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Karakteristik</th>
+                        <th>Implikasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Latent</strong></td>
+                        <td>Memerlukan tools khusus untuk melihat</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Fragile</strong></td>
+                        <td>Mudah dimodifikasi/dihancurkan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cross-Jurisdiction</strong></td>
+                        <td>Melewati batas geografis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Duplicable</strong></td>
+                        <td>Dapat disalin sempurna</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Time-Sensitive</strong></td>
+                        <td>Dapat berubah seiring waktu</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 22: ORDER OF VOLATILITY ==================== -->
+            <section>
+                <h2>⏱️ Order of Volatility</h2>
+                <p class="medium-text">Urutan pengumpulan bukti berdasarkan volatilitas:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>CPU Register & Cache</strong> - Nanoseconds</li>
+                    <li class="fragment"><strong>RAM</strong> - Hilang saat power off</li>
+                    <li class="fragment"><strong>Network State</strong> - Real-time</li>
+                    <li class="fragment"><strong>Running Processes</strong> - Saat shutdown</li>
+                    <li class="fragment"><strong>Hard Disk</strong> - Persisten</li>
+                    <li class="fragment"><strong>Backup Media</strong> - Sangat persisten</li>
+                </ol>
+                <div class="fragment box-warning">
+                    💡 Kumpulkan yang paling volatile TERLEBIH DAHULU!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 23: HASH INTEGRITY ==================== -->
+            <section>
+                <h2>🔐 Integritas Bukti: Hashing</h2>
+                <p class="medium-text">Algoritma hash untuk verifikasi integritas:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Algoritma</th>
+                        <th>Panjang</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>MD5</td>
+                        <td>128-bit</td>
+                        <td class="warning">❌ Compromised</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>SHA-1</td>
+                        <td>160-bit</td>
+                        <td class="warning">❌ Compromised</td>
+                    </tr>
+                    <tr class="fragment" style="background-color: rgba(34, 197, 94, 0.3);">
+                        <td><strong>SHA-256</strong></td>
+                        <td>256-bit</td>
+                        <td class="success">✅ Direkomendasikan</td>
+                    </tr>
+                </table>
+                <pre class="fragment"><code class="small">SHA-256: e3b0c44298fc1c149afbf4c8996fb924...</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 24: FORENSIC READINESS ==================== -->
+            <section>
+                <h2>🏛️ Forensic Readiness</h2>
+                <div class="box-definition">
+                    <strong>Forensic Readiness</strong> adalah kemampuan organisasi memaksimalkan penggunaan bukti digital sambil meminimalkan biaya investigasi.
+                </div>
+                <img src="images/p01-05-forensic-readiness.png" alt="Forensic Readiness" style="max-height: 300px;">
+            </section>
+
+            <!-- ==================== SLIDE 25: FOUR PILLARS ==================== -->
+            <section>
+                <h2>Empat Pilar Forensic Readiness</h2>
+                <div class="grid-2x2">
+                    <div class="step-box fragment">
+                        <h4 style="color: #10b981;">📜 POLICY</h4>
+                        <p class="small">Kebijakan & SOP forensik, klasifikasi data</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 style="color: #f59e0b;">🖥️ TECHNOLOGY</h4>
+                        <p class="small">Log management, forensic tools</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 style="color: #ef4444;">👥 PEOPLE</h4>
+                        <p class="small">Tim forensik internal terlatih</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 style="color: #8b5cf6;">⚙️ PROCESS</h4>
+                        <p class="small">Incident response plan</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 26: CYBER INTELLIGENCE ==================== -->
+            <section>
+                <h2>🕵️ Cyber Intelligence</h2>
+                <div class="box-definition">
+                    <strong>Cyber Intelligence</strong> adalah pengumpulan, analisis, dan pemanfaatan informasi ancaman siber untuk pengambilan keputusan.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Cyber Intel</th>
+                        <th>Forensik Digital</th>
+                    </tr>
+                    <tr>
+                        <td>Fokus</td>
+                        <td>Threat prediction</td>
+                        <td>Incident investigation</td>
+                    </tr>
+                    <tr>
+                        <td>Timing</td>
+                        <td>Proaktif</td>
+                        <td>Reaktif</td>
+                    </tr>
+                    <tr>
+                        <td>Output</td>
+                        <td>Threat reports</td>
+                        <td>Evidence reports</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 27: CNO TRIAD ==================== -->
+            <section>
+                <h2>🎖️ Computer Network Operations</h2>
+                <img src="images/p01-07-cno-triad.png" alt="CNO Triad" style="max-height: 350px;">
+                <p class="small">Tiga komponen CNO dan peran forensik digital</p>
+            </section>
+
+            <!-- ==================== SLIDE 28: CNO DETAILS ==================== -->
+            <section>
+                <h2>Komponen CNO</h2>
+                <div class="three-columns medium-text">
+                    <div class="fragment">
+                        <div class="box-info">
+                            <h4>🛡️ CND</h4>
+                            <p class="small"><strong>Defense</strong></p>
+                            <p class="small">Melindungi sistem sendiri</p>
+                            <p class="small"><em>Forensik: Incident response</em></p>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>⚔️ CNA</h4>
+                            <p class="small"><strong>Attack</strong></p>
+                            <p class="small">Mengganggu sistem adversary</p>
+                            <p class="small"><em>Forensik: Post-op analysis</em></p>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-warning">
+                            <h4>🔍 CNE</h4>
+                            <p class="small"><strong>Exploitation</strong></p>
+                            <p class="small">Mengumpulkan intelijen</p>
+                            <p class="small"><em>Forensik: Data analysis</em></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 29: REGULATIONS ==================== -->
+            <section>
+                <h2>📚 Regulasi di Indonesia</h2>
+                <div class="two-columns medium-text">
+                    <div class="fragment">
+                        <div class="box-info">
+                            <h4>UU ITE No. 1/2024</h4>
+                            <ul class="small">
+                                <li>Pasal 5: Bukti elektronik sah</li>
+                                <li>Pasal 6: Dokumen elektronik = tertulis</li>
+                                <li>Pasal 27-37: Kejahatan siber</li>
+                                <li>Pasal 43: Kewenangan penyidik</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-success">
+                            <h4>UU Pertahanan No. 3/2002</h4>
+                            <ul class="small">
+                                <li>Pertahanan siber = bagian pertahanan nasional</li>
+                                <li>Kewenangan TNI dalam operasi siber</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 30: ADMISSIBILITY ==================== -->
+            <section>
+                <h2>⚖️ Admissibility Bukti Digital</h2>
+                <p class="medium-text">Kriteria agar bukti diterima pengadilan:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kriteria</th>
+                        <th>Cara Memenuhi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Authenticity</strong></td>
+                        <td>Hash verification, chain of custody</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Reliability</strong></td>
+                        <td>Tool validation, standard procedures</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Relevance</strong></td>
+                        <td>Scope investigation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Completeness</strong></td>
+                        <td>Full imaging, metadata preservation</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 31: STANDARDS ==================== -->
+            <section>
+                <h2>📋 Standar Internasional</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Standar</th>
+                        <th>Fokus</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ISO/IEC 27037</strong></td>
+                        <td>Identification, collection, acquisition, preservation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ISO/IEC 27041</strong></td>
+                        <td>Assurance for digital evidence</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ISO/IEC 27042</strong></td>
+                        <td>Analysis and interpretation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>NIST SP 800-86</strong></td>
+                        <td>Forensic integration in incident response</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 32: NIST PHASES ==================== -->
+            <section>
+                <h2>Fase NIST SP 800-86</h2>
+                <div class="medium-text">
+                    <div class="step-box fragment">
+                        <strong>1. Collection</strong> → Identifikasi, akuisisi, preservasi
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>2. Examination</strong> → Processing, filtering, extraction
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>3. Analysis</strong> → Correlation, timeline, interpretation
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>4. Reporting</strong> → Documentation, presentation
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 33: FORENSIC TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Forensik Digital</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Tool</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Imaging</td>
+                        <td><strong>FTK Imager</strong></td>
+                        <td>Akuisisi forensic image</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Analysis</td>
+                        <td><strong>Autopsy</strong></td>
+                        <td>Analisis komprehensif</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Memory</td>
+                        <td><strong>Volatility</strong></td>
+                        <td>Analisis RAM</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Network</td>
+                        <td><strong>Wireshark</strong></td>
+                        <td>Analisis traffic</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>System</td>
+                        <td><strong>Sysinternals</strong></td>
+                        <td>Live analysis Windows</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 34: ETHICS ==================== -->
+            <section>
+                <h2>🎖️ Etika Profesional</h2>
+                <p class="medium-text">Prinsip Etika Investigator Forensik:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Integritas</strong> - Jujur, tidak memalsukan bukti</li>
+                    <li class="fragment"><strong>Objektivitas</strong> - Tidak bias, melaporkan semua temuan</li>
+                    <li class="fragment"><strong>Kompetensi</strong> - Bekerja dalam batas kemampuan</li>
+                    <li class="fragment"><strong>Kerahasiaan</strong> - Melindungi informasi sensitif</li>
+                    <li class="fragment"><strong>Profesionalisme</strong> - Menjaga standar tertinggi</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 35: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>Prinsip forensik digital yang menyatakan "setiap kontak meninggalkan jejak" disebut?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Chain of Custody</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Order of Volatility</div>
+                <div class="quiz-option fragment" data-fragment-index="3" style="background-color: rgba(16, 185, 129, 0.4);">C. Locard's Exchange Principle ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. NIST Framework</div>
+            </section>
+
+            <!-- ==================== SLIDE 36: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>Manakah yang PALING volatile dan harus dikumpulkan pertama?</p>
+                <div class="quiz-option fragment" data-fragment-index="1" style="background-color: rgba(16, 185, 129, 0.4);">A. RAM ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Hard Disk</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. USB Drive</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Email Server</div>
+                <p class="fragment small box-info">💡 RAM hilang saat sistem dimatikan, harus di-capture terlebih dahulu!</p>
+            </section>
+
+            <!-- ==================== SLIDE 37: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Algoritma hash yang direkomendasikan untuk forensik digital saat ini adalah?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. MD5</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. SHA-1</div>
+                <div class="quiz-option fragment" data-fragment-index="3" style="background-color: rgba(16, 185, 129, 0.4);">C. SHA-256 ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. CRC32</div>
+                <p class="fragment small box-warning">⚠️ MD5 dan SHA-1 sudah compromised, tidak direkomendasikan!</p>
+            </section>
+
+            <!-- ==================== SLIDE 38: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Forensik Digital</strong></td>
+                        <td>Identifikasi, koleksi, preservasi, analisis, penyajian bukti</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5 Prinsip</strong></td>
+                        <td>Tidak ubah bukti, CoC, kompetensi, dokumentasi, hukum</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kejahatan Siber</strong></td>
+                        <td>Internal vs External, APT, Cyber Kill Chain</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bukti Digital</strong></td>
+                        <td>Latent, fragile, duplicable, time-sensitive</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Forensic Readiness</strong></td>
+                        <td>Policy, Technology, People, Process</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standar</strong></td>
+                        <td>ISO 27037, NIST SP 800-86</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 39: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 02: Proses Investigasi Forensik Digital</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Fase-fase investigasi forensik (NIST Framework)</li>
+                    <li class="fragment">First response procedures</li>
+                    <li class="fragment">Chain of custody implementation</li>
+                    <li class="fragment">Dokumentasi bukti elektronik</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 40: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. <strong>Chapter 1-2</strong></li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (6th Ed.). Cengage. Chapter 1.</li>
+                    <li>Sammons, J. (2020). <em>The Basics of Digital Forensics</em> (2nd Ed.). Syngress. Chapter 1.</li>
+                    <li>NIST SP 800-86: Guide to Integrating Forensic Techniques</li>
+                    <li>UU No. 1 Tahun 2024 tentang ITE</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 41: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 01: Pengantar Forensik Digital dalam Konteks Militer</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
