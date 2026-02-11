@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 04: Akuisisi dan Duplikasi Data Forensik</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 04</h3>
+                <h2>Akuisisi dan Duplikasi Data Forensik</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan prinsip dasar akuisisi forensik dan write-blocking</li>
+                    <li class="fragment">Membedakan metode akuisisi physical, logical, dan sparse</li>
+                    <li class="fragment">Mengidentifikasi format image forensik (raw/dd, E01, AFF4)</li>
+                    <li class="fragment">Memahami perbedaan live acquisition dan dead acquisition</li>
+                    <li class="fragment">Melakukan akuisisi volatile data dan memory forensics</li>
+                    <li class="fragment">Menerapkan verifikasi integritas menggunakan fungsi hash</li>
+                    <li class="fragment">Menjelaskan tantangan akuisisi pada SSD, enkripsi, dan RAID</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Prinsip Akuisisi Forensik</li>
+                            <li>Write-Blocking</li>
+                            <li>Metode Akuisisi</li>
+                            <li>Live vs Dead Acquisition</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>Format Image Forensik</li>
+                            <li>Memory Forensics</li>
+                            <li>Verifikasi Hash</li>
+                            <li>Tantangan Media Modern</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WHAT IS FORENSIC ACQUISITION ==================== -->
+            <section>
+                <h2>🔍 Apa itu Akuisisi Forensik?</h2>
+                <div class="box-definition">
+                    <strong>Akuisisi Forensik</strong> adalah proses pembuatan salinan data yang akurat secara bitwise dari media penyimpanan digital, dengan tetap menjaga integritas dan keaslian bukti asli.
+                </div>
+                <p class="fragment">Tahap paling kritis dalam investigasi:</p>
+                <ul class="medium-text">
+                    <li class="fragment">❌ Kegagalan → bukti tidak diterima pengadilan</li>
+                    <li class="fragment">⏱️ Sering dalam tekanan waktu tinggi</li>
+                    <li class="fragment">🎖️ Konteks militer: insiden di Kodam, medan operasi</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 5: COPY VS IMAGING ==================== -->
+            <section>
+                <h2>Copy Biasa vs Akuisisi Forensik</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Copy Biasa</th>
+                        <th>Forensic Imaging</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cakupan</strong></td>
+                        <td>File terlihat saja</td>
+                        <td>Seluruh bit (+ deleted data)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Metode</strong></td>
+                        <td>Copy-paste standar</td>
+                        <td>Bit-by-bit duplication</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Verifikasi</strong></td>
+                        <td>Tidak ada</td>
+                        <td>Hash verification</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Metadata</strong></td>
+                        <td>Berubah (timestamp)</td>
+                        <td>Terjaga (write-blocker)</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>Admissibility</strong></td>
+                        <td>Tidak diterima</td>
+                        <td>Diterima sebagai bukti</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: ACQUISITION PRINCIPLES ==================== -->
+            <section>
+                <h2>⚖️ Lima Prinsip Akuisisi</h2>
+                <img src="images/p04-01-acquisition-principles.png" alt="Prinsip Akuisisi Forensik" class="img-medium">
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Keutuhan Bukti</strong> — Data asli tidak boleh berubah</li>
+                    <li class="fragment"><strong>Verifikasi</strong> — Hash cryptographic untuk validasi</li>
+                    <li class="fragment"><strong>Dokumentasi</strong> — Seluruh proses tercatat</li>
+                    <li class="fragment"><strong>Repeatability</strong> — Proses dapat diulangi</li>
+                    <li class="fragment"><strong>Chain of Custody</strong> — Alur penanganan terdokumentasi</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 7: WRITE BLOCKING DEFINITION ==================== -->
+            <section>
+                <h2>🛡️ Write-Blocking</h2>
+                <div class="box-definition">
+                    <strong>Write Blocker</strong> adalah perangkat keras atau perangkat lunak yang mencegah penulisan data ke media penyimpanan, menjaga integritas bukti asli.
+                </div>
+                <div class="fragment box-danger">
+                    <strong>Tanpa write blocker, OS otomatis memodifikasi media:</strong>
+                    <ul class="small">
+                        <li>Windows autoplay/autorun</li>
+                        <li>NTFS journal update</li>
+                        <li>Timestamp modification</li>
+                        <li>Antivirus scanning</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 8: WRITE BLOCKER TYPES ==================== -->
+            <section>
+                <h2>Jenis Write Blocker</h2>
+                <div class="three-columns medium-text">
+                    <div class="step-box fragment">
+                        <h4 class="text-gold">Hardware</h4>
+                        <p class="small">Perangkat fisik antara media dan komputer</p>
+                        <p class="small text-success">✅ Independen dari OS</p>
+                        <p class="small warning">💰 Mahal</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 class="text-gold">Software</h4>
+                        <p class="small">Utilitas software yang mencegah penulisan</p>
+                        <p class="small text-success">✅ Gratis/murah</p>
+                        <p class="small warning">⚠️ Bergantung OS</p>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 class="text-gold">Firmware</h4>
+                        <p class="small">Built-in pada forensic workstation</p>
+                        <p class="small text-success">✅ Terintegrasi</p>
+                        <p class="small warning">⚠️ Terbatas perangkat</p>
+                    </div>
+                </div>
+                <div class="fragment box-info content-margin">
+                    🎖️ <strong>Konteks Militer:</strong> Hardware write blocker wajib dalam forensic kit standar TNI
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 9: ACQUISITION METHODS OVERVIEW ==================== -->
+            <section>
+                <h2>📊 Metode Akuisisi Forensik</h2>
+                <img src="images/p04-02-acquisition-methods.png" alt="Metode Akuisisi" class="img-medium">
+                <p class="small">Gambar: Tiga metode utama akuisisi forensik</p>
+            </section>
+
+            <!-- ==================== SLIDE 10: PHYSICAL ACQUISITION ==================== -->
+            <section>
+                <h2>💽 Physical Acquisition</h2>
+                <div class="box-definition">
+                    Penyalinan <strong>bit-by-bit</strong> dari seluruh media penyimpanan — termasuk semua partisi, unallocated space, slack space, HPA, dan DCO.
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">✅ Mencakup <strong>deleted files</strong> dan <strong>slack space</strong></li>
+                    <li class="fragment">✅ Menyalin <strong>HPA</strong> (Host Protected Area) dan <strong>DCO</strong></li>
+                    <li class="fragment">✅ Salinan identik dari media asli</li>
+                    <li class="fragment">⏱️ Waktu paling lama, ruang paling besar</li>
+                    <li class="fragment">🏆 <strong>Gold standard</strong> untuk investigasi lengkap</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 11: LOGICAL & SPARSE ACQUISITION ==================== -->
+            <section>
+                <h2>Logical & Sparse Acquisition</h2>
+                <div class="two-columns">
+                    <div class="fragment">
+                        <div class="box-info">
+                            <h4>Logical Acquisition</h4>
+                            <ul class="small">
+                                <li>File & folder yang terlihat saja</li>
+                                <li>Tidak mencakup deleted data</li>
+                                <li>Cepat, ukuran kecil</li>
+                                <li><strong>Kapan:</strong> Triage, live system, remote</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-warning">
+                            <h4>Sparse Acquisition</h4>
+                            <ul class="small">
+                                <li>Area tertentu berdasarkan kriteria</li>
+                                <li>Rentang sektor atau tipe file</li>
+                                <li>Waktu sedang</li>
+                                <li><strong>Kapan:</strong> Disk besar, fokus spesifik</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 12: METHOD COMPARISON TABLE ==================== -->
+            <section>
+                <h2>Perbandingan Metode Akuisisi</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Metode</th>
+                        <th>Cakupan</th>
+                        <th>Waktu</th>
+                        <th>Deleted Data</th>
+                        <th>Kasus Penggunaan</th>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>Physical</strong></td>
+                        <td>100% disk</td>
+                        <td>Lama</td>
+                        <td>Ya</td>
+                        <td>Investigasi lengkap</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Logical</strong></td>
+                        <td>File aktif</td>
+                        <td>Cepat</td>
+                        <td>Tidak</td>
+                        <td>Triage, live system</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Sparse</strong></td>
+                        <td>Area tertentu</td>
+                        <td>Sedang</td>
+                        <td>Tergantung</td>
+                        <td>Fokus spesifik</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 13: DEAD VS LIVE ACQUISITION ==================== -->
+            <section>
+                <h2>⚡ Dead vs Live Acquisition</h2>
+                <div class="two-columns">
+                    <div class="fragment">
+                        <div class="box-success">
+                            <h4>Dead Acquisition</h4>
+                            <ul class="small">
+                                <li>Sistem sudah mati / disk dilepas</li>
+                                <li>✅ Hasil konsisten & repeatable</li>
+                                <li>✅ Integritas tinggi</li>
+                                <li>❌ Volatile data hilang</li>
+                                <li>❌ Encrypted volume terkunci</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>Live Acquisition</h4>
+                            <ul class="small">
+                                <li>Sistem masih berjalan</li>
+                                <li>✅ Volatile data terjaga</li>
+                                <li>✅ Encryption key di RAM</li>
+                                <li>❌ Integritas lebih rendah</li>
+                                <li>❌ Tidak repeatable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: LIVE ACQUISITION COMPARISON ==================== -->
+            <section>
+                <h2>Kapan Live Acquisition?</h2>
+                <p class="medium-text">Tiga kondisi utama:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Full Disk Encryption aktif</strong><br>
+                        <span class="small">BitLocker/VeraCrypt key hanya di RAM → shutdown = data terkunci</span></li>
+                    <li class="fragment"><strong>Sistem kritis tidak boleh mati</strong><br>
+                        <span class="small">Server C2 militer, sistem komunikasi operasional</span></li>
+                    <li class="fragment"><strong>Bukti volatile diperlukan</strong><br>
+                        <span class="small">Fileless malware, koneksi C2 aktif, injeksi memori</span></li>
+                </ol>
+                <div class="fragment box-warning content-margin">
+                    🎖️ Server TNI sering memerlukan live acquisition — downtime berdampak operasional
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 15: ORDER OF VOLATILITY ==================== -->
+            <section>
+                <h2>📉 Order of Volatility (RFC 3227)</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Urutan</th>
+                        <th>Sumber Data</th>
+                        <th>Volatilitas</th>
+                        <th>Metode</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>1</td>
+                        <td>CPU Registers/Cache</td>
+                        <td>Sangat tinggi</td>
+                        <td>Tidak praktis</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>2</td>
+                        <td><strong>RAM (Memory)</strong></td>
+                        <td>Tinggi</td>
+                        <td>Memory dump</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>3</td>
+                        <td>Network State</td>
+                        <td>Tinggi</td>
+                        <td>Command capture</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>4</td>
+                        <td>Running Processes</td>
+                        <td>Tinggi</td>
+                        <td>Process listing</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>5</td>
+                        <td>Disk / Storage</td>
+                        <td>Rendah</td>
+                        <td>Forensic imaging</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>6</td>
+                        <td>Archival Media</td>
+                        <td>Sangat rendah</td>
+                        <td>Standard copy</td>
+                    </tr>
+                </table>
+                <p class="fragment small">⬆️ Akuisisi dari paling volatile ke paling stabil!</p>
+            </section>
+
+            <!-- ==================== SLIDE 16: MEMORY FORENSICS ==================== -->
+            <section>
+                <h2>🧠 Akuisisi RAM (Memory Dump)</h2>
+                <p class="medium-text">Data penting yang <strong>hanya</strong> ada di RAM:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>🔑 Encryption Keys</strong><br>
+                        <span class="small">BitLocker FVEK, VeraCrypt key</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🦠 Fileless Malware</strong><br>
+                        <span class="small">Kode hanya di memori, tidak di disk</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🌐 Network Connections</strong><br>
+                        <span class="small">Koneksi C2 aktif, remote IP/port</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🔓 Decrypted Data</strong><br>
+                        <span class="small">Plaintext dari file terenkripsi</span>
+                    </div>
+                </div>
+                <div class="fragment box-danger content-margin">
+                    ⚠️ <strong>Shutdown = semua data ini HILANG PERMANEN</strong>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 17: RAM ACQUISITION TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Akuisisi RAM</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Platform</th>
+                        <th>Metode</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Belkasoft RAM Capturer</strong></td>
+                        <td>Windows</td>
+                        <td>User-mode</td>
+                        <td>Gratis, minimal footprint</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WinPMEM</strong></td>
+                        <td>Windows</td>
+                        <td>Kernel driver</td>
+                        <td>Open source (Rekall)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>FTK Imager</strong></td>
+                        <td>Windows</td>
+                        <td>User-mode</td>
+                        <td>Memory capture terintegrasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DumpIt</strong></td>
+                        <td>Windows</td>
+                        <td>User-mode</td>
+                        <td>Portable, satu klik</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>LiME</strong></td>
+                        <td>Linux</td>
+                        <td>Kernel module</td>
+                        <td>Open source</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 18: FORENSIC IMAGE FORMATS ==================== -->
+            <section>
+                <h2>📁 Format Image Forensik</h2>
+                <img src="images/p04-03-forensic-image-formats.png" alt="Format Image" class="img-medium">
+                <p class="small">Gambar: Perbandingan tiga format image forensik utama</p>
+            </section>
+
+            <!-- ==================== SLIDE 19: RAW FORMAT ==================== -->
+            <section>
+                <h2>Format Raw (dd)</h2>
+                <div class="box-definition">
+                    <strong>Format Raw</strong> adalah salinan bit-per-bit exact dari media sumber — tanpa header, metadata, atau kompresi.
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">✅ <strong>Kompatibilitas universal</strong> — semua tools mendukung</li>
+                    <li class="fragment">✅ Ukuran image = ukuran media sumber</li>
+                    <li class="fragment">✅ Direct mounting sebagai virtual disk</li>
+                    <li class="fragment">❌ Tidak ada kompresi → ukuran besar</li>
+                    <li class="fragment">❌ Tidak ada metadata kasus terintegrasi</li>
+                </ul>
+                <p class="fragment small">Ekstensi: <code>.dd</code>, <code>.raw</code>, <code>.img</code>, <code>.001</code></p>
+            </section>
+
+            <!-- ==================== SLIDE 20: E01 FORMAT ==================== -->
+            <section>
+                <h2>Format E01 (EnCase)</h2>
+                <div class="box-definition">
+                    <strong>E01</strong> adalah format standar de facto dari Guidance Software (OpenText) dengan kompresi dan metadata terintegrasi.
+                </div>
+                <p class="medium-text fragment">Struktur E01:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Header</strong> — Informasi kasus, examiner, catatan</li>
+                    <li class="fragment"><strong>Data Blocks</strong> — Data terkompresi (32KB/64KB chunks)</li>
+                    <li class="fragment"><strong>CRC per Block</strong> — Verifikasi integritas per chunk</li>
+                    <li class="fragment"><strong>Hash Footer</strong> — MD5/SHA-1 keseluruhan</li>
+                </ol>
+                <div class="fragment box-success content-margin">
+                    💡 Kompresi ~30-50% lebih kecil dari raw — ideal untuk penyimpanan & transfer
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 21: AFF4 FORMAT ==================== -->
+            <section>
+                <h2>Format AFF4</h2>
+                <div class="box-definition">
+                    <strong>AFF4</strong> (Advanced Forensics Format 4) adalah format open source generasi terbaru dengan fitur modern.
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">🔓 <strong>Open source</strong> dan bebas lisensi</li>
+                    <li class="fragment">📦 Multi-algoritma kompresi (snappy, zlib, lz4)</li>
+                    <li class="fragment">🔏 <strong>Digital signatures</strong> untuk autentikasi</li>
+                    <li class="fragment">🔐 Mendukung <strong>enkripsi</strong></li>
+                    <li class="fragment">📂 Multiple image sources dalam satu container</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 22: FORMAT COMPARISON ==================== -->
+            <section>
+                <h2>Perbandingan Format Image</h2>
+                <table class="small">
+                    <tr>
+                        <th>Fitur</th>
+                        <th>Raw (dd)</th>
+                        <th>E01</th>
+                        <th>AFF4</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Kompresi</td>
+                        <td class="warning">Tidak</td>
+                        <td class="text-success">Ya</td>
+                        <td class="text-success">Ya (multi)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Metadata</td>
+                        <td class="warning">Tidak</td>
+                        <td class="text-success">Ya</td>
+                        <td class="text-success">Ya (extensible)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Hash terintegrasi</td>
+                        <td class="warning">Tidak</td>
+                        <td class="text-success">MD5/SHA1</td>
+                        <td class="text-success">SHA-256+</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Open source</td>
+                        <td class="text-success">Ya</td>
+                        <td class="warning">Tidak</td>
+                        <td class="text-success">Ya</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Enkripsi</td>
+                        <td class="warning">Tidak</td>
+                        <td class="warning">Tidak</td>
+                        <td class="text-success">Ya</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Kompatibilitas</td>
+                        <td class="text-success">Sangat tinggi</td>
+                        <td class="text-success">Tinggi</td>
+                        <td class="text-gold">Sedang</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 23: HASH VERIFICATION ==================== -->
+            <section>
+                <h2>🔐 Verifikasi Integritas: Hash</h2>
+                <div class="box-definition">
+                    <strong>Fungsi Hash</strong> mengubah input data sembarang menjadi output fixed-length (digest) yang unik dan tidak dapat dibalik.
+                </div>
+                <p class="fragment medium-text">Properti penting:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Deterministic</strong> — Input sama → output selalu sama</li>
+                    <li class="fragment"><strong>One-way</strong> — Tidak bisa dibalik</li>
+                    <li class="fragment"><strong>Collision resistant</strong> — Sulit menemukan 2 input = 1 hash</li>
+                    <li class="fragment"><strong>Avalanche effect</strong> — 1 bit berubah → hash sangat berbeda</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 24: HASH ALGORITHMS ==================== -->
+            <section>
+                <h2>Algoritma Hash Forensik</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Algoritma</th>
+                        <th>Panjang</th>
+                        <th>Status</th>
+                        <th>Forensik</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>MD5</strong></td>
+                        <td>128 bit (32 hex)</td>
+                        <td>Deprecated</td>
+                        <td>Legacy, masih dipakai</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>SHA-1</strong></td>
+                        <td>160 bit (40 hex)</td>
+                        <td>Deprecated</td>
+                        <td>Transisi</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>SHA-256</strong></td>
+                        <td>256 bit (64 hex)</td>
+                        <td>Aman ✅</td>
+                        <td>Standar saat ini</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SHA-512</strong></td>
+                        <td>512 bit (128 hex)</td>
+                        <td>Aman ✅</td>
+                        <td>High-security</td>
+                    </tr>
+                </table>
+                <div class="fragment box-info content-margin">
+                    💡 <strong>Rekomendasi:</strong> Gunakan minimal SHA-256 + MD5 untuk backward compatibility
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 25: HASH VERIFICATION PROCESS ==================== -->
+            <section>
+                <h2>Proses Verifikasi Hash</h2>
+                <img src="images/p04-04-hash-verification.png" alt="Hash Verification" class="img-medium">
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Pre-acquisition:</strong> Hitung hash media sumber</li>
+                    <li class="fragment"><strong>Post-acquisition:</strong> Hitung hash forensic image</li>
+                    <li class="fragment"><strong>Comparison:</strong> Kedua hash harus <span class="text-success">IDENTIK</span></li>
+                </ol>
+                <div class="fragment box-danger content-margin">
+                    ⚠️ Hash berbeda = integritas GAGAL → bukti mungkin ditolak
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 26: FTK IMAGER ==================== -->
+            <section>
+                <h2>🛠️ FTK Imager</h2>
+                <p class="medium-text">Tool akuisisi forensik gratis dari Exterro:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Physical dan logical acquisition</li>
+                    <li class="fragment">Memory capture (RAM dump)</li>
+                    <li class="fragment">Format output: Raw, SMART, E01, AFF</li>
+                    <li class="fragment">Hashing otomatis (MD5, SHA-1, SHA-256)</li>
+                    <li class="fragment">Preview evidence tanpa mounting</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 27: FTK IMAGER PROCEDURE ==================== -->
+            <section>
+                <h2>Prosedur Akuisisi FTK Imager</h2>
+                <pre><code class="plaintext">Langkah Akuisisi Physical:
+═══════════════════════════════════════
+1. Koneksikan media via write blocker
+2. File → Create Disk Image
+3. Pilih source: "Physical Drive"
+4. Pilih drive sumber (VERIFIKASI!)
+5. Add destination → format E01
+6. Isi metadata kasus:
+   - Case Number, Evidence Number
+   - Examiner Name, Notes
+7. Centang "Verify images after created"
+8. Klik Start → Tunggu selesai
+9. Verifikasi hash → MATCH ✅
+10. Dokumentasikan hasil</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 28: DD COMMAND ==================== -->
+            <section>
+                <h2>🐧 Akuisisi dengan dd (WSL/Linux)</h2>
+                <pre><code class="bash"># Akuisisi dengan dd
+sudo dd if=/dev/sdb of=/mnt/cases/evidence.dd \
+  bs=4096 conv=noerror,sync status=progress
+
+# Akuisisi dengan dcfldd (+ hashing)
+sudo dcfldd if=/dev/sdb of=/mnt/cases/evidence.dd \
+  bs=4096 hash=md5,sha256 \
+  hashlog=/mnt/cases/evidence.hashlog</code></pre>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>if</code></td>
+                        <td>Input file (sumber)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>of</code></td>
+                        <td>Output file (tujuan)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>bs</code></td>
+                        <td>Block size per operasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>conv=noerror,sync</code></td>
+                        <td>Lanjutkan meski error, padding zero</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 29: HASH VERIFICATION COMMAND ==================== -->
+            <section>
+                <h2>Verifikasi Hash via CLI</h2>
+                <pre><code class="bash"># Hitung hash media sumber
+sudo md5sum /dev/sdb > source_md5.txt
+sudo sha256sum /dev/sdb > source_sha256.txt
+
+# Hitung hash dari image
+md5sum evidence.dd > image_md5.txt
+sha256sum evidence.dd > image_sha256.txt
+
+# Bandingkan hash
+diff source_md5.txt image_md5.txt
+diff source_sha256.txt image_sha256.txt
+
+# Hasil yang diharapkan: TIDAK ADA OUTPUT
+# (berarti file identik)</code></pre>
+                <div class="fragment box-success content-margin">
+                    ✅ <strong>Tidak ada output dari diff</strong> = Hash COCOK = Integritas TERJAGA
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 30: SSD CHALLENGES ==================== -->
+            <section>
+                <h2>⚡ Tantangan SSD</h2>
+                <p class="medium-text">SSD menghadirkan tantangan unik dalam forensik:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tantangan</th>
+                        <th>Dampak Forensik</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>TRIM</strong></td>
+                        <td>Data terhapus tidak dapat di-recover</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>Garbage Collection</strong></td>
+                        <td>Data hilang tanpa perintah OS</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>Wear Leveling</strong></td>
+                        <td>Data berpindah lokasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Over-provisioning</strong></td>
+                        <td>Area tersembunyi tidak accessible</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HW Encryption</strong></td>
+                        <td>Self-encrypting drive mengunci data</td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger content-margin">
+                    ⏱️ <strong>Semakin cepat akuisisi, semakin besar kemungkinan recovery!</strong>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: ENCRYPTION CHALLENGES ==================== -->
+            <section>
+                <h2>🔐 Tantangan Media Terenkripsi</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Contoh</th>
+                        <th>Tantangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Full Disk</td>
+                        <td>BitLocker, VeraCrypt</td>
+                        <td>Seluruh disk terenkripsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>File-level</td>
+                        <td>EFS, AxCrypt</td>
+                        <td>File individual terenkripsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Container</td>
+                        <td>VeraCrypt container</td>
+                        <td>Volume virtual terenkripsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Hardware</td>
+                        <td>SED</td>
+                        <td>Transparan, selalu aktif</td>
+                    </tr>
+                </table>
+                <div class="fragment box-info content-margin">
+                    <strong>Pendekatan:</strong> Live acquisition (key di RAM), password recovery, compulsion legal
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 32: BITLOCKER SCENARIO ==================== -->
+            <section>
+                <h2>💻 Skenario: Laptop BitLocker + Sleep</h2>
+                <div class="box-danger">
+                    <strong>Situasi:</strong> Laptop militer, SSD NVMe, BitLocker aktif, sleep mode
+                </div>
+                <ol class="medium-text">
+                    <li class="fragment"><strong class="warning">JANGAN MATIKAN!</strong> BitLocker key di RAM</li>
+                    <li class="fragment">🧠 <strong>Akuisisi RAM</strong> → jalankan RAM Capturer dari USB</li>
+                    <li class="fragment">🔑 <strong>Ekstraksi key</strong> → Volatility plugin <code>bitlocker</code></li>
+                    <li class="fragment">💽 <strong>Physical acquisition</strong> → dekripsi dengan FVEK</li>
+                    <li class="fragment">📝 <strong>Dokumentasi</strong> lengkap semua langkah</li>
+                </ol>
+                <p class="fragment small box-warning">
+                    Mematikan laptop = key hilang = data TIDAK BISA DIAKSES
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 33: RAID CHALLENGES ==================== -->
+            <section>
+                <h2>💾 Tantangan RAID</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Level RAID</th>
+                        <th>Konfigurasi</th>
+                        <th>Tantangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>RAID 0</td>
+                        <td>Striping</td>
+                        <td>Data tersebar, semua disk diperlukan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>RAID 1</td>
+                        <td>Mirroring</td>
+                        <td>Identifikasi disk terbaru</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>RAID 5</td>
+                        <td>Stripe + parity</td>
+                        <td>Strip size, disk order, parity rotation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>RAID 10</td>
+                        <td>Mirror + stripe</td>
+                        <td>Kompleksitas tinggi</td>
+                    </tr>
+                </table>
+                <div class="fragment box-info content-margin">
+                    <strong>Pendekatan:</strong> Image melalui RAID controller ATAU image individual + rekonstruksi
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 34: REMOTE ACQUISITION ==================== -->
+            <section>
+                <h2>🌐 Remote Acquisition</h2>
+                <div class="box-definition">
+                    <strong>Remote Acquisition:</strong> Akuisisi data forensik dari sistem di lokasi berbeda melalui jaringan.
+                </div>
+                <p class="medium-text fragment">Penting dalam konteks militer:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Aset tersebar di Kodam, Lantamal, Lanud</li>
+                    <li class="fragment">Tim forensik terbatas (tidak selalu hadir fisik)</li>
+                    <li class="fragment">Respon cepat sebelum bukti hilang</li>
+                </ul>
+                <div class="fragment">
+                    <table class="small content-margin">
+                        <tr>
+                            <th>Metode</th>
+                            <th>Tools</th>
+                        </tr>
+                        <tr>
+                            <td>Agent-based</td>
+                            <td>F-Response, EnCase Enterprise</td>
+                        </tr>
+                        <tr>
+                            <td>Agentless</td>
+                            <td>PowerShell Remoting, SSH</td>
+                        </tr>
+                        <tr>
+                            <td>Cloud API</td>
+                            <td>AWS CLI, Azure Tools</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 35: ACQUISITION LOG ==================== -->
+            <section>
+                <h2>📝 Acquisition Log</h2>
+                <pre><code class="plaintext">╔════════════════════════════════════╗
+║    FORENSIC ACQUISITION LOG        ║
+╠════════════════════════════════════╣
+║ Case Number  : [Nomor Kasus]       ║
+║ Evidence Item: [Nomor Bukti]       ║
+║ Date/Time    : [Tanggal & Waktu]   ║
+║ Examiner     : [Nama & NIP]        ║
+║                                    ║
+║ SOURCE: [Device Type, Model, S/N]  ║
+║ METHOD: [Physical/Logical/Memory]  ║
+║ TOOL  : [Nama Tool + Versi]       ║
+║ FORMAT: [Raw/E01/AFF4]            ║
+║                                    ║
+║ HASH VERIFICATION:                 ║
+║ Source SHA-256: [hash]             ║
+║ Image  SHA-256: [hash]             ║
+║ Match: [YES/NO]                    ║
+╚════════════════════════════════════╝</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 36: MILITARY TRIAGE SCENARIO ==================== -->
+            <section>
+                <h2>🎖️ Skenario: Operasi Triage Militer</h2>
+                <div class="box-danger">
+                    <strong>Situasi:</strong> 10 perangkat, waktu 2 jam, lokasi harus dikosongkan
+                </div>
+                <table class="small">
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Aktivitas</th>
+                        <th>Target</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0-10 min</td>
+                        <td>Dokumentasi foto semua perangkat</td>
+                        <td>Semua</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>10-25 min</td>
+                        <td>RAM dump laptop menyala</td>
+                        <td>Volatile data</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>25-55 min</td>
+                        <td>Image USB/SD Card (kecil, cepat)</td>
+                        <td>Removable media</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>55-90 min</td>
+                        <td>Physical image external HDD</td>
+                        <td>Storage utama</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>90-120 min</td>
+                        <td>Label dan packaging</td>
+                        <td>Chain of custody</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-warning">Perangkat yang tidak sempat di-image → seize fisik untuk lab</p>
+            </section>
+
+            <!-- ==================== SLIDE 37: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>Apa fungsi utama write blocker dalam akuisisi forensik?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Mempercepat proses akuisisi</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Mengkompresi data forensik</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. Mencegah modifikasi data pada media bukti ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Mengenkripsi forensic image</div>
+            </section>
+
+            <!-- ==================== SLIDE 38: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>Format image forensik yang mendukung kompresi, metadata, DAN enkripsi adalah?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Raw (dd)</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. E01 (EnCase)</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. AFF4 ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. VMDK</div>
+                <p class="fragment small box-info">💡 AFF4 adalah satu-satunya format yang mendukung ketiga fitur sekaligus!</p>
+            </section>
+
+            <!-- ==================== SLIDE 39: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Laptop dengan BitLocker aktif ditemukan dalam sleep mode. Langkah PERTAMA yang harus dilakukan?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Matikan laptop dan cabut hard disk</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. Akuisisi RAM untuk mendapatkan encryption key ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Copy file penting ke USB drive</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Jalankan antivirus scan</div>
+                <p class="fragment small box-danger">⚠️ Mematikan laptop = BitLocker key HILANG = data terkunci permanen!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: QUIZ 4 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 4:</strong></p>
+                <p>Mengapa SSD lebih sulit untuk data recovery dibanding HDD?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. SSD memiliki kapasitas lebih besar</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. TRIM dan garbage collection menghapus data secara otomatis ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. SSD tidak mendukung format E01</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. SSD menggunakan file system yang berbeda</div>
+            </section>
+
+            <!-- ==================== SLIDE 41: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Akuisisi Forensik</strong></td>
+                        <td>Salinan bitwise + verifikasi + dokumentasi</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Write Blocker</strong></td>
+                        <td>Mencegah modifikasi bukti (HW > SW)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3 Metode</strong></td>
+                        <td>Physical (100%), Logical (file), Sparse (area)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Format Image</strong></td>
+                        <td>Raw (universal), E01 (standar), AFF4 (modern)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory Forensics</strong></td>
+                        <td>RAM dump → encryption keys, malware, connections</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hash</strong></td>
+                        <td>SHA-256 (standar) + MD5 (backward compat)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tantangan</strong></td>
+                        <td>SSD (TRIM), Enkripsi (key di RAM), RAID</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 42: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 05: Forensik Windows I — Volatile Data dan Artefak Sistem</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Analisis volatile data dengan Volatility 3</li>
+                    <li class="fragment">Windows Event Logs forensics</li>
+                    <li class="fragment">Prefetch files dan evidence of execution</li>
+                    <li class="fragment">Artefak sistem Windows untuk investigasi</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 43: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. <strong>Chapter 5-6</strong></li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (6th Ed.). Cengage. Chapter 3.</li>
+                    <li>Nikkel, B. (2021). <em>Practical Forensic Imaging</em> (2nd Ed.). No Starch Press. Chapter 1-3, 7-8.</li>
+                    <li>RFC 3227: Guidelines for Evidence Collection and Archiving</li>
+                    <li>NIST SP 800-86: Guide to Integrating Forensic Techniques</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 44: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 04: Akuisisi dan Duplikasi Data Forensik</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
