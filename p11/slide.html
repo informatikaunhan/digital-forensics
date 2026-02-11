@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 11: Forensik Malware</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 11</h3>
+                <h2>Forensik Malware</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Mengklasifikasikan jenis malware dan karakteristiknya</li>
+                    <li class="fragment">Menjelaskan malware delivery mechanisms dan infection vectors</li>
+                    <li class="fragment">Melakukan static analysis terhadap file mencurigakan</li>
+                    <li class="fragment">Memahami prinsip dynamic analysis dan sandbox environments</li>
+                    <li class="fragment">Mengidentifikasi persistence mechanisms malware</li>
+                    <li class="fragment">Menganalisis C2 communication dan beaconing patterns</li>
+                    <li class="fragment">Menerapkan memory forensics untuk deteksi malware</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Pengantar Forensik Malware</li>
+                            <li>Klasifikasi Malware</li>
+                            <li>Delivery Mechanisms</li>
+                            <li>Static Analysis</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>Dynamic Analysis</li>
+                            <li>Persistence Mechanisms</li>
+                            <li>C2 Communication & DGA</li>
+                            <li>Memory Forensics for Malware</li>
+                            <li>IOC & MITRE ATT&CK</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: DEFINITION ==================== -->
+            <section>
+                <h2>🔬 Apa itu Forensik Malware?</h2>
+                <div class="box-definition">
+                    <strong>Forensik Malware</strong> adalah cabang forensik digital yang berfokus pada identifikasi, analisis, dan dokumentasi perangkat lunak berbahaya untuk memahami fungsi, asal-usul, dampak, dan atribusi malware dalam konteks investigasi insiden keamanan.
+                </div>
+                <p class="fragment content-margin">Berbeda dari analisis malware murni:</p>
+                <ul class="medium-text">
+                    <li class="fragment">🔗 Chain of custody harus dijaga</li>
+                    <li class="fragment">📝 Dokumentasi harus formal dan admissible</li>
+                    <li class="fragment">⚖️ Output mendukung proses hukum/tribunal militer</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 5: MALWARE vs FORENSIK MALWARE ==================== -->
+            <section>
+                <h2>Analisis vs Forensik Malware</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Analisis Malware</th>
+                        <th>Forensik Malware</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Tujuan</strong></td>
+                        <td>Memahami fungsi malware</td>
+                        <td>Mendukung investigasi hukum</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Fokus</strong></td>
+                        <td>Reverse engineering</td>
+                        <td>Chain of custody & dokumentasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Output</strong></td>
+                        <td>Technical report</td>
+                        <td>Laporan forensik admissible</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Standar</strong></td>
+                        <td>Best practices industri</td>
+                        <td>Standar forensik & prosedur legal</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: MILITARY CONTEXT ==================== -->
+            <section>
+                <h2>🎖️ Ancaman Malware bagi Pertahanan</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Aktor</th>
+                        <th>Target Militer</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Commodity</strong></td>
+                        <td>Kriminal umum</td>
+                        <td>PC individu personel</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Targeted</strong></td>
+                        <td>Kelompok terorganisir</td>
+                        <td>Jaringan unit tertentu</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>APT</strong></td>
+                        <td>State-sponsored</td>
+                        <td>Infrastruktur kritis pertahanan</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>Cyber Weapon</strong></td>
+                        <td>Negara</td>
+                        <td>Sistem kontrol industri militer</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 7: MALWARE CLASSIFICATION ==================== -->
+            <section>
+                <h2>🦠 Klasifikasi Malware</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>🔴 Virus</strong><br>
+                        <span class="small">Memerlukan host file, parasitic behavior, perlu interaksi user</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🟠 Worm</strong><br>
+                        <span class="small">Self-propagating, standalone, menyebar via jaringan otomatis</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🟡 Trojan</strong><br>
+                        <span class="small">Menyamar sebagai software legitimate (RAT, keylogger, dropper)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🔵 Ransomware</strong><br>
+                        <span class="small">Mengenkripsi file, meminta tebusan, double extortion</span>
+                    </div>
+                </div>
+                <div class="step-box fragment content-margin">
+                    <strong>⚫ APT (Advanced Persistent Threat)</strong> — Kampanye serangan terkoordinasi, multi-stage, state-sponsored
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 8: VIRUS vs WORM ==================== -->
+            <section>
+                <h2>Virus vs Worm</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Virus</th>
+                        <th>Worm</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Host File</strong></td>
+                        <td>Memerlukan host</td>
+                        <td>Standalone</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Penyebaran</strong></td>
+                        <td>Via file terinfeksi</td>
+                        <td>Self-propagating via jaringan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Interaksi User</strong></td>
+                        <td>Perlu menjalankan file</td>
+                        <td>Otomatis tanpa interaksi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Artefak Disk</strong></td>
+                        <td>Modified PE files</td>
+                        <td>Standalone exe di temp/system</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Artefak Network</strong></td>
+                        <td>Minimal</td>
+                        <td>Scanning activity, exploit traffic</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: TROJAN TYPES ==================== -->
+            <section>
+                <h2>🐴 Jenis-jenis Trojan</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Fungsi</th>
+                        <th>Indikator Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>RAT</strong></td>
+                        <td>Remote control penuh</td>
+                        <td>Koneksi outbound persisten</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Banking Trojan</strong></td>
+                        <td>Mencuri kredensial</td>
+                        <td>Browser hooks, form grabbing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Downloader</strong></td>
+                        <td>Mengunduh payload</td>
+                        <td>HTTP requests ke domain suspicious</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Dropper</strong></td>
+                        <td>Menyimpan & execute payload</td>
+                        <td>File creation di temp dirs</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Keylogger</strong></td>
+                        <td>Merekam keystroke</td>
+                        <td>Hidden log files, keyboard API hooks</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 10: RANSOMWARE ==================== -->
+            <section>
+                <h2>🔒 Ransomware</h2>
+                <div class="box-definition">
+                    Malware yang mengenkripsi file korban dan meminta tebusan untuk mendekripsinya. Ancaman signifikan terhadap infrastruktur pertahanan.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div>
+                        <h4>Tipe Ransomware</h4>
+                        <ul class="small">
+                            <li class="fragment"><strong>Crypto</strong> — Enkripsi file (AES-256)</li>
+                            <li class="fragment"><strong>Locker</strong> — Kunci akses OS</li>
+                            <li class="fragment"><strong>Double Extortion</strong> — Enkripsi + exfil</li>
+                            <li class="fragment"><strong>RaaS</strong> — Ransomware-as-a-Service</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Artefak Forensik</h4>
+                        <ul class="small">
+                            <li class="fragment">📄 Ransom note files</li>
+                            <li class="fragment">🔐 File terenkripsi (.encrypted)</li>
+                            <li class="fragment">🗝️ Registry persistence entries</li>
+                            <li class="fragment">🌐 Network traffic ke C2</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 11: APT KILL CHAIN ==================== -->
+            <section>
+                <h2>⚔️ APT Kill Chain</h2>
+                <p class="medium-text">Kampanye serangan multi-stage, terkoordinasi, state-sponsored</p>
+                <div class="medium-text content-margin">
+                    <div class="step-box fragment">1️⃣ <strong>Reconnaissance</strong> — Pengumpulan informasi target</div>
+                    <div class="step-box fragment">2️⃣ <strong>Weaponization</strong> — Membuat exploit/malware</div>
+                    <div class="step-box fragment">3️⃣ <strong>Delivery</strong> — Phishing, watering hole, USB</div>
+                    <div class="step-box fragment">4️⃣ <strong>Exploitation</strong> — Mengeksploitasi vulnerability</div>
+                    <div class="step-box fragment">5️⃣ <strong>Installation</strong> — Memasang backdoor/RAT</div>
+                    <div class="step-box fragment">6️⃣ <strong>Command & Control</strong> — Koneksi ke C2 server</div>
+                    <div class="step-box fragment">7️⃣ <strong>Actions on Objectives</strong> — Exfiltration, sabotage</div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 12: DELIVERY MECHANISMS ==================== -->
+            <section>
+                <h2>📨 Malware Delivery Mechanisms</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Metode</th>
+                        <th>Deskripsi</th>
+                        <th>Artefak Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Phishing Email</strong></td>
+                        <td>Attachment/link malicious</td>
+                        <td>Email headers, attachment metadata</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Drive-by Download</strong></td>
+                        <td>Exploit browser saat browsing</td>
+                        <td>Browser cache, download history</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>USB/Removable</strong></td>
+                        <td>Penyebaran via USB drive</td>
+                        <td>Autorun.inf, USB registry history</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Watering Hole</strong></td>
+                        <td>Kompromi website target</td>
+                        <td>Browser history, DNS logs</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Supply Chain</strong></td>
+                        <td>Kompromi software update</td>
+                        <td>Installation logs, hash mismatch</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 13: STATIC ANALYSIS INTRO ==================== -->
+            <section>
+                <h2>🔍 Static Analysis</h2>
+                <div class="box-definition">
+                    Teknik analisis malware yang dilakukan <strong>tanpa mengeksekusi</strong> file malware. Fokus pada pemeriksaan properti file, strings, imports, dan struktur binary.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div>
+                        <h4 class="text-success">✅ Keuntungan</h4>
+                        <ul class="small">
+                            <li class="fragment">Aman — malware tidak dijalankan</li>
+                            <li class="fragment">Gambaran menyeluruh kemampuan</li>
+                            <li class="fragment">Identifikasi URLs, IPs, strings</li>
+                            <li class="fragment">Library & API calls</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="warning">⚠️ Keterbatasan</h4>
+                        <ul class="small">
+                            <li class="fragment">Dikalahkan oleh obfuscation</li>
+                            <li class="fragment">Tidak melihat runtime behavior</li>
+                            <li class="fragment">Encrypted strings tersembunyi</li>
+                            <li class="fragment">Polymorphic malware</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: FILE PROPERTIES ==================== -->
+            <section>
+                <h2>📋 File Properties Analysis</h2>
+                <p class="medium-text">Langkah pertama: periksa properti dasar file</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Properti</th>
+                        <th>Tool</th>
+                        <th>Tujuan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Hash</strong></td>
+                        <td>HashMyFiles, PEStudio</td>
+                        <td>Identifikasi unik, VirusTotal lookup</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Type</strong></td>
+                        <td>file command, TrID</td>
+                        <td>Verifikasi tipe vs ekstensi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Size</strong></td>
+                        <td>Explorer, stat</td>
+                        <td>Perbandingan ukuran normal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Timestamps</strong></td>
+                        <td>PEStudio, exiftool</td>
+                        <td>Creation, compile time</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Digital Signature</strong></td>
+                        <td>sigcheck, PEStudio</td>
+                        <td>Verifikasi sertifikat</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 15: PESTUDIO ==================== -->
+            <section>
+                <h2>🛠️ Tool: PEStudio</h2>
+                <p class="medium-text">Tool gratis untuk analisis file PE (Portable Executable) Windows</p>
+                <div class="box-info content-margin">
+                    <p class="medium-text"><strong>PEStudio menampilkan:</strong></p>
+                    <ul class="small">
+                        <li>File indicators (hash, entropy)</li>
+                        <li>Imported libraries dan functions</li>
+                        <li>Strings yang terdeteksi</li>
+                        <li>Sections analysis (entropy per section)</li>
+                        <li>Resources (embedded files, icons)</li>
+                        <li>Certificate verification</li>
+                        <li>VirusTotal lookup</li>
+                    </ul>
+                </div>
+                <p class="small fragment content-margin">🔗 Download: <a href="https://www.winitor.com/">www.winitor.com</a></p>
+            </section>
+
+            <!-- ==================== SLIDE 16: STRINGS ANALYSIS ==================== -->
+            <section>
+                <h2>📝 Strings Analysis</h2>
+                <div class="box-definition">
+                    Proses mengekstrak teks readable dari binary file. Dapat mengungkap URLs, IP addresses, registry keys, dan informasi penting lainnya.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Contoh String</th>
+                        <th>Signifikansi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>URLs/IPs</strong></td>
+                        <td><code>http://evil.com/gate.php</code></td>
+                        <td>C2 infrastructure</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Registry</strong></td>
+                        <td><code>...\CurrentVersion\Run</code></td>
+                        <td>Persistence</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>API Names</strong></td>
+                        <td><code>CreateRemoteThread</code></td>
+                        <td>Code injection</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Commands</strong></td>
+                        <td><code>cmd.exe /c</code></td>
+                        <td>Execution methods</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Mutex</strong></td>
+                        <td><code>Global\MalwareMutex</code></td>
+                        <td>Instance control</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 17: FLOSS TOOL ==================== -->
+            <section>
+                <h2>🛠️ Tool: FLOSS</h2>
+                <p class="medium-text">FireEye Labs Obfuscated String Solver — mengekstrak string biasa dan obfuscated</p>
+                <pre><code class="language-bash"># Ekstraksi string dasar
+floss malware_sample.exe
+
+# Hanya string yang di-decode (obfuscated)
+floss --only decoded malware_sample.exe
+
+# Output ke file
+floss malware_sample.exe > strings_output.txt
+
+# Dengan minimum length
+floss -n 8 malware_sample.exe</code></pre>
+                <p class="small fragment content-margin">🔗 <a href="https://github.com/mandiant/flare-floss">github.com/mandiant/flare-floss</a></p>
+            </section>
+
+            <!-- ==================== SLIDE 18: PE FILE STRUCTURE ==================== -->
+            <section>
+                <h2>📦 Struktur File PE</h2>
+                <pre><code class="language-text">┌─────────────────────────────┐
+│     DOS Header (MZ)         │  ← "MZ" signature (0x4D5A)
+├─────────────────────────────┤
+│     DOS Stub                │
+├─────────────────────────────┤
+│     PE Signature            │  ← "PE\0\0" (0x50450000)
+├─────────────────────────────┤
+│     COFF File Header        │  ← Machine type, sections
+├─────────────────────────────┤
+│     Optional Header         │  ← Entry point, image base
+├─────────────────────────────┤
+│     Section Headers         │
+├─────────────────────────────┤
+│     .text (code)            │
+│     .data (initialized)     │
+│     .rdata (read-only)      │
+│     .rsrc (resources)       │
+└─────────────────────────────┘</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 19: ENTROPY & PACKING ==================== -->
+            <section>
+                <h2>📊 Entropy dan Packing</h2>
+                <div class="box-definition">
+                    <strong>Entropy</strong> mengukur keacakan data (0-8). Entropy tinggi pada section executable = packed/encrypted.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Entropy</th>
+                        <th>Interpretasi</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>0 – 4</td>
+                        <td>Normal text/data</td>
+                        <td>Source code, dokumen</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>4 – 6</td>
+                        <td>Normal executable</td>
+                        <td>Compiled binary</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>6 – 7</td>
+                        <td>Compressed</td>
+                        <td>ZIP, legitimate packed</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>7 – 8</td>
+                        <td class="warning">Encrypted/Packed</td>
+                        <td>Malware packed!</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: IMPORT ANALYSIS ==================== -->
+            <section>
+                <h2>📥 Import Analysis — API Mencurigakan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>API Functions</th>
+                        <th>Indikasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Process Injection</strong></td>
+                        <td><code>CreateRemoteThread</code>, <code>VirtualAllocEx</code></td>
+                        <td>Injeksi kode ke proses lain</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Keylogging</strong></td>
+                        <td><code>SetWindowsHookEx</code>, <code>GetAsyncKeyState</code></td>
+                        <td>Pencatatan keystroke</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Network</strong></td>
+                        <td><code>InternetOpen</code>, <code>HttpSendRequest</code></td>
+                        <td>Komunikasi jaringan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Crypto</strong></td>
+                        <td><code>CryptEncrypt</code>, <code>CryptGenKey</code></td>
+                        <td>Enkripsi (ransomware)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Anti-Debug</strong></td>
+                        <td><code>IsDebuggerPresent</code></td>
+                        <td>Deteksi analisis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 21: DYNAMIC ANALYSIS INTRO ==================== -->
+            <section>
+                <h2>⚡ Dynamic Analysis</h2>
+                <div class="box-definition">
+                    Teknik analisis dengan <strong>mengeksekusi malware</strong> dalam lingkungan terkontrol (sandbox) sambil memantau perilaku real-time.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Static</th>
+                        <th>Dynamic</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Eksekusi</strong></td>
+                        <td>Tidak</td>
+                        <td>Ya, dalam sandbox</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Obfuscation</strong></td>
+                        <td>Sulit menembus</td>
+                        <td>Bypass packing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Coverage</strong></td>
+                        <td>Semua kode (incl. dead)</td>
+                        <td>Hanya kode yang tereksekusi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Tools</strong></td>
+                        <td>PEStudio, FLOSS</td>
+                        <td>ProcMon, Wireshark, FakeNet</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 22: SANDBOX SETUP ==================== -->
+            <section>
+                <h2>🏗️ Sandbox Environment</h2>
+                <pre><code class="language-text">┌────────────────────────────────────────────┐
+│             HOST MACHINE                    │
+│  ┌──────────────────────────────────────┐  │
+│  │       ANALYSIS VM (Sandbox)          │  │
+│  │                                       │  │
+│  │  [ProcMon] [ProcExp] [Wireshark]     │  │
+│  │  [FakeNet] [Regshot] [Sysmon]        │  │
+│  │                                       │  │
+│  │  [Malware Sample] ← Execute here     │  │
+│  └──────────────────────────────────────┘  │
+│                                             │
+│  Network: Host-only / Isolated              │
+│  Snapshot: Taken BEFORE execution           │
+└────────────────────────────────────────────┘</code></pre>
+                <p class="small fragment">⚠️ <strong>Penting:</strong> Ambil snapshot VM sebelum eksekusi malware!</p>
+            </section>
+
+            <!-- ==================== SLIDE 23: PROCESS MONITOR ==================== -->
+            <section>
+                <h2>🛠️ Process Monitor (ProcMon)</h2>
+                <p class="medium-text">Memantau file system, registry, dan process activity secara real-time</p>
+                <pre><code class="language-text">Filter yang berguna:
+─────────────────────────────────────────────────
+Process Name  is  malware.exe       → Aktivitas malware
+Operation     is  WriteFile         → File creation
+Operation     is  RegSetValue       → Registry changes
+Path       contains  \Run           → Persistence detection
+Path       contains  \Temp          → File drop location</code></pre>
+                <pre class="fragment"><code class="language-text">Contoh output persistence:
+Time      Process       Operation     Path
+10:45:01  malware.exe   RegSetValue   HKLM\...\Run\svchost
+10:45:02  malware.exe   CreateFile    C:\Users\...\Temp\payload.exe</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 24: FAKENET-NG ==================== -->
+            <section>
+                <h2>🛠️ FakeNet-NG</h2>
+                <div class="box-definition">
+                    Tool dari Mandiant yang mensimulasikan layanan jaringan (DNS, HTTP, SMTP) sehingga malware "berpikir" sudah terhubung ke internet.
+                </div>
+                <pre class="content-margin"><code class="language-text">Contoh output FakeNet-NG:
+──────────────────────────────────────────────────
+[DNS]  malware.exe query: evil-c2.com → faked
+[HTTP] malware.exe GET /gate.php?id=VICTIM001
+[HTTP] malware.exe POST /exfil.php (4096 bytes)</code></pre>
+                <p class="small fragment">✅ Analisis network behavior tanpa koneksi internet nyata</p>
+                <p class="small fragment">🔗 <a href="https://github.com/mandiant/flare-fakenet-ng">github.com/mandiant/flare-fakenet-ng</a></p>
+            </section>
+
+            <!-- ==================== SLIDE 25: PERSISTENCE MECHANISMS ==================== -->
+            <section>
+                <h2>🔗 Persistence Mechanisms</h2>
+                <div class="box-definition">
+                    Teknik malware untuk bertahan di sistem meskipun setelah reboot. Artefak persistence paling sering ditemukan dalam investigasi.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Mekanisme</th>
+                        <th>Lokasi / Method</th>
+                        <th>Timing</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Registry Run</strong></td>
+                        <td><code>HKLM\...\Run</code></td>
+                        <td>User login</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Scheduled Task</strong></td>
+                        <td>Task Scheduler</td>
+                        <td>Custom trigger</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Services</strong></td>
+                        <td><code>HKLM\SYSTEM\...\Services</code></td>
+                        <td>System boot</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DLL Hijacking</strong></td>
+                        <td>DLL search order abuse</td>
+                        <td>App launch</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WMI Subscription</strong></td>
+                        <td>WMI repository</td>
+                        <td>Event-based</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Startup Folder</strong></td>
+                        <td><code>%AppData%\...\Startup</code></td>
+                        <td>User login</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 26: REGISTRY PERSISTENCE DETAIL ==================== -->
+            <section>
+                <h2>📋 Registry-Based Persistence</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Registry Key</th>
+                        <th>Scope</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>HKLM\...\CurrentVersion\Run</code></td>
+                        <td>All users, setiap login</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>HKCU\...\CurrentVersion\Run</code></td>
+                        <td>Current user, setiap login</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>HKLM\...\RunOnce</code></td>
+                        <td>All users, sekali saja</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>HKLM\SYSTEM\...\Services</code></td>
+                        <td>System boot</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>...\Winlogon\Shell</code></td>
+                        <td>Login replacement</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>...\Winlogon\Userinit</code></td>
+                        <td>Login initialization</td>
+                    </tr>
+                </table>
+                <p class="small fragment content-margin">⚠️ Malware sophisticated menggunakan <strong>multiple persistence</strong> sebagai redundancy</p>
+            </section>
+
+            <!-- ==================== SLIDE 27: C2 COMMUNICATION ==================== -->
+            <section>
+                <h2>📡 Command and Control (C2)</h2>
+                <div class="box-definition">
+                    Infrastruktur komunikasi untuk menerima perintah dari operator dan mengirimkan data yang dicuri.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Tipe C2</th>
+                        <th>Deskripsi</th>
+                        <th>Deteksi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HTTP/HTTPS</strong></td>
+                        <td>Web protocols</td>
+                        <td>Proxy logs, HTTP anomali</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DNS Tunneling</strong></td>
+                        <td>Data via DNS queries</td>
+                        <td>Anomali DNS, panjang query</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Social Media</strong></td>
+                        <td>Perintah di platform sosial</td>
+                        <td>API traffic anomali</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Custom Protocol</strong></td>
+                        <td>Protokol komunikasi khusus</td>
+                        <td>Unusual port, protocol anomaly</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 28: BEACONING ==================== -->
+            <section>
+                <h2>📶 Beaconing Pattern</h2>
+                <div class="box-definition">
+                    Pola komunikasi periodik malware ke C2 server untuk memeriksa perintah baru.
+                </div>
+                <pre class="content-margin"><code class="language-text">Contoh Beacon Pattern:
+[10:00:00] GET /check?id=abc123 → 200 OK (no cmd)
+[10:05:00] GET /check?id=abc123 → 200 OK (no cmd)
+[10:10:00] GET /check?id=abc123 → 200 OK {cmd: upload}
+[10:15:00] POST /upload (encrypted data)
+[10:20:00] GET /check?id=abc123 → 200 OK (no cmd)</code></pre>
+                <div class="fragment content-margin">
+                    <p class="medium-text"><strong>Jitter</strong> — Variasi interval untuk hindari deteksi:</p>
+                    <pre><code class="language-text">Tanpa jitter:  300s, 300s, 300s ← Mudah terdeteksi
+Dengan jitter:  285s, 312s, 298s ← Sulit terdeteksi</code></pre>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 29: DGA ==================== -->
+            <section>
+                <h2>🔄 Domain Generation Algorithm (DGA)</h2>
+                <div class="box-definition">
+                    Teknik di mana malware menghasilkan nama domain secara algoritmik untuk C2. Hanya operator yang tahu domain mana yang aktif.
+                </div>
+                <pre class="content-margin"><code class="language-python"># Contoh sederhana DGA (edukasi)
+def generate_domain(date, seed="malware_seed"):
+    date_str = date.strftime("%Y%m%d")
+    hash_input = f"{date_str}{seed}"
+    hash_result = hashlib.md5(hash_input.encode()).hexdigest()
+    return hash_result[:12] + ".com"
+# Berbeda setiap hari!</code></pre>
+                <div class="fragment content-margin">
+                    <p class="medium-text"><strong>Deteksi DGA:</strong></p>
+                    <ul class="small">
+                        <li>Domain entropy tinggi (karakter acak)</li>
+                        <li>Banyak NXDOMAIN responses</li>
+                        <li>Volume DNS queries tidak wajar</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 30: DNS TUNNELING ==================== -->
+            <section>
+                <h2>🔀 DNS Tunneling</h2>
+                <pre><code class="language-text">Cara Kerja:
+Malware → DNS Query → DNS Server → C2 Server
+                          ↓
+C2 Server → DNS Response → DNS Server → Malware
+
+Contoh encoding data dalam DNS query:
+Normal:  www.google.com
+Tunnel:  SGVsbG8gV29ybGQ=.data.evil-c2.com
+         ^^^^^^^^^^^^^^^^^^^
+         Base64 encoded stolen data</code></pre>
+                <div class="fragment content-margin">
+                    <p class="medium-text"><strong>Deteksi DNS Tunneling:</strong></p>
+                    <ul class="small">
+                        <li>Subdomain sangat panjang</li>
+                        <li>Volume query tidak normal</li>
+                        <li>TXT records berlebihan</li>
+                        <li>Payload DNS response besar</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: MEMORY FORENSICS FOR MALWARE ==================== -->
+            <section>
+                <h2>🧠 Memory Forensics untuk Malware</h2>
+                <div class="box-info">
+                    <p class="medium-text">Memory forensics kritis karena:</p>
+                </div>
+                <ul class="medium-text content-margin">
+                    <li class="fragment">🔓 <strong>Unpacked Code</strong> — Malware packed ter-unpack di memori</li>
+                    <li class="fragment">👻 <strong>Fileless Malware</strong> — Hanya berjalan di memori</li>
+                    <li class="fragment">🔑 <strong>Encryption Keys</strong> — Kunci ransomware mungkin ada</li>
+                    <li class="fragment">💉 <strong>Injected Code</strong> — Hanya terlihat di memori</li>
+                    <li class="fragment">🌐 <strong>Network Connections</strong> — Koneksi aktif ke C2</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 32: VOLATILITY PLUGINS ==================== -->
+            <section>
+                <h2>🛠️ Volatility 3 — Malware Plugins</h2>
+                <table class="small">
+                    <tr>
+                        <th>Plugin</th>
+                        <th>Fungsi</th>
+                        <th>Deteksi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.pslist</code></td>
+                        <td>Daftar proses</td>
+                        <td>Nama proses mencurigakan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.pstree</code></td>
+                        <td>Process tree</td>
+                        <td>Parent-child anomali</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><code>windows.malfind</code></td>
+                        <td>Injected code</td>
+                        <td>Code injection & hollowing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.cmdline</code></td>
+                        <td>Command line args</td>
+                        <td>Command mencurigakan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.netscan</code></td>
+                        <td>Network connections</td>
+                        <td>C2 connections</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>windows.svcscan</code></td>
+                        <td>Windows services</td>
+                        <td>Malicious services</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 33: PROCESS TREE ANOMALY ==================== -->
+            <section>
+                <h2>🌳 Deteksi Anomali Process Tree</h2>
+                <pre><code class="language-text">PID   PPID  Name            Analisis
+───── ───── ─────────────── ─────────────────────
+748   720   services.exe    ✅ Normal
+800   748   svchost.exe     ✅ Normal (parent: services)
+1200  2840  svchost.exe     ❌ ANOMALI! (parent: explorer)
+2840  1024  explorer.exe    ✅ Normal
+4500  2840  WINWORD.EXE     ✅ Normal
+4600  4500  cmd.exe         ❌ ANOMALI! (Word→cmd)
+4700  4600  powershell.exe  ❌ ANOMALI! (cmd→PS)</code></pre>
+                <div class="fragment content-margin">
+                    <p class="medium-text warning">Attack Chain terdeteksi:</p>
+                    <p class="small"><code>WINWORD.EXE → cmd.exe → powershell.exe</code> = <strong>Macro malware!</strong></p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 34: ANTI-ANALYSIS TECHNIQUES ==================== -->
+            <section>
+                <h2>🛡️ Anti-Analysis Techniques</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Teknik</th>
+                        <th>Deskripsi</th>
+                        <th>Counter-Measure</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Packing</strong></td>
+                        <td>Kompresi/enkripsi executable</td>
+                        <td>UPX unpack, manual unpack</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Anti-Debug</strong></td>
+                        <td><code>IsDebuggerPresent</code></td>
+                        <td>Patch API return value</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Anti-VM</strong></td>
+                        <td>Deteksi VMware/VBox</td>
+                        <td>Remove VM artifacts</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Timing Check</strong></td>
+                        <td><code>RDTSC</code>, <code>GetTickCount</code></td>
+                        <td>Adjust time values</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Environment</strong></td>
+                        <td>Cek jumlah file, RAM, user activity</td>
+                        <td>Buat VM realistis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: PROCESS INJECTION TYPES ==================== -->
+            <section>
+                <h2>💉 Process Injection vs Hollowing</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4>Process Injection</h4>
+                        <ul class="small">
+                            <li>Menyisipkan kode ke proses running</li>
+                            <li>Original code tetap ada</li>
+                            <li>API: OpenProcess → VirtualAllocEx → WriteProcessMemory → CreateRemoteThread</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Process Hollowing</h4>
+                        <ul class="small">
+                            <li>Mengganti kode proses legitimate</li>
+                            <li>Proses dibuat suspended</li>
+                            <li>API: CreateProcess(SUSPENDED) → NtUnmapViewOfSection → WriteProcessMemory → ResumeThread</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box-warning fragment content-margin">
+                    <p class="small"><strong>Deteksi:</strong> <code>windows.malfind</code> pada Volatility untuk RWX memory pages dan image mismatch</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 36: IOC ==================== -->
+            <section>
+                <h2>🎯 Indicators of Compromise (IOC)</h2>
+                <div class="box-definition">
+                    Artefak forensik yang mengindikasikan sistem telah terkompromi. Digunakan untuk deteksi, hunting, dan sharing.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Tipe IOC</th>
+                        <th>Contoh</th>
+                        <th>Durasi Validitas</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Hash</strong></td>
+                        <td>SHA256 malware binary</td>
+                        <td>Pendek</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>IP Address</strong></td>
+                        <td>C2 server IP</td>
+                        <td>Menengah</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Domain</strong></td>
+                        <td>C2 domain name</td>
+                        <td>Menengah</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>YARA Rule</strong></td>
+                        <td>Pattern matching rule</td>
+                        <td>Panjang</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>TTPs</strong></td>
+                        <td>MITRE ATT&CK technique</td>
+                        <td>Sangat panjang</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 37: MITRE ATT&CK ==================== -->
+            <section>
+                <h2>🗺️ MITRE ATT&CK Framework</h2>
+                <p class="medium-text">Knowledge base taktik dan teknik adversaries — standar de facto</p>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Tactic</th>
+                        <th>ID</th>
+                        <th>Contoh Technique</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Initial Access</strong></td>
+                        <td>TA0001</td>
+                        <td>Phishing (T1566)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Execution</strong></td>
+                        <td>TA0002</td>
+                        <td>PowerShell (T1059.001)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Persistence</strong></td>
+                        <td>TA0003</td>
+                        <td>Registry Run Keys (T1547.001)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Defense Evasion</strong></td>
+                        <td>TA0005</td>
+                        <td>Process Injection (T1055)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>C2</strong></td>
+                        <td>TA0011</td>
+                        <td>Web Protocols (T1071.001)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Exfiltration</strong></td>
+                        <td>TA0010</td>
+                        <td>Over C2 Channel (T1041)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 38: KEY TAKEAWAYS ==================== -->
+            <section>
+                <h2>📌 Key Takeaways</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Static Analysis First</strong> — Aman, memberikan gambaran awal kemampuan malware</li>
+                    <li class="fragment"><strong>Dynamic Analysis Melengkapi</strong> — Mengungkap perilaku runtime di sandbox terisolasi</li>
+                    <li class="fragment"><strong>Persistence = Artefak Utama</strong> — Registry, tasks, services adalah bukti kritis</li>
+                    <li class="fragment"><strong>C2 = Kunci Atribusi</strong> — Beaconing, DGA, DNS tunneling untuk identifikasi operator</li>
+                    <li class="fragment"><strong>Memory Forensics Kritis</strong> — Fileless malware dan injected code hanya visible di RAM</li>
+                    <li class="fragment"><strong>MITRE ATT&CK</strong> — Standarisasi dokumentasi dan threat intelligence sharing</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 39: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 12: Investigasi Serangan Web dan Teknik Anti-Forensik</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Web application attack vectors (SQL injection, XSS, CSRF)</li>
+                    <li class="fragment">Web server forensics (Apache, Nginx, IIS logs)</li>
+                    <li class="fragment">Teknik anti-forensik (data hiding, steganography)</li>
+                    <li class="fragment">Counter-forensics awareness dan detection</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 40: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Sikorski, M. & Honig, A. (2012). <em>Practical Malware Analysis</em>. No Starch Press. <strong>Chapter 1-6</strong></li>
+                    <li>Ligh, M.H., et al. (2014). <em>The Art of Memory Forensics</em>. Wiley. Chapter 10-15.</li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em>. Academic Press. Chapter 12.</li>
+                    <li>Johansen, G. (2020). <em>Digital Forensics and Incident Response</em>. Packt. Chapter 8-9.</li>
+                    <li>MITRE ATT&CK: <a href="https://attack.mitre.org/">attack.mitre.org</a></li>
+                    <li>PEStudio: <a href="https://www.winitor.com/">winitor.com</a></li>
+                    <li>FLOSS: <a href="https://github.com/mandiant/flare-floss">github.com/mandiant/flare-floss</a></li>
+                    <li>FakeNet-NG: <a href="https://github.com/mandiant/flare-fakenet-ng">github.com/mandiant/flare-fakenet-ng</a></li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 41: Q&A ==================== -->
+            <section>
+                <h2>❓ Sesi Tanya Jawab</h2>
+                <div class="box-info">
+                    <p class="large">Apakah ada pertanyaan tentang materi hari ini?</p>
+                </div>
+                <div class="content-margin-lg">
+                    <p class="medium-text">Topik diskusi:</p>
+                    <ul class="medium-text">
+                        <li>Klasifikasi dan delivery malware</li>
+                        <li>Static vs dynamic analysis</li>
+                        <li>Persistence dan C2 communication</li>
+                        <li>Memory forensics untuk malware detection</li>
+                        <li>IOC dan MITRE ATT&CK framework</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 42: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 11: Forensik Malware</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
