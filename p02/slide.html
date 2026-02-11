@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 02: Proses Investigasi Forensik Digital</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 02</h3>
+                <h2>Proses Investigasi Forensik Digital</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan fase-fase investigasi forensik digital (NIST Framework)</li>
+                    <li class="fragment">Menerapkan prosedur first response dan penanganan TKP digital</li>
+                    <li class="fragment">Melakukan dokumentasi bukti elektronik dan fotografi forensik</li>
+                    <li class="fragment">Mengimplementasikan chain of custody dalam penanganan bukti</li>
+                    <li class="fragment">Menerapkan teknik preservasi dan pengamanan bukti digital</li>
+                    <li class="fragment">Menyusun SOP investigasi forensik dalam konteks militer</li>
+                    <li class="fragment">Memahami incident handling dalam kerangka CERT militer</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Framework Investigasi (NIST)</li>
+                            <li>First Response & TKP Digital</li>
+                            <li>Dokumentasi Bukti</li>
+                            <li>Chain of Custody</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>Preservasi Bukti Digital</li>
+                            <li>SOP Forensik Militer</li>
+                            <li>Incident Handling & CERT</li>
+                            <li>Legal Considerations</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WHY FRAMEWORK ==================== -->
+            <section>
+                <h2>❓ Mengapa Framework Penting?</h2>
+                <div class="box-definition">
+                    <strong>Investigasi Forensik Digital</strong> adalah proses terstruktur untuk mengidentifikasi, mengumpulkan, memeriksa, menganalisis, dan melaporkan bukti digital yang relevan.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Tanpa Framework</th>
+                        <th>Dengan Framework</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Proses</strong></td>
+                        <td>Ad-hoc</td>
+                        <td>Sistematis</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bukti</strong></td>
+                        <td>Risiko kontaminasi</td>
+                        <td>Integritas terjaga</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Legal</strong></td>
+                        <td>Ditolak di pengadilan</td>
+                        <td>Admissible</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 5: NIST FRAMEWORK OVERVIEW ==================== -->
+            <section>
+                <h2>🏛️ NIST SP 800-86 Framework</h2>
+                <p class="medium-text">Empat fase utama investigasi forensik digital:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>1. Collection</strong><br>
+                        <span class="small">Identifikasi & akuisisi data</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>2. Examination</strong><br>
+                        <span class="small">Pemrosesan & ekstraksi data</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>3. Analysis</strong><br>
+                        <span class="small">Interpretasi & korelasi temuan</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>4. Reporting</strong><br>
+                        <span class="small">Dokumentasi & presentasi hasil</span>
+                    </div>
+                </div>
+                <p class="fragment small box-info">💡 Proses bersifat <strong>iteratif</strong> — dapat kembali ke fase sebelumnya jika diperlukan</p>
+            </section>
+
+            <!-- ==================== SLIDE 6: COLLECTION PHASE ==================== -->
+            <section>
+                <h2>📦 Fase 1: Collection (Pengumpulan)</h2>
+                <p class="medium-text">Aktivitas utama dalam fase pengumpulan:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Identifikasi</strong> — Menentukan perangkat & media yang relevan</li>
+                    <li class="fragment"><strong>Prioritisasi</strong> — Urutan berdasarkan volatilitas (Order of Volatility)</li>
+                    <li class="fragment"><strong>Akuisisi</strong> — Membuat salinan forensik</li>
+                    <li class="fragment"><strong>Preservasi</strong> — Menjaga integritas bukti</li>
+                    <li class="fragment"><strong>Dokumentasi</strong> — Mencatat setiap langkah</li>
+                </ol>
+                <div class="fragment box-warning">
+                    ⚠️ Kesalahan di fase ini dapat menggagalkan seluruh investigasi!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 7: EXAMINATION & ANALYSIS ==================== -->
+            <section>
+                <h2>🔍 Fase 2 & 3: Examination & Analysis</h2>
+                <div class="two-columns medium-text">
+                    <div class="fragment">
+                        <div class="box-info">
+                            <h4>Examination</h4>
+                            <ul class="small">
+                                <li>Ekstraksi data dari image</li>
+                                <li>Filtering data tidak relevan</li>
+                                <li>Dekompresi & dekripsi</li>
+                                <li>Kategorisasi artefak</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-success">
+                            <h4>Analysis</h4>
+                            <ul class="small">
+                                <li>Timeline reconstruction</li>
+                                <li>Correlation analysis</li>
+                                <li>Pattern analysis</li>
+                                <li>Attribution analysis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 8: REPORTING PHASE ==================== -->
+            <section>
+                <h2>📝 Fase 4: Reporting (Pelaporan)</h2>
+                <p class="medium-text">Elemen laporan forensik:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Bagian</th>
+                        <th>Konten</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Executive Summary</strong></td>
+                        <td>Ringkasan untuk non-teknis (1-2 halaman)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Metodologi</strong></td>
+                        <td>Tools, teknik, prosedur yang digunakan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Temuan</strong></td>
+                        <td>Artefak dan bukti yang ditemukan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Timeline</strong></td>
+                        <td>Rekonstruksi kronologi kejadian</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Kesimpulan</strong></td>
+                        <td>Jawaban atas pertanyaan investigasi</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: ALTERNATIVE FRAMEWORKS ==================== -->
+            <section>
+                <h2>🔄 Framework Alternatif</h2>
+                <table class="small">
+                    <tr>
+                        <th>Framework</th>
+                        <th>Pengembang</th>
+                        <th>Fase</th>
+                        <th>Keunggulan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>NIST SP 800-86</strong></td>
+                        <td>NIST (AS)</td>
+                        <td>4</td>
+                        <td>Sederhana, banyak diadopsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DFRWS</strong></td>
+                        <td>Research Workshop</td>
+                        <td>6</td>
+                        <td>Komprehensif, akademis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ISO/IEC 27037</strong></td>
+                        <td>ISO</td>
+                        <td>4</td>
+                        <td>Standar internasional</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ACPO Guidelines</strong></td>
+                        <td>UK Police</td>
+                        <td>4</td>
+                        <td>Berorientasi hukum</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 10: FIRST RESPONSE INTRO ==================== -->
+            <section>
+                <h2>🚨 First Response: Penanganan TKP Digital</h2>
+                <div class="box-definition">
+                    <strong>First Response</strong> adalah serangkaian tindakan awal saat pertama kali tiba di lokasi insiden untuk mengamankan, mendokumentasikan, dan mempreservasi bukti digital.
+                </div>
+                <p class="fragment medium-text">First response yang tepat <strong class="text-gold">menentukan keberhasilan</strong> seluruh investigasi!</p>
+                <div class="fragment box-danger">
+                    ❌ Kesalahan di tahap ini → bukti rusak, hilang, atau tidak admissible
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 11: FIRST RESPONSE STEPS ==================== -->
+            <section>
+                <h2>📋 Langkah-Langkah First Response</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Perimeter Control</strong> — Batasi akses ke area TKP</li>
+                    <li class="fragment"><strong>Personnel Log</strong> — Catat setiap orang masuk/keluar</li>
+                    <li class="fragment"><strong>Threat Assessment</strong> — Evaluasi risiko fisik & digital</li>
+                    <li class="fragment"><strong>Authorization</strong> — Pastikan otorisasi legal</li>
+                    <li class="fragment"><strong>Documentation</strong> — Dokumentasi kondisi awal</li>
+                    <li class="fragment"><strong>Evidence Handling</strong> — Penanganan sesuai status perangkat</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 12: INITIAL DOCUMENTATION ==================== -->
+            <section>
+                <h2>📸 Dokumentasi Kondisi Awal</h2>
+                <p class="medium-text">Sebelum menyentuh perangkat apapun:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aktivitas</th>
+                        <th>Tools</th>
+                        <th>Tujuan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Foto panorama</td>
+                        <td>Kamera digital</td>
+                        <td>Tata letak ruangan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Foto close-up</td>
+                        <td>Kamera digital</td>
+                        <td>Detail setiap perangkat</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Catat status</td>
+                        <td>Formulir</td>
+                        <td>Kondisi hidup/mati, LED</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Identifikasi koneksi</td>
+                        <td>Formulir</td>
+                        <td>Kabel, jaringan, USB</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Sketsa lokasi</td>
+                        <td>Kertas/tablet</td>
+                        <td>Denah TKP & posisi perangkat</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 13: LIVE VS DEAD SYSTEM ==================== -->
+            <section>
+                <h2>💻 Penanganan: Live vs Dead System</h2>
+                <div class="two-columns medium-text">
+                    <div class="fragment">
+                        <div class="box-success">
+                            <h4>🟢 Sistem MENYALA</h4>
+                            <ol class="small">
+                                <li>JANGAN matikan langsung</li>
+                                <li>Foto/screenshot layar</li>
+                                <li>Catat waktu sistem</li>
+                                <li>Capture volatile data (RAM)</li>
+                                <li>Pertimbangkan live acquisition</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-danger">
+                            <h4>🔴 Sistem MATI</h4>
+                            <ol class="small">
+                                <li>JANGAN menyalakan!</li>
+                                <li>Foto semua sisi perangkat</li>
+                                <li>Cabut power dari <em>belakang PC</em></li>
+                                <li>Label semua kabel & port</li>
+                                <li>Kemas dengan anti-static bag</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: WHY NOT TURN ON ==================== -->
+            <section>
+                <h2>⚠️ Mengapa Tidak Boleh Menyalakan?</h2>
+                <p class="medium-text">Risiko menyalakan komputer yang sudah mati:</p>
+                <ul class="medium-text">
+                    <li class="fragment">⏰ <strong>Modifikasi timestamp</strong> — OS mengubah metadata file saat boot</li>
+                    <li class="fragment">💾 <strong>Overwrite data</strong> — Startup menulis ke disk, menimpa bukti</li>
+                    <li class="fragment">🦠 <strong>Autorun malware</strong> — Script destruktif berjalan otomatis</li>
+                    <li class="fragment">📋 <strong>Registry changes</strong> — Windows memodifikasi registry entries</li>
+                    <li class="fragment">📊 <strong>Log modification</strong> — Event logs berubah dengan aktivitas baru</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 15: MILITARY CONTEXT ==================== -->
+            <section>
+                <h2>🎖️ TKP Digital: Konteks Militer</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Sipil</th>
+                        <th>Militer</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Otorisasi</strong></td>
+                        <td>Surat pengadilan</td>
+                        <td>Perintah komandan + legal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Akses</strong></td>
+                        <td>Area publik/privat</td>
+                        <td>Fasilitas berklasifikasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Personel</strong></td>
+                        <td>Investigator sipil</td>
+                        <td>Tim forensik militer</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Informasi</strong></td>
+                        <td>Variasi klasifikasi</td>
+                        <td>Rahasia negara</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>Urgency</strong></td>
+                        <td>Prosedur standar</td>
+                        <td>Dipercepat untuk operasi</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 16: MILITARY CONSIDERATIONS ==================== -->
+            <section>
+                <h2>Pertimbangan Khusus Militer</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Security Clearance</strong><br>
+                        <span class="small">Investigator harus memiliki izin keamanan yang sesuai</span></li>
+                    <li class="fragment"><strong>Classified Material</strong><br>
+                        <span class="small">Prosedur khusus untuk materi berklasifikasi</span></li>
+                    <li class="fragment"><strong>OPSEC</strong><br>
+                        <span class="small">Menjaga kerahasiaan operasi selama investigasi</span></li>
+                    <li class="fragment"><strong>Command Authority</strong><br>
+                        <span class="small">Koordinasi dengan rantai komando</span></li>
+                    <li class="fragment"><strong>Multi-Domain</strong><br>
+                        <span class="small">Bukti lintas matra (AD, AL, AU)</span></li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 17: FORENSIC DOCUMENTATION ==================== -->
+            <section>
+                <h2>📄 Dokumentasi Forensik</h2>
+                <div class="box-definition">
+                    <strong>Dokumentasi Forensik</strong> adalah pencatatan terperinci dan sistematis dari setiap tindakan selama investigasi.
+                </div>
+                <div class="grid-2x2 medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong>Case Notes</strong><br>
+                        <span class="small">Catatan kronologis aktivitas</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Chain of Custody</strong><br>
+                        <span class="small">Formulir perpindahan bukti</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Acquisition Log</strong><br>
+                        <span class="small">Catatan akuisisi & hash</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Forensic Photography</strong><br>
+                        <span class="small">Foto TKP & perangkat</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 18: FORENSIC PHOTOGRAPHY ==================== -->
+            <section>
+                <h2>📷 Fotografi Forensik: Tiga Level</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Level</th>
+                        <th>Nama</th>
+                        <th>Contoh di TKP Digital</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>1</strong></td>
+                        <td>Overview/Panoramic</td>
+                        <td>Seluruh ruangan kerja tersangka</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>2</strong></td>
+                        <td>Mid-range</td>
+                        <td>Workstation + monitor + kabel</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>3</strong></td>
+                        <td>Close-up/Detail</td>
+                        <td>Serial number, layar aktif, port USB</td>
+                    </tr>
+                </table>
+                <div class="fragment box-info content-margin">
+                    💡 Gunakan skala/ruler untuk close-up dan catat timestamp setiap foto
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 19: CASE NOTES ==================== -->
+            <section>
+                <h2>📝 Case Notes: Elemen Wajib</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Elemen</th>
+                        <th>Format</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Tanggal/Waktu</strong></td>
+                        <td>YYYY-MM-DD HH:MM:SS</td>
+                        <td>2026-02-07 14:30:25</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Investigator</strong></td>
+                        <td>Nama + NRP/NIP</td>
+                        <td>Kapten Inf. Ardi, NRP 123</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Lokasi</strong></td>
+                        <td>Alamat lengkap</td>
+                        <td>Ruang Server, Makodam XIII</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Aktivitas</strong></td>
+                        <td>Deskripsi detail</td>
+                        <td>Capture RAM via FTK Imager</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Hash Values</strong></td>
+                        <td>SHA-256</td>
+                        <td>a1b2c3d4e5f6...</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: CASE NOTES EXAMPLE ==================== -->
+            <section>
+                <h2>Contoh Case Notes</h2>
+                <pre><code class="language-text">CASE NOTES — LTM-V/DFIR/2026/002
+================================
+Investigator: Lettu Laut (T) Budi S., NRP 7654321
+Lokasi: Kantor Lantamal V Surabaya
+
+09:00 - Tiba di lokasi, pengarahan dari Danlanal
+09:17 - Laptop: Lenovo ThinkPad T480, S/N: PF1XXXXX
+        Status: MENYALA, layar terkunci
+09:18 - Foto panoramic (IMG_001-003)
+09:22 - Foto close-up serial number (IMG_007-012)
+09:25 - Mulai capture RAM: FTK Imager 4.7
+09:47 - RAM capture selesai: ram_dump.mem (8GB)
+        SHA-256: [hash value]
+09:50 - Shutdown: cabut baterai + kabel power
+09:55 - Label & kemas: EVD-001 (Laptop)
+10:00 - Serah terima → Kadenpom (CoC signed)</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 21: CHAIN OF CUSTODY ==================== -->
+            <section>
+                <h2>🔗 Chain of Custody</h2>
+                <div class="box-definition">
+                    <strong>Chain of Custody</strong> adalah dokumentasi kronologis yang mencatat setiap perpindahan, penanganan, dan penyimpanan bukti dari pengumpulan hingga pengadilan.
+                </div>
+                <p class="fragment medium-text">Jika chain of custody <strong class="text-red">terputus</strong>, bukti dapat <strong class="text-red">ditolak</strong> di pengadilan!</p>
+            </section>
+
+            <!-- ==================== SLIDE 22: COC PRINCIPLES ==================== -->
+            <section>
+                <h2>Prinsip Chain of Custody</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Continuity</strong> — Tidak ada celah waktu dalam pencatatan</li>
+                    <li class="fragment"><strong>Integrity</strong> — Bukti tidak diubah, ditambah, atau dikurangi</li>
+                    <li class="fragment"><strong>Accountability</strong> — Setiap penanganan tercatat & bertanggung jawab</li>
+                    <li class="fragment"><strong>Security</strong> — Bukti di lokasi aman, akses terkontrol</li>
+                    <li class="fragment"><strong>Documentation</strong> — Setiap perpindahan didokumentasikan tertulis</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 23: COC FORM COMPONENTS ==================== -->
+            <section>
+                <h2>Komponen Formulir Chain of Custody</h2>
+                <div class="three-columns medium-text">
+                    <div class="step-box fragment">
+                        <h4 class="text-gold">Info Kasus</h4>
+                        <ul class="small">
+                            <li>Nomor kasus</li>
+                            <li>Tanggal/waktu</li>
+                            <li>Investigator PJ</li>
+                            <li>Unit/satuan</li>
+                        </ul>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 class="text-gold">Deskripsi Bukti</h4>
+                        <ul class="small">
+                            <li>Evidence number</li>
+                            <li>Merek, model, S/N</li>
+                            <li>Kondisi diterima</li>
+                            <li>Hash value</li>
+                        </ul>
+                    </div>
+                    <div class="step-box fragment">
+                        <h4 class="text-gold">Perpindahan</h4>
+                        <ul class="small">
+                            <li>Dari siapa</li>
+                            <li>Kepada siapa</li>
+                            <li>Tujuan</li>
+                            <li>Tanda tangan</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 24: PRESERVATION TECHNIQUES ==================== -->
+            <section>
+                <h2>🛡️ Preservasi Bukti Digital</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Teknik</th>
+                        <th>Deskripsi</th>
+                        <th>Tools</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Forensic Imaging</strong></td>
+                        <td>Salinan bit-by-bit</td>
+                        <td>FTK Imager, dd</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Hash Verification</strong></td>
+                        <td>Sidik jari digital integritas</td>
+                        <td>HashMyFiles, md5sum</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Write Blocking</strong></td>
+                        <td>Cegah penulisan ke bukti</td>
+                        <td>Tableau, SAFE Block</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Secure Storage</strong></td>
+                        <td>Penyimpanan aman terkontrol</td>
+                        <td>Evidence locker</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 25: FORENSIC IMAGING ==================== -->
+            <section>
+                <h2>💿 Forensic Imaging</h2>
+                <div class="box-definition">
+                    <strong>Forensic Image</strong> adalah salinan bit-by-bit dari seluruh media, termasuk unallocated space, deleted files, dan metadata.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Cakupan</th>
+                        <th>Penggunaan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Physical Image</strong></td>
+                        <td>Seluruh disk + unallocated</td>
+                        <td>Investigasi menyeluruh</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Logical Image</strong></td>
+                        <td>Hanya file/folder aktif</td>
+                        <td>Waktu terbatas</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Targeted</strong></td>
+                        <td>File tertentu saja</td>
+                        <td>Scope spesifik</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 26: WRITE BLOCKER ==================== -->
+            <section>
+                <h2>🚫 Write Blocker</h2>
+                <div class="box-definition">
+                    <strong>Write Blocker</strong> mencegah penulisan data ke media bukti, menjaga integritas bukti asli.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div class="fragment">
+                        <div class="box-info">
+                            <h4>Hardware</h4>
+                            <ul class="small">
+                                <li>Blok sinyal write secara fisik</li>
+                                <li>Lebih reliabel</li>
+                                <li>Tidak bergantung OS</li>
+                                <li>Mahal, perlu dibawa fisik</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <div class="box-warning">
+                            <h4>Software</h4>
+                            <ul class="small">
+                                <li>Modifikasi driver storage</li>
+                                <li>Murah, mudah digunakan</li>
+                                <li>Bergantung pada OS</li>
+                                <li>Kurang reliabel</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: HASH VERIFICATION ==================== -->
+            <section>
+                <h2>#️⃣ Hash Verification</h2>
+                <p class="medium-text">Algoritma hash untuk membuktikan integritas bukti:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Algoritma</th>
+                        <th>Panjang</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>MD5</td>
+                        <td>128-bit (32 hex)</td>
+                        <td class="text-red">Deprecated</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>SHA-1</td>
+                        <td>160-bit (40 hex)</td>
+                        <td class="text-red">Deprecated</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>SHA-256</strong></td>
+                        <td>256-bit (64 hex)</td>
+                        <td class="text-success">✅ Direkomendasikan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>SHA-512</td>
+                        <td>512-bit (128 hex)</td>
+                        <td class="text-success">Sangat aman</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 Perubahan 1 bit → hash berubah total (avalanche effect)</p>
+            </section>
+
+            <!-- ==================== SLIDE 28: SOP FORENSIK MILITER ==================== -->
+            <section>
+                <h2>📑 SOP Investigasi Forensik Militer</h2>
+                <div class="box-definition">
+                    <strong>SOP</strong> adalah instruksi langkah demi langkah untuk melaksanakan prosedur secara konsisten dan sesuai standar.
+                </div>
+                <p class="fragment medium-text">Karakteristik SOP forensik militer:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Mengikuti hierarki komando militer</li>
+                    <li class="fragment">Mempertimbangkan klasifikasi keamanan</li>
+                    <li class="fragment">Selaras dengan doktrin operasi</li>
+                    <li class="fragment">Terintegrasi dengan sistem pelaporan militer</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 29: SOP STAGES ==================== -->
+            <section>
+                <h2>Tahapan SOP Forensik Militer</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>No</th>
+                        <th>Tahap</th>
+                        <th>Penanggung Jawab</th>
+                        <th>Output</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>1</td>
+                        <td><strong>Penerimaan Kasus</strong></td>
+                        <td>Unit pelapor</td>
+                        <td>Laporan insiden</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>2</td>
+                        <td><strong>Otorisasi</strong></td>
+                        <td>Komandan satuan</td>
+                        <td>Surat perintah</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>3</td>
+                        <td><strong>Persiapan Tim</strong></td>
+                        <td>Ketua tim forensik</td>
+                        <td>Checklist kesiapan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>4</td>
+                        <td><strong>Penanganan TKP</strong></td>
+                        <td>First responder</td>
+                        <td>Case notes, foto</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>5</td>
+                        <td><strong>Akuisisi & Analisis</strong></td>
+                        <td>Forensic examiner</td>
+                        <td>Images, temuan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>6</td>
+                        <td><strong>Pelaporan</strong></td>
+                        <td>Ketua tim</td>
+                        <td>Laporan forensik</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 30: INCIDENT HANDLING ==================== -->
+            <section>
+                <h2>🔥 Incident Handling</h2>
+                <div class="box-definition">
+                    <strong>Incident Handling</strong> adalah proses terstruktur untuk mendeteksi, menganalisis, membatasi dampak, dan memulihkan sistem dari insiden keamanan siber.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Incident Handling</th>
+                        <th>Digital Forensics</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Tujuan</strong></td>
+                        <td>Pemulihan operasional</td>
+                        <td>Pengumpulan bukti</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Prioritas</strong></td>
+                        <td>Hentikan serangan</td>
+                        <td>Jaga integritas bukti</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Waktu</strong></td>
+                        <td>Secepat mungkin</td>
+                        <td>Teliti & menyeluruh</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 31: NIST IR LIFECYCLE ==================== -->
+            <section>
+                <h2>🔄 NIST Incident Response Lifecycle</h2>
+                <p class="medium-text">NIST SP 800-61: Empat fase incident response:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>1. Preparation</strong><br>
+                        <span class="small">Bangun kapabilitas, siapkan tools, latih tim</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>2. Detection & Analysis</strong><br>
+                        <span class="small">Deteksi insiden, tentukan scope & severity</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>3. Containment, Eradication & Recovery</strong><br>
+                        <span class="small">Batasi dampak, hapus ancaman, pulihkan</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>4. Post-Incident Activity</strong><br>
+                        <span class="small">Lessons learned, perbaikan, dokumentasi</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 32: CERT MILITER ==================== -->
+            <section>
+                <h2>🏢 CERT/CSIRT Militer Indonesia</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Organisasi</th>
+                        <th>Peran</th>
+                        <th>Cakupan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>BSSN</strong></td>
+                        <td>Koordinator siber nasional</td>
+                        <td>Infrastruktur kritis nasional</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Satsiber TNI</strong></td>
+                        <td>Operasi siber militer</td>
+                        <td>Pertahanan siber militer</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Pusdiksus TNI</strong></td>
+                        <td>Pelatihan kapabilitas</td>
+                        <td>Seluruh matra TNI</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>CERT Kodam</strong></td>
+                        <td>Respons insiden regional</td>
+                        <td>Wilayah pertahanan Kodam</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 33: FORENSICS IN IR ==================== -->
+            <section>
+                <h2>🤝 Integrasi Forensik & Incident Response</h2>
+                <table class="small">
+                    <tr>
+                        <th>Fase IR</th>
+                        <th>Peran Forensik Digital</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Preparation</strong></td>
+                        <td>Siapkan tools forensik, latih kemampuan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Detection</strong></td>
+                        <td>Analisis artefak untuk konfirmasi insiden</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>Containment</strong></td>
+                        <td>⚠️ Capture volatile data SEBELUM isolasi!</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Eradication</strong></td>
+                        <td>Analisis root cause & IOC</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Recovery</strong></td>
+                        <td>Verifikasi ancaman telah dihilangkan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Post-Incident</strong></td>
+                        <td>Laporan forensik untuk lessons learned</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 34: LEGAL FRAMEWORK ==================== -->
+            <section>
+                <h2>⚖️ Kerangka Hukum</h2>
+                <p class="medium-text">Regulasi terkait investigasi forensik digital militer:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>UU No. 1/2024 (ITE)</strong> — Pengakuan bukti elektronik, intersepsi</li>
+                    <li class="fragment"><strong>UU No. 3/2002 (Pertahanan)</strong> — Kewenangan militer</li>
+                    <li class="fragment"><strong>UU No. 31/1997 (Peradilan Militer)</strong> — Prosedur pembuktian</li>
+                    <li class="fragment"><strong>ISO/IEC 27037:2012</strong> — Standar internasional bukti digital</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 35: ADMISSIBILITY ==================== -->
+            <section>
+                <h2>Admissibility Bukti Digital</h2>
+                <p class="medium-text">Kriteria agar bukti diterima di pengadilan:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kriteria</th>
+                        <th>Cara Memenuhi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Authenticity</strong></td>
+                        <td>Hash verification, chain of custody</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Reliability</strong></td>
+                        <td>Ikuti SOP & standar (NIST, ISO)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Completeness</strong></td>
+                        <td>Dokumentasi menyeluruh</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Relevance</strong></td>
+                        <td>Analisis & filtering yang tepat</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Proportionality</strong></td>
+                        <td>Tidak excessive collection</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 36: QUALITY ASSURANCE ==================== -->
+            <section>
+                <h2>✅ Quality Assurance</h2>
+                <p class="medium-text">Elemen QA forensik digital:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>Peer Review</strong><br>
+                        <span class="small">Review proses & temuan oleh investigator lain</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Tool Validation</strong><br>
+                        <span class="small">Verifikasi tools dengan dataset NIST CFTT</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Proficiency Testing</strong><br>
+                        <span class="small">Pengujian berkala kemampuan investigator</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Documentation Audit</strong><br>
+                        <span class="small">Audit kelengkapan & kualitas dokumentasi</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 37: COMMON ERRORS ==================== -->
+            <section>
+                <h2>❌ Kesalahan Umum & Pencegahan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Error</th>
+                        <th>Dampak</th>
+                        <th>Pencegahan</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>Tidak hash sebelum analisis</td>
+                        <td>Integritas dipertanyakan</td>
+                        <td>SOP wajib hash di awal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Chain of custody gap</td>
+                        <td>Bukti tidak admissible</td>
+                        <td>Template & checklist</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>Analisis pada bukti asli</td>
+                        <td>Bukti asli termodifikasi</td>
+                        <td>Selalu working copy</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Dokumentasi tidak lengkap</td>
+                        <td>Tidak reproducible</td>
+                        <td>Template standar</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Bias konfirmasi</td>
+                        <td>Kesimpulan tidak objektif</td>
+                        <td>Peer review wajib</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 38: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>Berapa fase yang didefinisikan oleh NIST SP 800-86 untuk investigasi forensik digital?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. 3 fase</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. 4 fase (Collection, Examination, Analysis, Reporting) ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. 5 fase</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. 6 fase</div>
+            </section>
+
+            <!-- ==================== SLIDE 39: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>Saat tiba di TKP dan menemukan komputer dalam keadaan MATI, apa yang harus dilakukan?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Nyalakan untuk memeriksa isinya</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Hubungkan ke jaringan forensik</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. JANGAN nyalakan, dokumentasi & kemas sebagai bukti ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Format hard disk untuk analisis bersih</div>
+                <p class="fragment small box-warning">⚠️ Menyalakan komputer akan mengubah timestamp, registry, dan berpotensi menjalankan malware!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Apa tujuan utama chain of custody dalam investigasi forensik?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Mempercepat proses investigasi</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Mengurangi biaya investigasi</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. Mendokumentasikan setiap perpindahan bukti untuk menjamin integritas ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Mengenkripsi bukti digital</div>
+            </section>
+
+            <!-- ==================== SLIDE 41: QUIZ 4 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 4:</strong></p>
+                <p>Dalam incident response, kapan forensik harus capture volatile data?</p>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="1">A. SEBELUM containment (isolasi sistem) ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Setelah eradication</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. Saat post-incident review</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. Setelah sistem di-rebuild</div>
+                <p class="fragment small box-info">💡 Volatile data hilang saat sistem dimatikan/diisolasi — capture dulu!</p>
+            </section>
+
+            <!-- ==================== SLIDE 42: SUMMARY ==================== -->
+            <section>
+                <h2>📋 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>NIST SP 800-86</strong></td>
+                        <td>4 fase: Collection → Examination → Analysis → Reporting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>First Response</strong></td>
+                        <td>Amankan lokasi, dokumentasi, preservasi bukti</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Live vs Dead</strong></td>
+                        <td>Live: capture volatile; Dead: jangan nyalakan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chain of Custody</strong></td>
+                        <td>Dokumentasi kronologis setiap perpindahan bukti</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Preservasi</strong></td>
+                        <td>Imaging, hashing, write blocking</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Incident Response</strong></td>
+                        <td>Preparation → Detection → Containment → Post-Incident</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 43: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 03: Hard Disk dan Sistem File</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Struktur fisik dan logis hard disk (HDD & SSD)</li>
+                    <li class="fragment">Sistem file: FAT, NTFS, ext4</li>
+                    <li class="fragment">Partisi dan Master Boot Record</li>
+                    <li class="fragment">Artefak forensik pada media penyimpanan</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 44: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. <strong>Chapter 3-4</strong></li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (6th Ed.). Cengage. Chapter 2-3.</li>
+                    <li>Johansen, G. (2020). <em>Digital Forensics and Incident Response</em> (2nd Ed.). Packt. Chapter 2-3.</li>
+                    <li>NIST SP 800-86: Guide to Integrating Forensic Techniques into Incident Response</li>
+                    <li>NIST SP 800-61: Computer Security Incident Handling Guide</li>
+                    <li>ISO/IEC 27037:2012 — Guidelines for Digital Evidence</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 45: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 02: Proses Investigasi Forensik Digital</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
