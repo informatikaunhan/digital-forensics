@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 09: Teknik Recovery Data dan File Carving</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 09</h3>
+                <h2>Teknik Recovery Data dan File Carving</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Memahami prinsip penghapusan file dan mekanisme data remnants</li>
+                    <li class="fragment">Menjelaskan konsep file carving dan teknik identifikasi file</li>
+                    <li class="fragment">Melakukan recovery data terhapus menggunakan berbagai tools</li>
+                    <li class="fragment">Menerapkan teknik file carving pada unallocated space</li>
+                    <li class="fragment">Mengidentifikasi file berdasarkan header/footer signatures</li>
+                    <li class="fragment">Menangani tantangan recovery pada SSD dan damaged media</li>
+                    <li class="fragment">Menggunakan hex editor untuk analisis manual file signature</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Prinsip Penghapusan File</li>
+                            <li>Data Remnants</li>
+                            <li>Slack Space</li>
+                            <li>Unallocated Space</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>File Carving Concepts</li>
+                            <li>File Signatures</li>
+                            <li>Recovery Tools</li>
+                            <li>SSD Challenges</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: FILE DELETION MECHANISM ==================== -->
+            <section>
+                <h2>🗑️ Mekanisme Penghapusan File</h2>
+                <div class="box-warning">
+                    Ketika file "dihapus", data sebenarnya <strong>TIDAK dihapus secara fisik</strong> hingga area tersebut ditimpa oleh data baru!
+                </div>
+                <p class="fragment content-margin">Yang terjadi saat delete:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong class="text-gold">Pointer Removal:</strong> Entry di MFT/FAT dihapus</li>
+                    <li class="fragment"><strong class="text-gold">Space Marking:</strong> Cluster ditandai "available"</li>
+                    <li class="fragment"><strong class="text-success">Data Remains:</strong> Data masih ada di disk!</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 5: DELETION TYPES ==================== -->
+            <section>
+                <h2>Tipe-Tipe Penghapusan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Tipe</th>
+                        <th>Mekanisme</th>
+                        <th>Recoverable?</th>
+                        <th>Tingkat</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Normal Delete</strong></td>
+                        <td>Pointer dihapus</td>
+                        <td class="text-success">✓ Ya</td>
+                        <td>Mudah</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Shift+Delete</strong></td>
+                        <td>Bypass Recycle Bin</td>
+                        <td class="text-success">✓ Ya</td>
+                        <td>Mudah</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Format Quick</strong></td>
+                        <td>Rebuild file system</td>
+                        <td class="text-warning">△ Sebagian</td>
+                        <td>Sedang</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Format Full</strong></td>
+                        <td>Overwrite zeros</td>
+                        <td class="text-warning">△ Sebagian</td>
+                        <td>Sulit</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Secure Delete</strong></td>
+                        <td>Multiple overwrites</td>
+                        <td class="text-red">✗ Tidak</td>
+                        <td>Sangat Sulit</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>TRIM (SSD)</strong></td>
+                        <td>Garbage collection</td>
+                        <td class="text-red">✗ Tidak</td>
+                        <td>Hampir Mustahil</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: DATA REMNANTS LOCATIONS ==================== -->
+            <section>
+                <h2>📍 Lokasi Data Remnants</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Unallocated Space</strong><br>
+                        <span class="small">Area tidak dialokasikan, sumber utama deleted files</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Slack Space</strong><br>
+                        <span class="small">Ruang tidak terpakai di akhir cluster (RAM slack + File slack)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Free Space</strong><br>
+                        <span class="small">Area previously allocated, masih ada metadata</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Bad Sectors</strong><br>
+                        <span class="small">Sektor "bad" tapi masih bisa dibaca dengan tools khusus</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 7: SLACK SPACE EXPLAINED ==================== -->
+            <section>
+                <h2>Slack Space: Contoh</h2>
+                <div class="box-info">
+                    <strong>Skenario:</strong> File 2,100 bytes pada cluster 4 KB (8 sektor × 512 bytes)
+                </div>
+                <pre class="fragment"><code class="language-plaintext" data-trim>
+Cluster (4 KB = 8 sektor @ 512 bytes):
+├─ Sektor 1-4: Data file (2,048 bytes)
+├─ Sektor 5: 52 bytes data
+│  └─ RAM Slack: 460 bytes ← Data sensitif!
+├─ Sektor 6-8: File Slack (1,536 bytes)
+│  └─ Data dari file sebelumnya!
+
+Total Slack: 1,996 bytes (~49% cluster)
+                </code></pre>
+                <p class="fragment text-warning">⚠️ Slack space dapat berisi remnants data sensitif!</p>
+            </section>
+
+            <!-- ==================== SLIDE 8: FILE SYSTEM RECOVERY COMPARISON ==================== -->
+            <section>
+                <h2>Recovery Potential: Sistem File</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>File System</th>
+                        <th>Recovery Rate</th>
+                        <th>Faktor Kunci</th>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>FAT32</strong></td>
+                        <td class="text-success">90%</td>
+                        <td>Simple structure, minimal metadata deletion</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>exFAT</strong></td>
+                        <td class="text-success">85%</td>
+                        <td>Similar to FAT, no journaling</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>NTFS</strong></td>
+                        <td class="text-warning">80%</td>
+                        <td>MFT records, journaling, compression</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>ext4</strong></td>
+                        <td class="text-warning">65%</td>
+                        <td>Deleted entries zeroed</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>APFS</strong></td>
+                        <td class="text-red">45%</td>
+                        <td>Encryption by default, snapshot management</td>
+                    </tr>
+                </table>
+                <p class="fragment small content-margin">💡 <strong>FAT32</strong> paling "forensics-friendly"</p>
+            </section>
+
+            <!-- ==================== SLIDE 9: FILE CARVING INTRO ==================== -->
+            <section>
+                <h2>🔪 File Carving: Definisi</h2>
+                <div class="box-definition">
+                    <strong>File Carving</strong> adalah teknik untuk mengekstrak file dari unallocated space atau image forensik <strong>tanpa menggunakan metadata sistem file</strong>, melainkan berdasarkan struktur internal file (signatures, headers, footers).
+                </div>
+                <p class="fragment content-margin">Diperlukan ketika:</p>
+                <ul class="medium-text">
+                    <li class="fragment">File system metadata rusak atau tidak tersedia</li>
+                    <li class="fragment">File telah dihapus sepenuhnya</li>
+                    <li class="fragment">Disk di-format atau di-corrupt</li>
+                    <li class="fragment">Investigasi pada raw binary data</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 10: FILE SIGNATURES ==================== -->
+            <section>
+                <h2>🔑 File Signatures (Magic Bytes)</h2>
+                <p>Setiap tipe file memiliki signature unik di header/footer:</p>
+                <table class="small">
+                    <tr>
+                        <th>File Type</th>
+                        <th>Extension</th>
+                        <th>Header (Hex)</th>
+                        <th>Footer (Hex)</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>JPEG</strong></td>
+                        <td>.jpg</td>
+                        <td><code>FF D8 FF</code></td>
+                        <td><code>FF D9</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PNG</strong></td>
+                        <td>.png</td>
+                        <td><code>89 50 4E 47 0D 0A 1A 0A</code></td>
+                        <td><code>49 45 4E 44 AE 42 60 82</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PDF</strong></td>
+                        <td>.pdf</td>
+                        <td><code>25 50 44 46</code> (%PDF)</td>
+                        <td><code>25 25 45 4F 46</code> (%%EOF)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ZIP</strong></td>
+                        <td>.zip</td>
+                        <td><code>50 4B 03 04</code> (PK..)</td>
+                        <td><code>50 4B 05 06</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>EXE</strong></td>
+                        <td>.exe</td>
+                        <td><code>4D 5A</code> (MZ)</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 11: JPEG HEADER ANALYSIS ==================== -->
+            <section>
+                <h2>Contoh: Analisis Header JPEG</h2>
+                <pre><code class="language-plaintext" data-trim>
+Offset   Hex                            ASCII
+00000000 FF D8 FF E0 00 10 4A 46 49 46  ÿØÿà..JFIF
+00000010 00 01 01 01 00 48 00 48 00 00  .....H.H..
+         │  │  │  │           │  │  │
+         │  │  │  │           └──────── JFIF identifier
+         │  │  └─└─────────────────── APP0 marker
+         └─└────────────────────────── JPEG SOI
+                </code></pre>
+                <p class="fragment content-margin"><strong class="text-gold">FF D8 FF E0</strong> = JPEG Start of Image (SOI)</p>
+                <p class="fragment"><strong class="text-gold">4A 46 49 46</strong> = "JFIF" dalam ASCII</p>
+                <p class="fragment text-success">✓ Confirmed: Valid JPEG file</p>
+            </section>
+
+            <!-- ==================== SLIDE 12: WHY SIGNATURES NOT EXTENSIONS ==================== -->
+            <section>
+                <h2>Mengapa Signature, Bukan Extension?</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4 class="text-red">❌ Extension-based</h4>
+                        <ul class="medium-text">
+                            <li>Mudah dimanipulasi</li>
+                            <li>File tanpa extension</li>
+                            <li>Extension mismatch</li>
+                            <li>Malware menyamar</li>
+                        </ul>
+                    </div>
+                    <div class="fragment">
+                        <h4 class="text-success">✓ Signature-based</h4>
+                        <ul class="medium-text">
+                            <li>Verifikasi struktur internal</li>
+                            <li>Bekerja tanpa metadata</li>
+                            <li>Deteksi file mismatch</li>
+                            <li>Ground truth</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box-warning content-margin fragment">
+                    <strong>Contoh:</strong> File bernama <code>document.pdf</code> dengan header <code>FF D8 FF E0</code><br>
+                    → Extension: PDF | Signature: JPEG | <strong class="text-red">Reality: JPEG dengan nama salah!</strong>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 13: CARVING TECHNIQUES ==================== -->
+            <section>
+                <h2>Teknik File Carving</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Header/Footer Carving</strong><br>
+                        <span class="small">Mencari pasangan header-footer yang sesuai</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Header/Size Carving</strong><br>
+                        <span class="small">Size information dalam header (PNG, EXE)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Block-based Carving</strong><br>
+                        <span class="small">Per-block extraction untuk fragmented files</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">Statistical Carving</strong><br>
+                        <span class="small">Entropy analysis, ML classification</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: RECOVERY TOOL: RECUVA ==================== -->
+            <section>
+                <h2>🛠️ Tool 1: Recuva</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Features</h4>
+                        <ul class="medium-text">
+                            <li>User-friendly GUI</li>
+                            <li>Deep scan capability</li>
+                            <li>Preview before recovery</li>
+                            <li>Multiple file systems</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Recovery Status</h4>
+                        <ul class="medium-text">
+                            <li>🟢 Excellent (95-100%)</li>
+                            <li>🟡 Good (60-90%)</li>
+                            <li>🔴 Poor (10-50%)</li>
+                            <li>⚫ Unrecoverable (&lt;5%)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box-danger content-margin fragment">
+                    <strong>⚠️ CRITICAL:</strong> JANGAN save hasil recovery ke drive yang sama dengan sumber! Akan overwrite data yang sedang di-recover.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 15: RECOVERY TOOL: PHOTOREC ==================== -->
+            <section>
+                <h2>🛠️ Tool 2: PhotoRec</h2>
+                <div class="box-info">
+                    Open-source, cross-platform, signature-based carving tool
+                </div>
+                <p class="content-margin">Key Features:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong class="text-gold">Signature-based:</strong> Ignores file system</li>
+                    <li class="fragment"><strong class="text-gold">500+ formats:</strong> Images, videos, documents, databases</li>
+                    <li class="fragment"><strong class="text-gold">Cross-platform:</strong> Windows, Linux, Mac</li>
+                    <li class="fragment"><strong class="text-gold">Free:</strong> Open-source (GPL)</li>
+                </ul>
+                <p class="fragment content-margin text-warning">
+                    ⚠️ <strong>Limitation:</strong> Tidak mempertahankan filename dan folder structure asli
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 16: PHOTOREC OUTPUT STRUCTURE ==================== -->
+            <section>
+                <h2>PhotoRec: Struktur Output</h2>
+                <pre><code class="language-plaintext" data-trim>
+Destination Folder:
+├─ recup_dir.1/
+│   ├─ f0000001.jpg  ← Generic sequential names
+│   ├─ f0000002.pdf
+│   ├─ f0000003.png
+│   └─ ... (up to 500 files per directory)
+├─ recup_dir.2/
+│   ├─ f0000501.docx
+│   └─ ...
+└─ report.xml        ← Recovery report
+                </code></pre>
+                <p class="fragment content-margin"><strong class="text-gold">Why no original names?</strong></p>
+                <p class="fragment">PhotoRec carves berdasarkan signatures, <strong>tidak menggunakan MFT/FAT metadata</strong> (filename, path, timestamps tersimpan terpisah dari file content)</p>
+            </section>
+
+            <!-- ==================== SLIDE 17: FOREMOST VS SCALPEL ==================== -->
+            <section>
+                <h2>🛠️ Tool 3 & 4: Foremost vs Scalpel</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Feature</th>
+                        <th>Foremost</th>
+                        <th>Scalpel</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Threading</strong></td>
+                        <td>Single-threaded</td>
+                        <td class="text-success">Multi-threaded</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Speed</strong></td>
+                        <td>~100 MB/s</td>
+                        <td class="text-success">~250 MB/s (2-3x)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Memory</strong></td>
+                        <td class="text-success">~100 MB</td>
+                        <td>~300 MB</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Preview</strong></td>
+                        <td class="text-red">No</td>
+                        <td class="text-success">Yes (-p flag)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Best For</strong></td>
+                        <td>Small images (&lt;10 GB)</td>
+                        <td class="text-success">Large images (&gt;100 GB)</td>
+                    </tr>
+                </table>
+                <p class="fragment content-margin text-gold">💡 <strong>Scalpel</strong> recommended untuk large-scale forensic investigations</p>
+            </section>
+
+            <!-- ==================== SLIDE 18: AUTOPSY FILE CARVER ==================== -->
+            <section>
+                <h2>🛠️ Tool 5: Autopsy</h2>
+                <p>Integrated file carving dalam case management:</p>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4>Advantages</h4>
+                        <ul class="small">
+                            <li>GUI-based workflow</li>
+                            <li>Case management</li>
+                            <li>Automatic timeline</li>
+                            <li>Built-in reporting</li>
+                            <li>Hash database</li>
+                            <li>Tagging system</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Carving Modules</h4>
+                        <ul class="small">
+                            <li>Photorec Carver</li>
+                            <li>File Type Identification</li>
+                            <li>Extension Mismatch Detector</li>
+                            <li>Tika MIME Type Detection</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment content-margin text-success">
+                    ✓ Best untuk <strong>military investigations</strong>: Chain of custody, documentation, professional reporting
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 19: HEX EDITOR MANUAL CARVING ==================== -->
+            <section>
+                <h2>🔍 Manual Carving: HxD Hex Editor</h2>
+                <p>Workflow manual extraction:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Step 1:</strong> Open image/drive (read-only mode)</li>
+                    <li class="fragment"><strong>Step 2:</strong> Search signature (Ctrl+F) → Hex values</li>
+                    <li class="fragment"><strong>Step 3:</strong> Identify boundaries (header + footer)</li>
+                    <li class="fragment"><strong>Step 4:</strong> Select byte range → Copy</li>
+                    <li class="fragment"><strong>Step 5:</strong> New file → Paste → Save</li>
+                    <li class="fragment"><strong>Step 6:</strong> Validate extracted file</li>
+                </ol>
+                <p class="fragment content-margin text-warning">
+                    ⚠️ Always include footer dalam extraction!
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 20: DATABASE CARVING: SQLITE ==================== -->
+            <section>
+                <h2>💾 Database Carving: SQLite</h2>
+                <div class="box-info">
+                    <strong>SQLite Signature:</strong> <code>53 51 4C 69 74 65 20 66 6F 72 6D 61 74 20 33 00</code><br>
+                    ASCII: "SQLite format 3\0"
+                </div>
+                <p class="content-margin">Common locations:</p>
+                <div class="two-columns small">
+                    <div>
+                        <strong>Android:</strong>
+                        <ul>
+                            <li>SMS: mmssms.db</li>
+                            <li>Contacts: contacts2.db</li>
+                            <li>Call log: calllog.db</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>Browsers:</strong>
+                        <ul>
+                            <li>Firefox: places.sqlite</li>
+                            <li>Chrome: History</li>
+                            <li>Edge: History</li>
+                        </ul>
+                    </div>
+                </div>
+                <pre class="fragment content-margin"><code class="language-bash" data-trim>
+# Validate recovered database
+sqlite3 recovered.db "PRAGMA integrity_check;"
+
+# Extract schema
+sqlite3 recovered.db ".schema"
+
+# Query data
+sqlite3 -csv recovered.db "SELECT * FROM table;" > output.csv
+                </code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 21: PST/OST EMAIL DATABASES ==================== -->
+            <section>
+                <h2>📧 Email Database: PST/OST</h2>
+                <div class="box-warning">
+                    <strong>PST Signature:</strong> <code>21 42 44 4E</code> ("!BDN")
+                </div>
+                <p class="content-margin">PST/OST Contains:</p>
+                <div class="grid-2x2 small">
+                    <div class="step-box">
+                        Email messages (sent/received)
+                    </div>
+                    <div class="step-box">
+                        Attachments
+                    </div>
+                    <div class="step-box">
+                        Contacts & Calendar
+                    </div>
+                    <div class="step-box">
+                        Deleted items (recoverable!)
+                    </div>
+                </div>
+                <p class="fragment content-margin text-red">
+                    🚨 <strong>High-value evidence</strong> dalam konteks kebocoran dokumen militer:<br>
+                    Communication records, timestamps, attachment metadata, deleted items
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 22: SSD CHALLENGES ==================== -->
+            <section>
+                <h2>💽 SSD Recovery Challenges</h2>
+                <div class="box-danger">
+                    <strong>TRIM Command:</strong> Memberi tahu SSD bahwa data blocks tidak lagi digunakan dan dapat di-erase secara internal
+                </div>
+                <p class="content-margin fragment">Impact pada recovery:</p>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Storage Type</th>
+                        <th>Recovery Rate</th>
+                        <th>Why?</th>
+                    </tr>
+                    <tr class="highlight-row-success">
+                        <td><strong>HDD Tradisional</strong></td>
+                        <td class="text-success">90%</td>
+                        <td>Data persists until overwritten</td>
+                    </tr>
+                    <tr class="highlight-row-warning">
+                        <td><strong>SSD Tanpa TRIM</strong></td>
+                        <td class="text-warning">70%</td>
+                        <td>Some garbage collection</td>
+                    </tr>
+                    <tr class="highlight-row-danger">
+                        <td><strong>SSD Dengan TRIM</strong></td>
+                        <td class="text-red">10%</td>
+                        <td>Immediate data erasure</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 23: TRIM PROCESS ==================== -->
+            <section>
+                <h2>TRIM Process Flow</h2>
+                <div class="step-box fragment">
+                    <strong>Step 1:</strong> User deletes file → File system marks space available
+                </div>
+                <div class="step-box fragment content-margin">
+                    <strong>Step 2:</strong> OS sends TRIM command → SSD controller receives
+                </div>
+                <div class="step-box fragment content-margin">
+                    <strong>Step 3:</strong> SSD marks blocks invalid → Queued for erasure
+                </div>
+                <div class="step-box fragment content-margin">
+                    <strong>Step 4:</strong> Garbage Collection → Background process erases blocks
+                </div>
+                <div class="box-danger fragment content-margin">
+                    <strong>Result:</strong> Data PERMANENTLY ERASED - <span class="text-red">CANNOT be recovered!</span>
+                </div>
+                <p class="fragment text-warning">
+                    ⚠️ Recovery window pada SSD modern: <strong>Minutes to Hours</strong> (not days!)
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 24: SSD RECOVERY STRATEGY ==================== -->
+            <section>
+                <h2>Strategi Recovery pada SSD</h2>
+                <div class="box-warning">
+                    <strong>Scenario:</strong> Laptop dengan SSD TRIM-enabled, file dihapus 3 jam lalu
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div>
+                        <h4 class="text-red">Critical Actions</h4>
+                        <ol class="small">
+                            <li>Power OFF immediately</li>
+                            <li>Preserve volatile data</li>
+                            <li>DO NOT reboot</li>
+                            <li>DO NOT write to SSD</li>
+                        </ol>
+                    </div>
+                    <div class="fragment">
+                        <h4 class="text-gold">Recovery Attempts</h4>
+                        <ol class="small">
+                            <li>Memory dump (RAM)</li>
+                            <li>Forensic imaging</li>
+                            <li>Signature carving</li>
+                            <li>MFT analysis</li>
+                        </ol>
+                    </div>
+                </div>
+                <p class="fragment content-margin text-warning">
+                    <strong>Realistic expectation:</strong> 5-15% recovery chance dari SSD<br>
+                    <strong>Alternative sources:</strong> Volume Shadow Copies, cloud backup, email, temp files
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 25: DAMAGED MEDIA RECOVERY ==================== -->
+            <section>
+                <h2>🔧 Recovery dari Damaged Media</h2>
+                <p>Tool of choice: <strong class="text-gold">ddrescue</strong></p>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4>Multi-pass Strategy</h4>
+                        <ul class="small">
+                            <li><strong>Phase 1:</strong> Quick forward (skip errors)</li>
+                            <li><strong>Phase 2:</strong> Reverse pass</li>
+                            <li><strong>Phase 3:</strong> Targeted retry (limited)</li>
+                            <li><strong>Phase 4:</strong> Verification</li>
+                        </ul>
+                    </div>
+                    <div class="fragment">
+                        <h4>Expected Results</h4>
+                        <ul class="small">
+                            <li><strong>Best:</strong> 98-99% recovery</li>
+                            <li><strong>Typical:</strong> 95-97% recovery</li>
+                            <li><strong>Worst:</strong> 85-90% recovery</li>
+                        </ul>
+                    </div>
+                </div>
+                <pre class="fragment content-margin"><code class="language-bash" data-trim>
+# Phase 1: Quick pass
+ddrescue -f -n -v /dev/sdb evidence.img evidence.log
+
+# Phase 2: Reverse
+ddrescue -f -R -v /dev/sdb evidence.img evidence.log
+
+# Phase 3: Limited retry
+ddrescue -f -r 1 -v /dev/sdb evidence.img evidence.log
+                </code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 26: BEST PRACTICES ==================== -->
+            <section>
+                <h2>✅ Best Practices: Data Recovery</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong class="text-success">DO:</strong><br>
+                        <span class="small">• Write-block source media<br>• Work on forensic images<br>• Document everything<br>• Verify with hash</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-red">DON'T:</strong><br>
+                        <span class="small">• Write to source drive<br>• Skip documentation<br>• Retry excessively<br>• Delay imaging</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-gold">For HDD:</strong><br>
+                        <span class="small">• High recovery chance<br>• Use any carving tool<br>• Time not critical</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong class="text-warning">For SSD:</strong><br>
+                        <span class="small">• Act IMMEDIATELY<br>• Power off quickly<br>• Seek alternatives</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: MILITARY CONTEXT ==================== -->
+            <section>
+                <h2>🎖️ Konteks Investigasi Militer</h2>
+                <div class="box-info">
+                    <strong>Scenario:</strong> Suspected data exfiltration di Kodam, file dihapus dari laptop SSD
+                </div>
+                <p class="content-margin">Investigation priorities:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong class="text-red">Immediate seizure:</strong> Power off, preserve volatile data</li>
+                    <li class="fragment"><strong class="text-gold">Forensic imaging:</strong> Write-protected, multiple copies, hash</li>
+                    <li class="fragment"><strong class="text-navy">Recovery attempts:</strong> Carving tools, MFT analysis, manual hex</li>
+                    <li class="fragment"><strong class="text-success">Alternative sources:</strong> Backups, email, network logs, recipients</li>
+                    <li class="fragment"><strong class="text-warning">Documentation:</strong> Chain of custody, detailed reporting</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 28: TOOL SELECTION GUIDE ==================== -->
+            <section>
+                <h2>📊 Tool Selection Guide</h2>
+                <table class="small">
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Recommended Tool</th>
+                        <th>Why?</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Quick recovery, GUI needed</td>
+                        <td class="text-gold">Recuva</td>
+                        <td>User-friendly, fast, preview</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Cross-platform, no metadata needed</td>
+                        <td class="text-gold">PhotoRec</td>
+                        <td>Signature-based, 500+ formats</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Large image (&gt;100 GB)</td>
+                        <td class="text-gold">Scalpel</td>
+                        <td>Multi-threaded, 2-3x faster</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Military investigation</td>
+                        <td class="text-gold">Autopsy</td>
+                        <td>Case management, documentation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Manual analysis needed</td>
+                        <td class="text-gold">HxD</td>
+                        <td>Hex editor, full control</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Damaged media</td>
+                        <td class="text-gold">ddrescue</td>
+                        <td>Multi-pass, bad sector handling</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 29: QUIZ INTRO ==================== -->
+            <section>
+                <h2>📝 Quiz Time!</h2>
+                <p class="large">Mari uji pemahaman Anda tentang recovery data dan file carving!</p>
+                <p class="fragment content-margin text-gold">3 soal multiple choice</p>
+            </section>
+
+            <!-- ==================== SLIDE 30: QUIZ 1 ==================== -->
+            <section>
+                <h2>Quiz 1</h2>
+                <p class="medium-text">File berukuran 5,678 bytes disimpan pada sistem dengan cluster size 8 KB (8,192 bytes). Berapa besar slack space yang terbentuk?</p>
+                <div class="quiz-options">
+                    <div class="quiz-option fragment">A. 2,514 bytes</div>
+                    <div class="quiz-option fragment">B. 3,072 bytes</div>
+                    <div class="quiz-option fragment">C. 5,678 bytes</div>
+                    <div class="quiz-option fragment">D. 8,192 bytes</div>
+                </div>
+                <div class="quiz-correct fragment content-margin">
+                    <strong>✓ Jawaban: A. 2,514 bytes</strong><br>
+                    <span class="small">Slack space = Cluster size - File size = 8,192 - 5,678 = 2,514 bytes</span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: QUIZ 2 ==================== -->
+            <section>
+                <h2>Quiz 2</h2>
+                <p class="medium-text">Anda menemukan hex pattern berikut: <code>FF D8 FF E0 00 10 4A 46 49 46</code>. File type apa ini?</p>
+                <div class="quiz-options">
+                    <div class="quiz-option fragment">A. PNG Image</div>
+                    <div class="quiz-option fragment">B. PDF Document</div>
+                    <div class="quiz-option fragment">C. JPEG Image</div>
+                    <div class="quiz-option fragment">D. ZIP Archive</div>
+                </div>
+                <div class="quiz-correct fragment content-margin">
+                    <strong>✓ Jawaban: C. JPEG Image</strong><br>
+                    <span class="small">FF D8 FF = JPEG SOI (Start of Image), 4A 46 49 46 = "JFIF"</span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 32: QUIZ 3 ==================== -->
+            <section>
+                <h2>Quiz 3</h2>
+                <p class="medium-text">Laptop dengan SSD Samsung (TRIM enabled), file dihapus 3 jam lalu. Apa yang HARUS dilakukan PERTAMA?</p>
+                <div class="quiz-options">
+                    <div class="quiz-option fragment">A. Jalankan PhotoRec immediately</div>
+                    <div class="quiz-option fragment">B. Power OFF laptop immediately</div>
+                    <div class="quiz-option fragment">C. Check Recycle Bin dulu</div>
+                    <div class="quiz-option fragment">D. Reboot ke Linux untuk recovery</div>
+                </div>
+                <div class="quiz-correct fragment content-margin">
+                    <strong>✓ Jawaban: B. Power OFF laptop immediately</strong><br>
+                    <span class="small">Mencegah garbage collection lebih lanjut. TRIM dengan 3 jam elapsed = recovery chance sangat rendah, tapi power off adalah prioritas #1.</span>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 33: SUMMARY 1 ==================== -->
+            <section>
+                <h2>📚 Ringkasan (1/2)</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Key Points</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Deletion</strong></td>
+                        <td>Data remains until overwritten; pointer dihapus, data tetap ada</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Data Remnants</strong></td>
+                        <td>Unallocated space, slack space, free space, bad sectors</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Signatures</strong></td>
+                        <td>Magic bytes identify file types (JPEG: FF D8 FF, PNG: 89 50 4E 47)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>File Carving</strong></td>
+                        <td>Extract files tanpa metadata: header/footer, size-based, statistical</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Slack Space</strong></td>
+                        <td>RAM slack + File slack; dapat berisi data sensitif</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 34: SUMMARY 2 ==================== -->
+            <section>
+                <h2>📚 Ringkasan (2/2)</h2>
+                <table class="small">
+                    <tr>
+                        <th>Tool/Concept</th>
+                        <th>Application</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Recuva</strong></td>
+                        <td>User-friendly, quick recovery, GUI-based</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PhotoRec</strong></td>
+                        <td>Signature-based, 500+ formats, cross-platform</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Scalpel</strong></td>
+                        <td>Large images, multi-threaded, 2-3x faster than Foremost</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Autopsy</strong></td>
+                        <td>Case management, military investigations, documentation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SSD + TRIM</strong></td>
+                        <td>Recovery chance: 5-15%; Act immediately; Seek alternatives</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ddrescue</strong></td>
+                        <td>Damaged media, multi-pass strategy, 95-99% recovery</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: KEY TAKEAWAYS ==================== -->
+            <section>
+                <h2>💡 Key Takeaways</h2>
+                <div class="box-warning">
+                    <ol class="medium-text">
+                        <li class="fragment"><strong>File deletion ≠ Data erasure:</strong> Data remains until overwritten</li>
+                        <li class="fragment"><strong>Signatures &gt; Extensions:</strong> Always verify dengan magic bytes</li>
+                        <li class="fragment"><strong>Multiple tools strategy:</strong> Recuva → PhotoRec → Scalpel → Manual</li>
+                        <li class="fragment"><strong>SSD = Time critical:</strong> TRIM makes recovery window very short</li>
+                        <li class="fragment"><strong>Write-protection mandatory:</strong> NEVER write to source media</li>
+                        <li class="fragment"><strong>Documentation is evidence:</strong> Chain of custody, hash verification</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 36: PRACTICAL TIPS ==================== -->
+            <section>
+                <h2>🔧 Practical Tips</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4 class="text-success">✓ Best Practices</h4>
+                        <ul class="small">
+                            <li>Always work on images, not originals</li>
+                            <li>Use write-blockers</li>
+                            <li>Document every step</li>
+                            <li>Calculate hashes</li>
+                            <li>Create multiple copies</li>
+                            <li>Test recovered files</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-red">✗ Common Mistakes</h4>
+                        <ul class="small">
+                            <li>Saving to source drive</li>
+                            <li>Running CHKDSK on evidence</li>
+                            <li>Excessive retry on damaged media</li>
+                            <li>Ignoring TRIM on SSD</li>
+                            <li>Delaying acquisition</li>
+                            <li>Poor documentation</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 37: NEXT MEETING ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 10: Forensik Jaringan</h3>
+                    <p class="content-margin">Topik yang akan dibahas:</p>
+                    <ul class="medium-text">
+                        <li>Network forensics fundamentals</li>
+                        <li>Packet capture dan analysis (Wireshark)</li>
+                        <li>Traffic analysis dan anomaly detection</li>
+                        <li>Network-based indicators of compromise</li>
+                        <li>Intrusion detection dan log analysis</li>
+                        <li>Malicious traffic identification</li>
+                    </ul>
+                </div>
+                <p class="content-margin text-gold">
+                    <strong>Persiapan:</strong> Install Wireshark, familiarize dengan network basics
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 38: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="smaller">
+                    <li>Carrier, B. (2005). <em>File System Forensic Analysis</em>. Addison-Wesley. Chapter 12-14.</li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th ed.). Academic Press. Chapter 7.</li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (7th ed.). Cengage. Chapter 8.</li>
+                    <li>Nikkel, B. (2021). <em>Practical Forensic Imaging</em>. No Starch Press. Chapter 8-10.</li>
+                    <li>Wei, M., et al. (2011). "Reliably Erasing Data from Flash-Based SSDs." <em>FAST</em>.</li>
+                    <li>Garfinkel, S. L. (2007). "Carving Contiguous and Fragmented Files." <em>Digital Investigation</em>.</li>
+                    <li>Richard III, G. G., & Roussev, V. (2005). "Scalpel: A Frugal, High Performance File Carver." <em>DFRWS</em>.</li>
+                    <li>Fairbanks, K., et al. (2012). "Forensic Implications of Solid State Drives." <em>Journal of Digital Forensics</em>.</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 39: Q&A ==================== -->
+            <section class="center">
+                <h1>❓ Tanya Jawab</h1>
+                <p class="large content-margin">Silakan ajukan pertanyaan Anda!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 09: Teknik Recovery Data dan File Carving</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
