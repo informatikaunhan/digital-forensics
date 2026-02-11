@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 13: Forensik Dark Web dan Investigasi Email</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 13</h3>
+                <h2>Forensik Dark Web dan Investigasi Email</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan konsep surface web, deep web, dan dark web</li>
+                    <li class="fragment">Memahami arsitektur jaringan Tor dan mekanisme anonimisasi</li>
+                    <li class="fragment">Menerapkan teknik investigasi dark web dan OSINT</li>
+                    <li class="fragment">Memahami dasar forensik cryptocurrency</li>
+                    <li class="fragment">Menganalisis header email untuk pelacakan sumber</li>
+                    <li class="fragment">Menjelaskan mekanisme autentikasi SPF, DKIM, DMARC</li>
+                    <li class="fragment">Melakukan investigasi phishing dan forensik email</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1: Dark Web</h4>
+                        <ul class="medium-text">
+                            <li>Lapisan Web</li>
+                            <li>Arsitektur Tor</li>
+                            <li>Teknik Investigasi Dark Web</li>
+                            <li>Forensik Cryptocurrency</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2: Email Forensics</h4>
+                        <ul class="medium-text">
+                            <li>Sistem & Protokol Email</li>
+                            <li>Analisis Header Email</li>
+                            <li>SPF, DKIM, DMARC</li>
+                            <li>Investigasi Phishing</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== BAGIAN 1: DARK WEB FORENSICS ==================== -->
+
+            <!-- ==================== SLIDE 4: WEB LAYERS ==================== -->
+            <section>
+                <h2>🌐 Tiga Lapisan Web</h2>
+                <div class="box-definition">
+                    Internet bukan hanya yang terlihat di Google. Mayoritas konten berada di bawah permukaan — tidak terindeks oleh mesin pencari.
+                </div>
+                <table class="medium-text">
+                    <tr>
+                        <th>Lapisan</th>
+                        <th>Proporsi</th>
+                        <th>Akses</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Surface Web</strong></td>
+                        <td>~4-5%</td>
+                        <td>Browser biasa</td>
+                        <td>Google, Wikipedia</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Deep Web</strong></td>
+                        <td>~90-95%</td>
+                        <td>Login/autentikasi</td>
+                        <td>Email, banking, database</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Dark Web</strong></td>
+                        <td>&lt;1%</td>
+                        <td>Software khusus (Tor)</td>
+                        <td>Hidden services (.onion)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 5: ICEBERG DIAGRAM ==================== -->
+            <section>
+                <h2>🧊 Analogi Gunung Es</h2>
+                <img src="images/p13-01-web-layers.png" alt="Diagram Lapisan Web">
+                <p class="small">Gambar 13.1: Surface, Deep, dan Dark Web — Analogi Gunung Es</p>
+            </section>
+
+            <!-- ==================== SLIDE 6: DEEP WEB CONTENT ==================== -->
+            <section>
+                <h2>📂 Konten Deep Web</h2>
+                <p>Deep web <strong>bukan</strong> sinonim dark web. Sebagian besar kontennya legal:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>🏦 Perbankan Online</strong><br>
+                        <span class="small">Internet banking, e-commerce</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📧 Email</strong><br>
+                        <span class="small">Gmail, Outlook, Yahoo Mail</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🎓 Database Akademik</strong><br>
+                        <span class="small">JSTOR, IEEE Xplore</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🎖️ Intranet Militer</strong><br>
+                        <span class="small">Jaringan internal TNI, Kemenhan</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 7: DARK WEB CONTENT ==================== -->
+            <section>
+                <h2>🕳️ Konten Dark Web</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4 class="text-success">✅ Legal</h4>
+                        <ul>
+                            <li class="fragment">Komunikasi anonim jurnalis/aktivis</li>
+                            <li class="fragment">Whistleblowing (SecureDrop)</li>
+                            <li class="fragment">Forum kebebasan berekspresi</li>
+                            <li class="fragment">Mirror situs berita (anti-sensor)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-danger">❌ Ilegal</h4>
+                        <ul>
+                            <li class="fragment">Marketplace narkotika & senjata</li>
+                            <li class="fragment">Jual beli data curian</li>
+                            <li class="fragment">Ransomware-as-a-Service</li>
+                            <li class="fragment">Perdagangan identitas palsu</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 8: TOR ARCHITECTURE ==================== -->
+            <section>
+                <h2>🧅 Arsitektur Jaringan Tor</h2>
+                <div class="box-definition">
+                    <strong>Tor (The Onion Router)</strong> — Jaringan overlay yang menganonimkan trafik internet melalui serangkaian relay terenkripsi. Dikembangkan oleh U.S. Naval Research Laboratory.
+                </div>
+                <p class="fragment">Komponen utama:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Guard Node</strong> — Relay pertama, mengetahui IP pengguna</li>
+                    <li class="fragment"><strong>Middle Node</strong> — Relay tengah, tidak mengetahui sumber maupun tujuan</li>
+                    <li class="fragment"><strong>Exit Node</strong> — Relay terakhir, menghubungkan ke internet terbuka</li>
+                    <li class="fragment"><strong>Hidden Service</strong> — Server yang beroperasi di dalam jaringan Tor (.onion)</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 9: ONION ROUTING ==================== -->
+            <section>
+                <h2>🔐 Onion Routing — Enkripsi Berlapis</h2>
+                <pre><code class="language-text">[Data Asli]
+    ↓ Enkripsi dengan kunci Exit Node
+[Layer 3: Encrypted]
+    ↓ Enkripsi dengan kunci Middle Node
+[Layer 2: Encrypted]
+    ↓ Enkripsi dengan kunci Guard Node
+[Layer 1: Encrypted]
+    ↓ Kirim ke Guard Node</code></pre>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Node</th>
+                        <th>Tahu IP Pengguna?</th>
+                        <th>Tahu Tujuan?</th>
+                        <th>Tahu Konten?</th>
+                    </tr>
+                    <tr>
+                        <td>Guard</td>
+                        <td class="text-danger">✅ Ya</td>
+                        <td>❌ Tidak</td>
+                        <td>❌ Tidak</td>
+                    </tr>
+                    <tr>
+                        <td>Middle</td>
+                        <td>❌ Tidak</td>
+                        <td>❌ Tidak</td>
+                        <td>❌ Tidak</td>
+                    </tr>
+                    <tr>
+                        <td>Exit</td>
+                        <td>❌ Tidak</td>
+                        <td class="text-danger">✅ Ya</td>
+                        <td class="text-warning">⚠️ Jika non-HTTPS</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 10: HIDDEN SERVICES ==================== -->
+            <section>
+                <h2>🧅 Hidden Services (.onion)</h2>
+                <p>Proses akses hidden service lebih kompleks:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Hidden service membuat <strong>introduction points</strong> pada beberapa relay</li>
+                    <li class="fragment">Hidden service mempublikasikan descriptor ke <strong>DHT</strong></li>
+                    <li class="fragment">Klien mendapatkan descriptor dan memilih <strong>rendezvous point</strong></li>
+                    <li class="fragment">Klien mengirim pesan melalui introduction point</li>
+                    <li class="fragment">Hidden service terhubung ke rendezvous point</li>
+                    <li class="fragment">Komunikasi berlangsung melalui rendezvous point</li>
+                </ol>
+                <div class="box-warning fragment">
+                    <strong>Alamat .onion v3:</strong> 56 karakter alfanumerik acak dari kunci kriptografi
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 11: TOR FORENSIC ARTIFACTS ==================== -->
+            <section>
+                <h2>🔍 Artefak Forensik Tor pada Windows</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Artefak</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Tor Browser folder</strong></td>
+                        <td><code>%USERPROFILE%\Desktop\Tor Browser\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Prefetch files</strong></td>
+                        <td><code>C:\Windows\Prefetch\TOR.EXE-*.pf</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Registry UserAssist</strong></td>
+                        <td><code>NTUSER.DAT\...\UserAssist</code> (ROT13)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DNS Cache</strong></td>
+                        <td>Query ke <code>torproject.org</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Network connections</strong></td>
+                        <td>Koneksi ke Tor nodes (port 9001/9030)</td>
+                    </tr>
+                </table>
+                <div class="box-info fragment">
+                    <strong>💡 Konteks Militer:</strong> Monitoring penggunaan Tor di jaringan Kodam/Lantamal
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 12: DE-ANONYMIZATION ==================== -->
+            <section>
+                <h2>🎯 Teknik De-anonimisasi Tor</h2>
+                <p>Meskipun Tor dirancang untuk anonimitas, identitas bisa terungkap melalui:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Traffic Correlation</strong> — Menghubungkan trafik masuk & keluar berdasarkan timing</li>
+                    <li class="fragment"><strong>Browser Exploitation</strong> — Eksploitasi kerentanan browser (contoh: NIT oleh FBI)</li>
+                    <li class="fragment"><strong>OPSEC Failure</strong> — Kesalahan operasional pengguna (login akun real)</li>
+                    <li class="fragment"><strong>Cryptocurrency Tracing</strong> — Melacak transaksi Bitcoin</li>
+                    <li class="fragment"><strong>Server Misconfiguration</strong> — Konfigurasi hidden service yang bocor</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 13: DARK WEB INVESTIGATION TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Investigasi Dark Web</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Fungsi</th>
+                        <th>Jenis</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Tor Browser</strong></td>
+                        <td>Akses .onion sites</td>
+                        <td>Browser</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Ahmia.fi</strong></td>
+                        <td>Mesin pencari dark web</td>
+                        <td>Search Engine</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ExoneraTor</strong></td>
+                        <td>Cek apakah IP adalah relay Tor</td>
+                        <td>Verification</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Hunchly</strong></td>
+                        <td>Web capture & dokumentasi</td>
+                        <td>Documentation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Maltego</strong></td>
+                        <td>OSINT & link analysis</td>
+                        <td>Intelligence</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 14: CRYPTOCURRENCY BASICS ==================== -->
+            <section>
+                <h2>₿ Forensik Cryptocurrency</h2>
+                <div class="box-definition">
+                    <strong>Cryptocurrency</strong> — Mata uang digital yang menggunakan kriptografi dan beroperasi secara desentralisasi. <strong>Blockchain</strong> mencatat semua transaksi secara publik dan permanen.
+                </div>
+                <p class="fragment">Komponen utama Bitcoin:</p>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Wallet Address</strong> — Alamat publik (hash dari public key)</li>
+                    <li class="fragment"><strong>Private Key</strong> — Kunci rahasia untuk menandatangani transaksi</li>
+                    <li class="fragment"><strong>Transaction</strong> — Transfer Bitcoin antar alamat</li>
+                    <li class="fragment"><strong>Block</strong> — Kumpulan transaksi yang divalidasi</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 15: PSEUDONYMOUS vs ANONYMOUS ==================== -->
+            <section>
+                <h2>🔎 Pseudonymous ≠ Anonymous</h2>
+                <div class="box-warning">
+                    Bitcoin bersifat <strong>pseudonymous</strong> — semua transaksi tercatat publik di blockchain, tetapi alamat tidak langsung terkait identitas.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Bitcoin</th>
+                        <th>Monero</th>
+                    </tr>
+                    <tr>
+                        <td>Ledger</td>
+                        <td>Transparan</td>
+                        <td>Opaque</td>
+                    </tr>
+                    <tr>
+                        <td>Alamat pengirim</td>
+                        <td>Terlihat</td>
+                        <td>Tersembunyi</td>
+                    </tr>
+                    <tr>
+                        <td>Jumlah transaksi</td>
+                        <td>Terlihat</td>
+                        <td>Tersembunyi (RingCT)</td>
+                    </tr>
+                    <tr>
+                        <td>Traceability</td>
+                        <td>Dapat dilacak</td>
+                        <td>Sangat sulit dilacak</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 16: BLOCKCHAIN FORENSICS ==================== -->
+            <section>
+                <h2>⛓️ Teknik Forensik Blockchain</h2>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Cluster Analysis</strong> — Mengelompokkan alamat milik entitas yang sama</li>
+                    <li class="fragment"><strong>Transaction Graph</strong> — Memvisualisasi aliran dana antar alamat</li>
+                    <li class="fragment"><strong>Exchange Identification</strong> — Mengenali alamat milik exchange (KYC data)</li>
+                    <li class="fragment"><strong>Mixing Detection</strong> — Mendeteksi penggunaan tumbler/mixer</li>
+                    <li class="fragment"><strong>Heuristic Analysis</strong> — Pola common-input-ownership</li>
+                </ul>
+                <div class="box-info fragment">
+                    <strong>Tools:</strong> Blockchain.com Explorer, Etherscan.io, Blockchair.com, OXT.me
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 17: OSINT ==================== -->
+            <section>
+                <h2>🕵️ OSINT untuk Investigasi Dark Web</h2>
+                <div class="box-definition">
+                    <strong>OSINT (Open Source Intelligence)</strong> — Pengumpulan dan analisis informasi dari sumber publik untuk mendukung intelijen.
+                </div>
+                <p class="fragment">Metodologi OSINT:</p>
+                <pre class="fragment"><code class="language-text">1. DEFINE    → Tentukan target investigasi
+2. DISCOVER  → Kumpulkan data dari berbagai sumber
+3. ANALYZE   → Analisis dan korelasi temuan
+4. VALIDATE  → Verifikasi keakuratan informasi
+5. REPORT    → Dokumentasi dan pelaporan</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 18: OSINT SOURCES ==================== -->
+            <section>
+                <h2>📡 Sumber OSINT Dark Web</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>🔍 Mesin Pencari</strong><br>
+                        <span class="small">Ahmia.fi, DarkSearch.io</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📋 Paste Sites</strong><br>
+                        <span class="small">Pastebin, Ghostbin (data dumps)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>💬 Forum Monitoring</strong><br>
+                        <span class="small">Underground forums, marketplace</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📱 Social Media</strong><br>
+                        <span class="small">Korelasi akun dark web ↔ media sosial</span>
+                    </div>
+                </div>
+                <div class="box-warning fragment">
+                    <strong>⚠️ Stylometry:</strong> Analisis gaya bahasa penulisan untuk korelasi identitas lintas platform
+                </div>
+            </section>
+
+            <!-- ==================== BAGIAN 2: EMAIL FORENSICS ==================== -->
+
+            <!-- ==================== SLIDE 19: SECTION DIVIDER ==================== -->
+            <section class="center">
+                <h1>📧 Forensik Email</h1>
+                <h3>Bagian 2</h3>
+                <p class="medium-text">Sistem Email, Header Analysis, Autentikasi, dan Investigasi Phishing</p>
+            </section>
+
+            <!-- ==================== SLIDE 20: EMAIL ARCHITECTURE ==================== -->
+            <section>
+                <h2>📮 Arsitektur Sistem Email</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Fungsi</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MUA</strong></td>
+                        <td>Mail User Agent — klien email</td>
+                        <td>Outlook, Thunderbird</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MSA</strong></td>
+                        <td>Mail Submission Agent — menerima dari MUA</td>
+                        <td>SMTP server</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MTA</strong></td>
+                        <td>Mail Transfer Agent — routing antar server</td>
+                        <td>Postfix, Exchange</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MDA</strong></td>
+                        <td>Mail Delivery Agent — kirim ke mailbox</td>
+                        <td>Dovecot</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 21: EMAIL PROTOCOLS ==================== -->
+            <section>
+                <h2>📡 Protokol Email</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Protokol</th>
+                        <th>Fungsi</th>
+                        <th>Port</th>
+                        <th>Port TLS</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SMTP</strong></td>
+                        <td>Pengiriman email</td>
+                        <td>25</td>
+                        <td>465/587</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>POP3</strong></td>
+                        <td>Unduh email ke lokal</td>
+                        <td>110</td>
+                        <td>995</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>IMAP</strong></td>
+                        <td>Akses email di server</td>
+                        <td>143</td>
+                        <td>993</td>
+                    </tr>
+                </table>
+                <div class="box-info fragment">
+                    <strong>Implikasi Forensik:</strong> POP3 → bukti di lokal | IMAP → bukti di server + cache lokal
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 22: EMAIL FLOW ==================== -->
+            <section>
+                <h2>📬 Alur Pengiriman Email</h2>
+                <pre><code class="language-text">alice@kodam.mil.id → bob@lantamal.mil.id
+
+1. Alice menulis email di Outlook (MUA)
+2. Outlook → smtp.kodam.mil.id (MSA/MTA) via SMTP:587
+3. MTA kodam → DNS MX lookup untuk lantamal.mil.id
+4. MTA kodam → mx.lantamal.mil.id (MTA penerima) via SMTP:25
+5. MTA lantamal → MDA → Mailbox Bob
+6. Bob mengakses email via Outlook/IMAP</code></pre>
+                <div class="box-warning fragment">
+                    <strong>🔑 Kunci Forensik:</strong> Setiap server yang memproses email menambahkan header <code>Received</code>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 23: EMAIL HEADER ==================== -->
+            <section>
+                <h2>📋 Struktur Email Header</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Field</th>
+                        <th>Deskripsi</th>
+                        <th>Dapat Dipalsukan?</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>From</strong></td>
+                        <td>Alamat pengirim</td>
+                        <td class="text-danger">⚠️ Ya (spoofable)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Received</strong></td>
+                        <td>Jejak routing</td>
+                        <td class="text-success">Sulit dipalsukan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Message-ID</strong></td>
+                        <td>ID unik pesan</td>
+                        <td>Bergantung server</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>X-Originating-IP</strong></td>
+                        <td>IP pengirim asli</td>
+                        <td class="text-success">Ditambahkan server</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Return-Path</strong></td>
+                        <td>Alamat bounce</td>
+                        <td class="text-warning">Kadang berbeda dari From</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 24: READING RECEIVED HEADERS ==================== -->
+            <section>
+                <h2>📖 Membaca Header "Received"</h2>
+                <div class="box-warning">
+                    <strong>⚠️ PENTING:</strong> Header Received dibaca dari <strong>BAWAH ke ATAS</strong> untuk menelusuri jalur pengiriman!
+                </div>
+                <pre class="fragment"><code class="language-text">Received: from mail.kodam.mil.id (10.20.30.1)
+  by inbox.lantamal.mil.id; 14:22:30 +0700     ← [3] Terakhir
+
+Received: from webmail.kodam.mil.id (10.20.30.5)
+  by mail.kodam.mil.id; 14:22:25 +0700         ← [2] Tengah
+
+Received: from [172.16.50.100]
+  by webmail.kodam.mil.id; 14:22:20 +0700       ← [1] ASAL</code></pre>
+                <p class="fragment medium-text"><strong>IP pengirim asli: 172.16.50.100</strong></p>
+            </section>
+
+            <!-- ==================== SLIDE 25: SPF ==================== -->
+            <section>
+                <h2>🛡️ SPF — Sender Policy Framework</h2>
+                <div class="box-definition">
+                    <strong>SPF</strong> memungkinkan pemilik domain menentukan server mana yang berhak mengirim email atas nama domain tersebut via DNS TXT record.
+                </div>
+                <pre class="fragment"><code class="language-text">v=spf1 ip4:203.0.113.0/24 include:_spf.google.com -all</code></pre>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Qualifier</th>
+                        <th>Simbol</th>
+                        <th>Aksi</th>
+                    </tr>
+                    <tr>
+                        <td>Pass</td>
+                        <td><code>+</code></td>
+                        <td>Diizinkan (default)</td>
+                    </tr>
+                    <tr>
+                        <td>Fail</td>
+                        <td><code>-</code></td>
+                        <td class="text-danger">Ditolak</td>
+                    </tr>
+                    <tr>
+                        <td>Softfail</td>
+                        <td><code>~</code></td>
+                        <td class="text-warning">Diterima, ditandai</td>
+                    </tr>
+                    <tr>
+                        <td>Neutral</td>
+                        <td><code>?</code></td>
+                        <td>Tidak ada pernyataan</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 26: DKIM ==================== -->
+            <section>
+                <h2>✍️ DKIM — DomainKeys Identified Mail</h2>
+                <div class="box-definition">
+                    <strong>DKIM</strong> menggunakan tanda tangan digital untuk memverifikasi bahwa email berasal dari domain yang diklaim dan konten tidak dimodifikasi.
+                </div>
+                <p class="fragment">Proses DKIM:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Server pengirim menandatangani header + body dengan <strong>private key</strong></li>
+                    <li class="fragment">Tanda tangan disertakan dalam header <code>DKIM-Signature</code></li>
+                    <li class="fragment">Server penerima mengambil <strong>public key</strong> dari DNS TXT record</li>
+                    <li class="fragment">Server penerima <strong>memverifikasi</strong> tanda tangan</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 27: DMARC ==================== -->
+            <section>
+                <h2>🔒 DMARC — Domain-based Message Authentication</h2>
+                <div class="box-definition">
+                    <strong>DMARC</strong> menggabungkan SPF + DKIM dan memberikan instruksi kepada server penerima jika email gagal autentikasi.
+                </div>
+                <pre class="fragment"><code class="language-text">v=DMARC1; p=reject; rua=mailto:dmarc@kodam.mil.id</code></pre>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Kebijakan</th>
+                        <th>Aksi</th>
+                    </tr>
+                    <tr>
+                        <td><code>p=none</code></td>
+                        <td>Monitor saja, tidak ada tindakan</td>
+                    </tr>
+                    <tr>
+                        <td><code>p=quarantine</code></td>
+                        <td class="text-warning">Masukkan ke spam/karantina</td>
+                    </tr>
+                    <tr>
+                        <td><code>p=reject</code></td>
+                        <td class="text-danger">Tolak email sepenuhnya</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 28: AUTH SUMMARY ==================== -->
+            <section>
+                <h2>🔐 SPF + DKIM + DMARC = Defense in Depth</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Mekanisme</th>
+                        <th>Memverifikasi</th>
+                        <th>Melindungi Dari</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SPF</strong></td>
+                        <td>Server pengirim</td>
+                        <td>Unauthorized server</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DKIM</strong></td>
+                        <td>Integritas konten</td>
+                        <td>Email tampering</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DMARC</strong></td>
+                        <td>Kebijakan domain</td>
+                        <td>Email spoofing</td>
+                    </tr>
+                </table>
+                <div class="box-info fragment">
+                    <strong>💡 Forensik:</strong> Jika SPF=fail, DKIM=fail, DMARC=fail → <strong>Indikasi kuat email spoofed!</strong>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 29: PHISHING TYPES ==================== -->
+            <section>
+                <h2>🎣 Jenis Serangan Phishing</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Deskripsi</th>
+                        <th>Target</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Phishing</strong></td>
+                        <td>Email massal meniru entitas terpercaya</td>
+                        <td>Massal</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Spear Phishing</strong></td>
+                        <td>Ditargetkan ke individu spesifik</td>
+                        <td>Individu</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Whaling</strong></td>
+                        <td>Menargetkan pimpinan/eksekutif</td>
+                        <td>C-suite</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>BEC</strong></td>
+                        <td>Memalsukan email pimpinan</td>
+                        <td>Staf keuangan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Clone Phishing</strong></td>
+                        <td>Duplikasi email legitimate</td>
+                        <td>Penerima asli</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 30: PHISHING INDICATORS ==================== -->
+            <section>
+                <h2>🚩 Indikator Phishing Email</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>📋 Header Analysis</strong><br>
+                        <span class="small">SPF/DKIM/DMARC gagal, IP mencurigakan</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🔗 URL Inspection</strong><br>
+                        <span class="small">Typosquatting, URL shortener, homograph</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📎 Attachment Analysis</strong><br>
+                        <span class="small">Double extension (.pdf.exe), macro</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📝 Content Analysis</strong><br>
+                        <span class="small">Urgensi palsu, ancaman, grammar errors</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: URL PHISHING TECHNIQUES ==================== -->
+            <section>
+                <h2>🔗 Teknik URL Phishing</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Teknik</th>
+                        <th>Contoh</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Typosquatting</strong></td>
+                        <td><code>go0gle.com</code> vs <code>google.com</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Subdomain abuse</strong></td>
+                        <td><code>kemenhan.go.id.<span class="text-danger">malicious.xyz</span></code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>URL shortening</strong></td>
+                        <td><code>bit.ly/xxx</code> menyembunyikan URL asli</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Homograph attack</strong></td>
+                        <td><code>gооgle.com</code> (huruf Cyrillic "о")</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Path manipulation</strong></td>
+                        <td><code>malicious.com/kemenhan.go.id/login</code></td>
+                    </tr>
+                </table>
+                <div class="box-warning fragment">
+                    <strong>⚠️ Selalu periksa domain utama sebelum TLD!</strong>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 32: PHISHING INVESTIGATION ==================== -->
+            <section>
+                <h2>🔬 Langkah Investigasi Phishing</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Preservasi</strong> — Simpan email asli (.eml/.msg), jangan forward</li>
+                    <li class="fragment"><strong>Header Analysis</strong> — Periksa Received, SPF, DKIM, DMARC</li>
+                    <li class="fragment"><strong>URL Analysis</strong> — Analisis tanpa mengklik, gunakan sandbox</li>
+                    <li class="fragment"><strong>Attachment Analysis</strong> — Sandbox (Any.run, VirusTotal)</li>
+                    <li class="fragment"><strong>IOC Extraction</strong> — Kumpulkan IP, domain, hash, email</li>
+                    <li class="fragment"><strong>Threat Intelligence</strong> — Cek IOC di TI platform</li>
+                    <li class="fragment"><strong>Scope Assessment</strong> — Berapa banyak penerima terkena?</li>
+                    <li class="fragment"><strong>Documentation</strong> — Buat laporan forensik lengkap</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 33: SPOOFED EMAIL DETECTION ==================== -->
+            <section>
+                <h2>🕵️ Deteksi Email Spoofed</h2>
+                <pre><code class="language-text">From: admin@kodam-jaya.mil.id
+Return-Path: &lt;hacker@malicious-domain.ru&gt;     ⚠️
+Received: from mail.malicious-domain.ru         ⚠️
+Message-ID: &lt;random@malicious-domain.ru&gt;       ⚠️
+X-Originating-IP: [198.51.100.50]               ⚠️
+Authentication-Results: spf=fail; dkim=none; dmarc=fail</code></pre>
+                <div class="box-danger fragment">
+                    <strong>🚨 SPOOFED!</strong> Return-Path, Received, Message-ID, dan IP semua menunjuk ke domain asing. SPF, DKIM, DMARC semuanya gagal.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 34: EMAIL ARTIFACTS ==================== -->
+            <section>
+                <h2>💾 Lokasi Artefak Email (Windows)</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Email Client</th>
+                        <th>Format</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Outlook (POP)</strong></td>
+                        <td>.pst</td>
+                        <td><code>%USERPROFILE%\Documents\Outlook Files\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Outlook (Exchange)</strong></td>
+                        <td>.ost</td>
+                        <td><code>%LOCALAPPDATA%\Microsoft\Outlook\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Thunderbird</strong></td>
+                        <td>Mbox</td>
+                        <td><code>%APPDATA%\Thunderbird\Profiles\</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Windows Mail</strong></td>
+                        <td>.eml</td>
+                        <td><code>%LOCALAPPDATA%\Comms\Unistore\</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: EMAIL FORMATS ==================== -->
+            <section>
+                <h2>📄 Format File Email</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Format</th>
+                        <th>Deskripsi</th>
+                        <th>Dibuka Dengan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>.eml</strong></td>
+                        <td>Standar RFC 822, single email</td>
+                        <td>Outlook, Thunderbird, text editor</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>.msg</strong></td>
+                        <td>Format proprietary Microsoft</td>
+                        <td>Outlook, kernel MSG viewer</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>.pst</strong></td>
+                        <td>Personal Storage Table</td>
+                        <td>Outlook, Autopsy</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>.mbox</strong></td>
+                        <td>Format Unix mailbox</td>
+                        <td>Thunderbird, mbox viewer</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 36: IM FORENSICS ==================== -->
+            <section>
+                <h2>💬 Forensik Instant Messaging</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Platform</th>
+                        <th>Lokasi Artefak (Windows)</th>
+                        <th>Format DB</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WhatsApp Desktop</strong></td>
+                        <td><code>%APPDATA%\WhatsApp\</code></td>
+                        <td>SQLite</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Telegram Desktop</strong></td>
+                        <td><code>%APPDATA%\Telegram Desktop\</code></td>
+                        <td>Custom binary</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Signal Desktop</strong></td>
+                        <td><code>%APPDATA%\Signal\</code></td>
+                        <td>SQLite (encrypted)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Discord</strong></td>
+                        <td><code>%APPDATA%\discord\</code></td>
+                        <td>LevelDB</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 37: EMAIL FORENSIC TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Forensik Email</h2>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>🔍 Autopsy</strong><br>
+                        <span class="small">Analisis PST/MBOX dari forensic image</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📋 MXToolbox</strong><br>
+                        <span class="small">Analisis header email online</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🎣 PhishTool</strong><br>
+                        <span class="small">Analisis phishing email</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📧 MailHeader.org</strong><br>
+                        <span class="small">Parsing & visualisasi header</span>
+                    </div>
+                </div>
+                <div class="box-info fragment">
+                    <strong>Google Email Header Analyzer:</strong> toolbox.googleapps.com/apps/messageheader
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 38: MILITARY CASE STUDY ==================== -->
+            <section>
+                <h2>🎖️ Studi Kasus: Phishing di Pangkalan Militer</h2>
+                <div class="box-danger">
+                    <strong>Skenario:</strong> Pangkalan Udara TNI AU menerima laporan email phishing mengaku dari Kemenhan. 3 perwira mengklik tautan dan memasukkan kredensial.
+                </div>
+                <p class="fragment">Langkah respons:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Containment</strong> — Isolasi workstation, block domain phishing</li>
+                    <li class="fragment"><strong>Assessment</strong> — Identifikasi semua penerima, siapa yang mengklik</li>
+                    <li class="fragment"><strong>Eradication</strong> — Reset kredensial, scan malware</li>
+                    <li class="fragment"><strong>Recovery</strong> — Restore dari backup jika perlu</li>
+                    <li class="fragment"><strong>Lessons Learned</strong> — Update filtering, awareness training</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 39: KEY TAKEAWAYS ==================== -->
+            <section>
+                <h2>📌 Ringkasan Pertemuan 13</h2>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Lapisan Web:</strong> Surface (4-5%), Deep (90-95%), Dark (&lt;1%)</li>
+                    <li class="fragment"><strong>Tor:</strong> Onion routing, 3 relay, enkripsi berlapis</li>
+                    <li class="fragment"><strong>Cryptocurrency:</strong> Pseudonymous (Bitcoin), private (Monero)</li>
+                    <li class="fragment"><strong>Email Header:</strong> Received dibaca dari bawah ke atas</li>
+                    <li class="fragment"><strong>Autentikasi:</strong> SPF + DKIM + DMARC = defense-in-depth</li>
+                    <li class="fragment"><strong>Phishing:</strong> Analisis header, URL, attachment, IOC</li>
+                    <li class="fragment"><strong>Artefak:</strong> PST/OST (Outlook), Mbox (Thunderbird), SQLite (IM)</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 40: NEXT MEETING ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 14: Forensik Cloud Computing</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Cloud computing models: IaaS, PaaS, SaaS</li>
+                    <li class="fragment">Tantangan forensik di lingkungan cloud</li>
+                    <li class="fragment">Cloud storage forensics (Dropbox, Google Drive, OneDrive)</li>
+                    <li class="fragment">Virtual machine dan container forensics</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 41: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. <strong>Chapter 14</strong></li>
+                    <li>Davidoff, S. & Ham, J. (2022). <em>Network Forensics</em> (2nd Ed.). Pearson. Chapter 9-10.</li>
+                    <li>Johansen, G. (2020). <em>Digital Forensics and Incident Response</em>. Packt. Chapter 10.</li>
+                    <li>Europol (2023). <em>IOCTA 2023</em>.</li>
+                    <li>Tor Project (2024). <em>Tor: Overview</em>.</li>
+                    <li>Chainalysis (2024). <em>The 2024 Crypto Crime Report</em>.</li>
+                    <li>NIST. <em>Guidelines on Email Forensics</em>.</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 42: Q&A ==================== -->
+            <section>
+                <h2>❓ Sesi Tanya Jawab</h2>
+                <div class="box-definition">
+                    Silakan ajukan pertanyaan terkait materi Forensik Dark Web dan Investigasi Email.
+                </div>
+                <p class="medium-text fragment">Topik diskusi:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Pengalaman/kasus terkait dark web di Indonesia?</li>
+                    <li class="fragment">Tantangan investigasi email di organisasi militer?</li>
+                    <li class="fragment">Implementasi SPF/DKIM/DMARC di jaringan Kodam?</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 43: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 13: Forensik Dark Web dan Investigasi Email</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
