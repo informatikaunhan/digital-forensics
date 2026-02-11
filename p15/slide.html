@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 15: Forensik Mobile dan Internet of Things (IoT)</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 15</h3>
+                <h2>Forensik Mobile dan Internet of Things (IoT)</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan arsitektur Android dan iOS dari perspektif forensik</li>
+                    <li class="fragment">Menerapkan metode akuisisi data pada perangkat mobile</li>
+                    <li class="fragment">Menganalisis artefak mobile: pesan, kontak, lokasi, aplikasi</li>
+                    <li class="fragment">Memahami prinsip forensik IoT dan protokol komunikasinya</li>
+                    <li class="fragment">Menginvestigasi perangkat IoT: smart home, drone, SCADA</li>
+                    <li class="fragment">Menyusun laporan forensik mobile/IoT dalam konteks militer</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1: Mobile Forensics</h4>
+                        <ul class="medium-text">
+                            <li>Arsitektur Android & iOS</li>
+                            <li>Metode Akuisisi Mobile</li>
+                            <li>Analisis Artefak Mobile</li>
+                            <li>Backup Forensics</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2: IoT Forensics</h4>
+                        <ul class="medium-text">
+                            <li>Protokol IoT (MQTT, CoAP, Zigbee)</li>
+                            <li>Smart Home & Wearable</li>
+                            <li>Drone & Vehicle Forensics</li>
+                            <li>ICS/SCADA Forensics</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: WHY MOBILE FORENSICS ==================== -->
+            <section>
+                <h2>📱 Mengapa Forensik Mobile Penting?</h2>
+                <div class="box-definition">
+                    Smartphone menyimpan volume data besar: komunikasi, lokasi, foto, catatan, dan data aplikasi yang menjadi bukti digital kritis.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Konteks Militer</th>
+                        <th>Relevansi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Insider Threat</strong></td>
+                        <td>Kebocoran informasi via aplikasi pesan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Operasi Intelijen</strong></td>
+                        <td>Ekstraksi data dari perangkat sitaan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Counter-Intelligence</strong></td>
+                        <td>Deteksi spyware pada perangkat personel</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Operasi Lapangan</strong></td>
+                        <td>Analisis perangkat di zona operasi</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 5: ANDROID ARCHITECTURE ==================== -->
+            <section>
+                <h2>🤖 Arsitektur Android</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Layer</th>
+                        <th>Komponen</th>
+                        <th>Relevansi Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Applications</strong></td>
+                        <td>User & system apps</td>
+                        <td>Data aplikasi, cache</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Framework</strong></td>
+                        <td>Activity Mgr, Content Provider</td>
+                        <td>Database, shared data</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Libraries</strong></td>
+                        <td>SQLite, SSL, ART</td>
+                        <td>Database format, enkripsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HAL</strong></td>
+                        <td>Camera, GPS, Sensors</td>
+                        <td>Metadata sensor, lokasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Linux Kernel</strong></td>
+                        <td>File system, drivers</td>
+                        <td>Partisi ext4/f2fs</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 6: ANDROID PARTITIONS ==================== -->
+            <section>
+                <h2>📂 Struktur Partisi Android</h2>
+                <pre><code class="bash">/boot        → Kernel dan ramdisk
+/system      → Sistem operasi Android
+/data        → Data pengguna & aplikasi ← FOKUS FORENSIK
+/cache       → Cache sistem
+/recovery    → Recovery mode
+/sdcard      → Penyimpanan eksternal/emulasi</code></pre>
+                <div class="box-warning fragment">
+                    <strong>⚠️ Penting:</strong> Partisi <code>/data</code> adalah target utama forensik karena menyimpan semua data pengguna dan aplikasi.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 7: ANDROID DATA LOCATIONS ==================== -->
+            <section>
+                <h2>📍 Lokasi Data Penting Android</h2>
+                <table class="small">
+                    <tr>
+                        <th>Data</th>
+                        <th>Path</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Kontak</strong></td>
+                        <td><code>/data/data/com.android.providers.contacts/databases/contacts2.db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SMS/MMS</strong></td>
+                        <td><code>/data/data/com.android.providers.telephony/databases/mmssms.db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Call Logs</strong></td>
+                        <td><code>/data/data/com.android.providers.contacts/databases/calllog.db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WhatsApp</strong></td>
+                        <td><code>/data/data/com.whatsapp/databases/msgstore.db</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WiFi</strong></td>
+                        <td><code>/data/misc/wifi/wpa_supplicant.conf</code></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Lokasi GPS</strong></td>
+                        <td><code>/data/data/com.google.android.gms/databases/</code></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 8: iOS ARCHITECTURE ==================== -->
+            <section>
+                <h2>🍎 Arsitektur iOS</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Layer</th>
+                        <th>Komponen</th>
+                        <th>Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cocoa Touch</strong></td>
+                        <td>UIKit, MapKit</td>
+                        <td>Data UI, lokasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Media</strong></td>
+                        <td>Core Audio/Image</td>
+                        <td>Media files, metadata</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Core Services</strong></td>
+                        <td>Core Data, SQLite</td>
+                        <td>Database, penyimpanan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Core OS</strong></td>
+                        <td>Kernel, Security</td>
+                        <td>Enkripsi, secure boot</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: iOS SECURITY ==================== -->
+            <section>
+                <h2>🔒 Fitur Keamanan iOS</h2>
+                <p class="medium-text">iOS memiliki keamanan lebih ketat dibanding Android:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Fitur</th>
+                        <th>Dampak Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Secure Enclave</strong></td>
+                        <td>Key tersimpan di hardware terpisah, tidak bisa diekstrak</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Full Disk Encryption</strong></td>
+                        <td>Data terenkripsi berbasis passcode</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>USB Restricted Mode</strong></td>
+                        <td>USB nonaktif setelah 1 jam terkunci</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Secure Boot Chain</strong></td>
+                        <td>Mencegah modifikasi OS</td>
+                    </tr>
+                </table>
+                <div class="box-warning fragment">
+                    <strong>⚠️ Tantangan:</strong> Akuisisi fisik iOS jauh lebih sulit dibanding Android!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 10: ACQUISITION LEVELS ==================== -->
+            <section>
+                <h2>📊 Level Akuisisi Mobile</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Level</th>
+                        <th>Metode</th>
+                        <th>Data</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><span class="text-gold">L1</span> Manual</td>
+                        <td>Interaksi UI</td>
+                        <td>Screenshot, konten layar</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><span class="text-gold">L2</span> Logical</td>
+                        <td>Backup OS</td>
+                        <td>File user, database</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><span class="text-gold">L3</span> File System</td>
+                        <td>Root/Jailbreak</td>
+                        <td>Semua file + deleted</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><span class="text-gold">L4</span> Physical</td>
+                        <td>Bit-by-bit image</td>
+                        <td>Raw + unallocated space</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><span class="text-gold">L5</span> Chip-off</td>
+                        <td>Desolder chip</td>
+                        <td>Raw NAND/eMMC</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 11: ADB ACQUISITION ==================== -->
+            <section>
+                <h2>🔧 Akuisisi Android via ADB</h2>
+                <pre><code class="bash"># Cek koneksi perangkat
+adb devices
+
+# Full backup
+adb backup -all -shared -apk -system backup.ab
+
+# Pull specific databases
+adb pull /data/data/com.whatsapp/databases/msgstore.db
+
+# Daftar semua packages terinstall
+adb shell pm list packages
+
+# Screenshot
+adb exec-out screencap -p > screen.png
+
+# Info perangkat
+adb shell getprop ro.product.model
+adb shell getprop ro.build.version.release</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 12: ACQUISITION PROCEDURE ==================== -->
+            <section>
+                <h2>📋 Prosedur Akuisisi Android</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Persiapan:</strong> Aktifkan mode pesawat, cek baterai ≥50%</li>
+                    <li class="fragment"><strong>Dokumentasi:</strong> Foto kondisi awal, catat model & IMEI</li>
+                    <li class="fragment"><strong>USB Debugging:</strong> Settings → Developer Options → Enable</li>
+                    <li class="fragment"><strong>Verifikasi:</strong> <code>adb devices</code></li>
+                    <li class="fragment"><strong>Backup:</strong> <code>adb backup -all -shared</code></li>
+                    <li class="fragment"><strong>Pull data spesifik:</strong> WhatsApp, DCIM, Download</li>
+                    <li class="fragment"><strong>Hash:</strong> <code>certutil -hashfile backup.ab SHA256</code></li>
+                    <li class="fragment"><strong>Chain of custody:</strong> Dokumentasi lengkap</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 13: SQLITE ANALYSIS ==================== -->
+            <section>
+                <h2>🗄️ Analisis Database SQLite</h2>
+                <p class="medium-text">Mayoritas data mobile tersimpan dalam SQLite:</p>
+                <pre><code class="sql">-- Semua tabel dalam database
+SELECT name FROM sqlite_master WHERE type='table';
+
+-- Pesan SMS
+SELECT address, body, date, type FROM sms 
+ORDER BY date DESC;
+
+-- WhatsApp messages
+SELECT key_remote_jid, data, timestamp 
+FROM messages ORDER BY timestamp DESC;
+
+-- Call logs
+SELECT number, duration, date, type 
+FROM calls ORDER BY date DESC;</code></pre>
+                <p class="small fragment">Tools: <strong>DB Browser for SQLite</strong>, <strong>sqlite3</strong> CLI, <strong>Autopsy</strong></p>
+            </section>
+
+            <!-- ==================== SLIDE 14: SMS STRUCTURE ==================== -->
+            <section>
+                <h2>💬 Struktur Data SMS (mmssms.db)</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kolom</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>address</code></td>
+                        <td>Nomor pengirim/penerima</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>body</code></td>
+                        <td>Isi pesan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>date</code></td>
+                        <td>Timestamp Unix (milliseconds)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>type</code></td>
+                        <td>1=Received, 2=Sent, 3=Draft</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>read</code></td>
+                        <td>0=Unread, 1=Read</td>
+                    </tr>
+                </table>
+                <div class="box-info fragment">
+                    <strong>💡 Tip:</strong> Konversi timestamp: <code>datetime(date/1000, 'unixepoch', 'localtime')</code>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 15: MESSAGING APPS ==================== -->
+            <section>
+                <h2>📲 Artefak Aplikasi Pesan</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aplikasi</th>
+                        <th>Database</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WhatsApp</strong></td>
+                        <td>msgstore.db</td>
+                        <td>com.whatsapp/databases/</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Telegram</strong></td>
+                        <td>cache4.db</td>
+                        <td>org.telegram.messenger/files/</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Signal</strong></td>
+                        <td>signal.db</td>
+                        <td>org.thoughtcrime.securesms/databases/</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>LINE</strong></td>
+                        <td>naver_line</td>
+                        <td>jp.naver.line.android/databases/</td>
+                    </tr>
+                </table>
+                <p class="small fragment">Semua memerlukan <strong>root access</strong> atau <strong>physical acquisition</strong> untuk akses langsung</p>
+            </section>
+
+            <!-- ==================== SLIDE 16: LOCATION DATA ==================== -->
+            <section>
+                <h2>📍 Analisis Data Lokasi</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Sumber</th>
+                        <th>Akurasi</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>GPS</strong></td>
+                        <td>3-5 meter</td>
+                        <td>Sinyal satelit</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cell Tower</strong></td>
+                        <td>100-300 meter</td>
+                        <td>Triangulasi menara seluler</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WiFi</strong></td>
+                        <td>10-30 meter</td>
+                        <td>Posisi WiFi access point</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Bluetooth</strong></td>
+                        <td>1-3 meter</td>
+                        <td>Proximity BLE beacon</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Photo EXIF</strong></td>
+                        <td>Bervariasi</td>
+                        <td>Metadata GPS dalam foto</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 17: EXIF ANALYSIS ==================== -->
+            <section>
+                <h2>📸 Analisis EXIF Metadata Foto</h2>
+                <pre><code class="bash"># Menggunakan ExifTool
+exiftool -gps* photo.jpg
+
+# Output:
+# GPS Latitude  : 6 deg 10' 30.00" S
+# GPS Longitude : 106 deg 49' 35.00" E
+# GPS Altitude  : 15 m
+# GPS Time Stamp: 14:30:00</code></pre>
+                <div class="box-info fragment">
+                    <strong>🎖️ Konteks Militer:</strong> Foto dengan EXIF data yang menunjukkan lokasi di sekitar instalasi militer memerlukan investigasi apakah personel memiliki otorisasi untuk memotret di area tersebut.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 18: QUIZ 1 ==================== -->
+            <section>
+                <h2>❓ Quiz: Mobile Forensics</h2>
+                <p class="medium-text">Database SMS pada Android tersimpan di file:</p>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    A. contacts2.db
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-correct')">
+                    B. mmssms.db ✅
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    C. msgstore.db
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    D. calllog.db
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 19: BACKUP FORENSICS ==================== -->
+            <section>
+                <h2>💾 Mobile Backup Forensics</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4>Android Backup</h4>
+                        <ul>
+                            <li class="fragment">ADB Backup (.ab)</li>
+                            <li class="fragment">Google Takeout (cloud)</li>
+                            <li class="fragment">Samsung Backup (.sbu)</li>
+                        </ul>
+                        <pre class="fragment"><code class="bash"># Konversi .ab ke .tar
+java -jar abe.jar unpack \
+  backup.ab backup.tar</code></pre>
+                    </div>
+                    <div>
+                        <h4>iOS Backup</h4>
+                        <ul>
+                            <li class="fragment">iTunes (unencrypted)</li>
+                            <li class="fragment">iTunes (encrypted)</li>
+                            <li class="fragment">iCloud (cloud)</li>
+                        </ul>
+                        <pre class="fragment"><code class="text">Lokasi di Windows:
+C:\Users\&lt;user&gt;\Apple\
+  MobileSync\Backup\</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 20: ENCRYPTED vs UNENCRYPTED ==================== -->
+            <section>
+                <h2>🔐 iOS Backup: Encrypted vs Unencrypted</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Data</th>
+                        <th>Unencrypted</th>
+                        <th>Encrypted</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Foto, Kontak, SMS</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Keychain (passwords)</strong></td>
+                        <td>❌</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Health Data</strong></td>
+                        <td>❌</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>WiFi Passwords</strong></td>
+                        <td>❌</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Saved Passwords</strong></td>
+                        <td>❌</td>
+                        <td>✅</td>
+                    </tr>
+                </table>
+                <p class="small fragment">💡 Encrypted backup selalu lebih bernilai untuk forensik!</p>
+            </section>
+
+            <!-- ==================== SLIDE 21: TRANSITION TO IoT ==================== -->
+            <section class="center bg-red">
+                <h1>🌐 Bagian 2</h1>
+                <h2>Forensik Internet of Things (IoT)</h2>
+                <p>Tantangan baru dalam investigasi forensik digital</p>
+            </section>
+
+            <!-- ==================== SLIDE 22: IoT INTRODUCTION ==================== -->
+            <section>
+                <h2>🌐 Apa itu Forensik IoT?</h2>
+                <div class="box-definition">
+                    <strong>IoT Forensics</strong> adalah proses identifikasi, akuisisi, dan analisis bukti digital dari perangkat IoT yang terhubung ke internet.
+                </div>
+                <p class="medium-text fragment">Tantangan unik forensik IoT:</p>
+                <div class="grid-2x2 small fragment">
+                    <div class="step-box">
+                        <strong>Heterogenitas</strong><br>
+                        Beragam OS, protokol, format
+                    </div>
+                    <div class="step-box">
+                        <strong>Resource Terbatas</strong><br>
+                        CPU, RAM, storage minimal
+                    </div>
+                    <div class="step-box">
+                        <strong>Volatilitas Tinggi</strong><br>
+                        Data sering di-overwrite
+                    </div>
+                    <div class="step-box">
+                        <strong>Cloud Dependency</strong><br>
+                        Data di server vendor
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 23: IoT ARCHITECTURE ==================== -->
+            <section>
+                <h2>🏗️ Arsitektur IoT 3-Layer</h2>
+                <div class="step-box fragment">
+                    <strong>APPLICATION LAYER</strong><br>
+                    <span class="small">Dashboard, analitik, API → Log aplikasi, user activity</span>
+                </div>
+                <div class="step-box fragment" style="margin-top: 10px;">
+                    <strong>NETWORK LAYER</strong><br>
+                    <span class="small">Komunikasi, routing, gateway → Traffic capture, logs</span>
+                </div>
+                <div class="step-box fragment" style="margin-top: 10px;">
+                    <strong>PERCEPTION LAYER</strong><br>
+                    <span class="small">Sensor, aktuator, perangkat fisik → Firmware, storage</span>
+                </div>
+                <p class="small fragment">Setiap layer menyimpan bukti forensik yang berbeda dan memerlukan pendekatan akuisisi yang unik.</p>
+            </section>
+
+            <!-- ==================== SLIDE 24: IoT PROTOCOLS ==================== -->
+            <section>
+                <h2>📡 Protokol Komunikasi IoT</h2>
+                <table class="small">
+                    <tr>
+                        <th>Protokol</th>
+                        <th>Transport</th>
+                        <th>Penggunaan</th>
+                        <th>Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MQTT</strong></td>
+                        <td>TCP</td>
+                        <td>Smart home, sensor</td>
+                        <td>Broker log analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>CoAP</strong></td>
+                        <td>UDP</td>
+                        <td>Constrained devices</td>
+                        <td>Packet capture</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Zigbee</strong></td>
+                        <td>802.15.4</td>
+                        <td>Home automation</td>
+                        <td>RF sniffing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>BLE</strong></td>
+                        <td>Bluetooth LE</td>
+                        <td>Wearables</td>
+                        <td>GATT analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Modbus</strong></td>
+                        <td>TCP/Serial</td>
+                        <td>SCADA/ICS</td>
+                        <td>Register analysis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 25: MQTT DETAIL ==================== -->
+            <section>
+                <h2>📨 MQTT: Publish-Subscribe Model</h2>
+                <pre><code class="text">         ┌──────────────────┐
+         │   MQTT BROKER    │
+         │  (port 1883)     │
+         └──┬──────────┬────┘
+            │          │
+   subscribe│          │publish
+            ▼          ▲
+      ┌──────────┐ ┌──────────┐
+      │Subscriber│ │Publisher │
+      │(Monitor) │ │ (Sensor) │
+      └──────────┘ └──────────┘</code></pre>
+                <div class="box-info fragment">
+                    <strong>🔍 Forensik MQTT:</strong> Broker menyimpan log subscribe/publish yang menjadi sumber bukti. Analisis broker log dan capture traffic ke/dari broker.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 26: SMART HOME FORENSICS ==================== -->
+            <section>
+                <h2>🏠 Forensik Smart Home</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Perangkat</th>
+                        <th>Data Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Smart Speaker</strong></td>
+                        <td>Histori perintah suara, activity log, connected devices</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Smart Camera</strong></td>
+                        <td>Video recordings, motion events, config</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Smart Lock</strong></td>
+                        <td>Access log, credentials, timestamps</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Smart Thermostat</strong></td>
+                        <td>Occupancy patterns, schedule</td>
+                    </tr>
+                </table>
+                <p class="small fragment">Pendekatan: <strong>Cloud acquisition</strong> (akun pengguna) + <strong>App data</strong> (smartphone) + <strong>Network analysis</strong> (traffic capture)</p>
+            </section>
+
+            <!-- ==================== SLIDE 27: WEARABLE FORENSICS ==================== -->
+            <section>
+                <h2>⌚ Forensik Wearable Devices</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Data</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Kesehatan</strong></td>
+                        <td>Heart rate, SpO2, sleep</td>
+                        <td>Kondisi fisik pada waktu tertentu</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Aktivitas</strong></td>
+                        <td>Steps, distance</td>
+                        <td>Rekonstruksi pergerakan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Lokasi</strong></td>
+                        <td>GPS tracks</td>
+                        <td>Pelacakan posisi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Notifikasi</strong></td>
+                        <td>Mirror smartphone</td>
+                        <td>Pesan, panggilan, email</td>
+                    </tr>
+                </table>
+                <div class="box-info fragment">
+                    <strong>🎖️ Militer:</strong> Data wearable dapat merekonstruksi timeline kejadian: heart rate, lokasi, dan fall detection sebagai bukti.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 28: DRONE FORENSICS ==================== -->
+            <section>
+                <h2>🚁 Forensik Drone (UAV)</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Data Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Flight Controller</strong></td>
+                        <td>Flight logs, waypoints, GPS tracks</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Gimbal/Camera</strong></td>
+                        <td>Foto, video, metadata EXIF</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Remote Controller</strong></td>
+                        <td>Paired devices, flight history</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Mobile App</strong></td>
+                        <td>Flight records, cached maps, account</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SD Card</strong></td>
+                        <td>Media files, logs</td>
+                    </tr>
+                </table>
+                <p class="small fragment">Tools: <strong>DatCon</strong> (DJI log parser), <strong>ExifTool</strong>, <strong>Google Earth</strong> (KML visualization)</p>
+            </section>
+
+            <!-- ==================== SLIDE 29: DRONE FORENSICS PROCEDURE ==================== -->
+            <section>
+                <h2>🔍 Prosedur Forensik Drone</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Preservasi:</strong> Jangan nyalakan, lepas baterai, Faraday bag</li>
+                    <li class="fragment"><strong>Dokumentasi:</strong> Foto semua sisi, catat serial number</li>
+                    <li class="fragment"><strong>Akuisisi SD Card:</strong> Image menggunakan FTK Imager</li>
+                    <li class="fragment"><strong>Ekstraksi Flight Log:</strong> DJI Assistant / DatCon</li>
+                    <li class="fragment"><strong>Analisis Media:</strong> EXIF metadata dari foto/video</li>
+                    <li class="fragment"><strong>Rekonstruksi Rute:</strong> Export KML → Google Earth</li>
+                    <li class="fragment"><strong>Identifikasi Operator:</strong> DJI account, paired devices</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 30: QUIZ 2 ==================== -->
+            <section>
+                <h2>❓ Quiz: IoT Forensics</h2>
+                <p class="medium-text">Protokol IoT yang menggunakan model Publish-Subscribe melalui broker adalah:</p>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    A. CoAP
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-correct')">
+                    B. MQTT ✅
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    C. Modbus
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    D. BLE
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 31: ICS/SCADA ==================== -->
+            <section>
+                <h2>🏭 Forensik ICS/SCADA</h2>
+                <div class="box-definition">
+                    <strong>ICS/SCADA</strong> mengendalikan infrastruktur kritis militer: pembangkit listrik, distribusi air, dan sistem pertahanan.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Data Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>HMI</strong></td>
+                        <td>Operator logs, alarm history</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PLC</strong></td>
+                        <td>Program logic, config changes</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Historian</strong></td>
+                        <td>Time-series process data</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SCADA Server</strong></td>
+                        <td>Control commands, event logs</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 32: SCADA PROTOCOLS ==================== -->
+            <section>
+                <h2>🔌 Protokol ICS/SCADA</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Protokol</th>
+                        <th>Port</th>
+                        <th>Penggunaan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Modbus TCP</strong></td>
+                        <td>502</td>
+                        <td>Industrial automation</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DNP3</strong></td>
+                        <td>20000</td>
+                        <td>Power grid, utilities</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>OPC UA</strong></td>
+                        <td>4840</td>
+                        <td>Industrial interoperability</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>BACnet</strong></td>
+                        <td>47808</td>
+                        <td>Building automation</td>
+                    </tr>
+                </table>
+                <pre class="fragment"><code class="text"># Wireshark filter untuk deteksi serangan SCADA
+modbus.func_code == 6    # Write Single Register
+modbus.func_code == 16   # Write Multiple Registers</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 33: VEHICLE FORENSICS ==================== -->
+            <section>
+                <h2>🚗 Forensik Kendaraan Modern</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Sistem</th>
+                        <th>Data</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ECU</strong></td>
+                        <td>Parameter mesin, error codes (via OBD-II)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Infotainment</strong></td>
+                        <td>Media, kontak, call log, navigasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Event Data Recorder</strong></td>
+                        <td>Kecepatan, brake, airbag events</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>GPS/Telematics</strong></td>
+                        <td>Rute, lokasi, geofence violations</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Bluetooth</strong></td>
+                        <td>Paired devices, call history</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 34: ANTI-FORENSICS MOBILE ==================== -->
+            <section>
+                <h2>🛡️ Anti-Forensik Mobile</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Teknik</th>
+                        <th>Counter-Measure</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Factory Reset</strong></td>
+                        <td>File carving, cloud recovery</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Secure Messaging</strong></td>
+                        <td>Server-side data, metadata analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Encryption</strong></td>
+                        <td>Brute-force, memory analysis</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Remote Wipe</strong></td>
+                        <td>Faraday bag, airplane mode</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>GPS Spoofing</strong></td>
+                        <td>Cross-check dengan cell tower</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>VPN/Tor</strong></td>
+                        <td>VPN app artifacts, tor cache</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: FACTORY RESET RECOVERY ==================== -->
+            <section>
+                <h2>🔄 Recovery Setelah Factory Reset</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Kondisi</th>
+                        <th>Kemungkinan Recovery</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Android &lt; 6.0, tanpa FDE</td>
+                        <td><span class="text-gold">Tinggi</span> - file carving</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Android 6.0+, FDE aktif</td>
+                        <td><span class="warning">Rendah</span> - data terenkripsi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Android 10+, FBE aktif</td>
+                        <td><span class="warning">Sangat rendah</span></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>SD Card terpisah</td>
+                        <td><span class="text-gold">Tinggi</span> - jika tidak di-wipe</td>
+                    </tr>
+                </table>
+                <div class="box-info fragment">
+                    <strong>💡 Alternatif:</strong> Cloud recovery (Google Account), SIM card analysis, JTAG/chip-off untuk kasus kritis.
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 36: TOOLS ==================== -->
+            <section>
+                <h2>🧰 Tools Mobile & IoT Forensics</h2>
+                <div class="two-columns small">
+                    <div>
+                        <h4>Open Source</h4>
+                        <ul>
+                            <li class="fragment"><strong>Autopsy</strong> - Forensic suite</li>
+                            <li class="fragment"><strong>ADB</strong> - Android acquisition</li>
+                            <li class="fragment"><strong>ALEAPP</strong> - Android parser</li>
+                            <li class="fragment"><strong>iLEAPP</strong> - iOS parser</li>
+                            <li class="fragment"><strong>Andriller</strong> - Android tools</li>
+                            <li class="fragment"><strong>libimobiledevice</strong> - iOS tools</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Komersial</h4>
+                        <ul>
+                            <li class="fragment"><strong>Cellebrite UFED</strong> - Physical acq.</li>
+                            <li class="fragment"><strong>Magnet AXIOM</strong> - Multi-platform</li>
+                            <li class="fragment"><strong>MOBILedit</strong> - Data extraction</li>
+                            <li class="fragment"><strong>Oxygen Forensic</strong> - Cloud & mobile</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 37: NIST FRAMEWORK ==================== -->
+            <section>
+                <h2>📐 Framework NIST SP 800-101</h2>
+                <p class="medium-text">Panduan Forensik Perangkat Mobile:</p>
+                <div class="step-box fragment">
+                    <strong>1. Preservation</strong> → Isolasi perangkat, Faraday bag, dokumentasi
+                </div>
+                <div class="step-box fragment" style="margin-top: 8px;">
+                    <strong>2. Acquisition</strong> → Pilih metode akuisisi yang tepat (L1-L5)
+                </div>
+                <div class="step-box fragment" style="margin-top: 8px;">
+                    <strong>3. Examination</strong> → Ekstraksi data menggunakan tools
+                </div>
+                <div class="step-box fragment" style="margin-top: 8px;">
+                    <strong>4. Analysis</strong> → Interpretasi dan korelasi data
+                </div>
+                <div class="step-box fragment" style="margin-top: 8px;">
+                    <strong>5. Reporting</strong> → Dokumentasi temuan dan kesimpulan
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 38: CASE STUDY ==================== -->
+            <section>
+                <h2>🎖️ Studi Kasus: Drone di Zona Militer</h2>
+                <div class="box-definition">
+                    Drone tidak dikenal terdeteksi terbang di atas Kodam. Drone diamankan bersama smartphone diduga milik operator.
+                </div>
+                <div class="grid-2x2 small fragment">
+                    <div class="step-box">
+                        <strong>1. Preservasi</strong><br>
+                        Lepas baterai drone, Faraday bag untuk smartphone
+                    </div>
+                    <div class="step-box">
+                        <strong>2. Akuisisi</strong><br>
+                        Image SD card, ekstrak flight log, backup smartphone
+                    </div>
+                    <div class="step-box">
+                        <strong>3. Korelasi</strong><br>
+                        Flight path ↔ location history, paired devices ↔ BT
+                    </div>
+                    <div class="step-box">
+                        <strong>4. Identifikasi</strong><br>
+                        DJI account, foto aerial, timeline korelasi
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 39: IoT FORENSIC READINESS ==================== -->
+            <section>
+                <h2>📋 IoT Forensic Readiness (Militer)</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Inventarisasi:</strong> Katalog semua perangkat IoT dan klasifikasi criticality</li>
+                    <li class="fragment"><strong>Logging:</strong> Implementasi logging di setiap layer (device, network, app, cloud)</li>
+                    <li class="fragment"><strong>Retention:</strong> Kebijakan retensi log (90-365 hari)</li>
+                    <li class="fragment"><strong>SOP Response:</strong> Prosedur dari detection → reporting</li>
+                    <li class="fragment"><strong>Training:</strong> Pelatihan forensik IoT untuk tim Cyber Defense</li>
+                    <li class="fragment"><strong>Simulasi:</strong> Latihan insiden berkala</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 40: QUIZ 3 ==================== -->
+            <section>
+                <h2>❓ Quiz: Forensik Terintegrasi</h2>
+                <p class="medium-text">Langkah pertama saat mengamankan drone tidak dikenal di zona militer adalah:</p>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    A. Menyalakan drone untuk cek flight log
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    B. Menghubungkan ke komputer forensik
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-correct')">
+                    C. Lepas baterai, simpan di Faraday bag ✅
+                </div>
+                <div class="quiz-option fragment" onclick="this.classList.add('quiz-incorrect')">
+                    D. Factory reset untuk membersihkan malware
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 41: SUMMARY ==================== -->
+            <section>
+                <h2>📌 Rangkuman</h2>
+                <ul class="medium-text">
+                    <li class="fragment"><strong>Mobile Forensics:</strong> Android (open, SQLite-based) vs iOS (encrypted, secure enclave)</li>
+                    <li class="fragment"><strong>Akuisisi:</strong> 5 level dari manual hingga chip-off, sesuaikan dengan kebutuhan</li>
+                    <li class="fragment"><strong>Artefak Kunci:</strong> SMS, WhatsApp, lokasi GPS, EXIF foto, browser history</li>
+                    <li class="fragment"><strong>IoT Forensics:</strong> Heterogen, resource terbatas, protokol khusus</li>
+                    <li class="fragment"><strong>Drone & SCADA:</strong> Kritis untuk keamanan militer, memerlukan tools khusus</li>
+                    <li class="fragment"><strong>Anti-Forensik:</strong> Factory reset, encryption → counter dengan Faraday bag, cloud recovery</li>
+                    <li class="fragment"><strong>Framework:</strong> NIST SP 800-101 sebagai panduan investigasi mobile</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 42: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Easttom, C. (2021). <em>An In-Depth Guide to Mobile Device Forensics</em>. CRC Press.</li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Chapter 16.</li>
+                    <li>Johansen, G. (2020). <em>Digital Forensics and Incident Response</em>. Chapter 12.</li>
+                    <li>NIST SP 800-101 Rev. 1: <em>Guidelines on Mobile Device Forensics</em>.</li>
+                    <li>Harbawi, M. & Varol, A. (2017). IoT Forensic Acquisition Model. IEEE.</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 43: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 15: Forensik Mobile dan Internet of Things (IoT)</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
