@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 03: Hard Disk dan Sistem File</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 03</h3>
+                <h2>Hard Disk dan Sistem File</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan arsitektur dan geometri hard disk (HDD dan SSD)</li>
+                    <li class="fragment">Membedakan skema partisi MBR dan GPT beserta implikasi forensiknya</li>
+                    <li class="fragment">Menganalisis struktur sistem file Windows (FAT, NTFS)</li>
+                    <li class="fragment">Mengidentifikasi struktur internal NTFS (MFT, $LogFile, $UsnJrnl)</li>
+                    <li class="fragment">Memahami sistem file Linux (ext2/3/4) dan Mac (HFS+, APFS)</li>
+                    <li class="fragment">Menjelaskan konsep cluster, slack space, dan unallocated space</li>
+                    <li class="fragment">Menganalisis tantangan forensik SSD (TRIM, wear leveling)</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1</h4>
+                        <ul class="medium-text">
+                            <li>Arsitektur HDD & SSD</li>
+                            <li>Skema Partisi: MBR vs GPT</li>
+                            <li>Sistem File FAT</li>
+                            <li>NTFS & MFT</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2</h4>
+                        <ul class="medium-text">
+                            <li>NTFS Timestamps & ADS</li>
+                            <li>Sistem File Linux & Mac</li>
+                            <li>Slack & Unallocated Space</li>
+                            <li>Forensik SSD: TRIM & Wear Leveling</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: HDD ARCHITECTURE ==================== -->
+            <section>
+                <h2>💾 Arsitektur Hard Disk Drive (HDD)</h2>
+                <div class="box-definition">
+                    <strong>HDD</strong> adalah perangkat penyimpanan non-volatile yang menggunakan piringan magnetik berputar (platter) untuk membaca dan menulis data secara elektromagnetik.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Fungsi</th>
+                        <th>Relevansi Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Platter</strong></td>
+                        <td>Media magnetik penyimpanan</td>
+                        <td>Data recoverable setelah dihapus</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>R/W Head</strong></td>
+                        <td>Membaca & menulis data</td>
+                        <td>Kerusakan → data loss</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Controller</strong></td>
+                        <td>Mengontrol operasi disk</td>
+                        <td>Firmware menyimpan info forensik</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 5: CHS vs LBA ==================== -->
+            <section>
+                <h2>📐 Geometri: CHS vs LBA</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <div class="box-info">
+                            <strong>CHS</strong> (Cylinder-Head-Sector)
+                        </div>
+                        <ul class="small">
+                            <li class="fragment"><strong>Cylinder:</strong> Track vertikal pada semua platter</li>
+                            <li class="fragment"><strong>Head:</strong> Sisi platter (0 = atas)</li>
+                            <li class="fragment"><strong>Sector:</strong> Subdivisi pada track (512 bytes)</li>
+                            <li class="fragment">Batas: ~8,4 GB</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="box-success">
+                            <strong>LBA</strong> (Logical Block Addressing)
+                        </div>
+                        <ul class="small">
+                            <li class="fragment">Pengalamatan linier (mulai dari 0)</li>
+                            <li class="fragment">Lebih sederhana & modern</li>
+                            <li class="fragment">Mendukung kapasitas besar</li>
+                            <li class="fragment">Digunakan disk modern</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 6: SSD ARCHITECTURE ==================== -->
+            <section>
+                <h2>⚡ Solid State Drive (SSD)</h2>
+                <div class="box-definition">
+                    <strong>SSD</strong> menggunakan chip memori flash NAND untuk menyimpan data secara elektronik — tanpa komponen mekanik bergerak.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>HDD</th>
+                        <th>SSD</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Media</td>
+                        <td>Piringan magnetik</td>
+                        <td>Chip flash NAND</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Komponen bergerak</td>
+                        <td>Ya</td>
+                        <td class="text-success">Tidak</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Recovery data</td>
+                        <td class="text-success">Relatif mudah</td>
+                        <td class="text-red">Sangat sulit</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>TRIM support</td>
+                        <td>Tidak</td>
+                        <td class="text-red">Ya (menghapus data)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 7: NAND FLASH TYPES ==================== -->
+            <section>
+                <h2>🔬 Tipe Sel NAND Flash</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tipe</th>
+                        <th>Bit/Sel</th>
+                        <th>Daya Tahan</th>
+                        <th>Penggunaan</th>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>SLC</strong></td>
+                        <td>1</td>
+                        <td>~100K siklus</td>
+                        <td>Enterprise, <strong>militer</strong></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MLC</strong></td>
+                        <td>2</td>
+                        <td>~10K siklus</td>
+                        <td>Enterprise</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>TLC</strong></td>
+                        <td>3</td>
+                        <td>~3K siklus</td>
+                        <td>Consumer</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>QLC</strong></td>
+                        <td>4</td>
+                        <td>~1K siklus</td>
+                        <td>Storage massal</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 SLC dipilih untuk militer karena keandalan tinggi dan rentang suhu operasi luas (-40°C s/d 85°C)</p>
+            </section>
+
+            <!-- ==================== SLIDE 8: MBR STRUCTURE ==================== -->
+            <section>
+                <h2>📀 Master Boot Record (MBR)</h2>
+                <div class="box-definition">
+                    <strong>MBR</strong> adalah struktur 512 bytes di sektor pertama (LBA 0) yang berisi boot code dan tabel partisi. Dikembangkan IBM tahun 1983.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Offset</th>
+                        <th>Ukuran</th>
+                        <th>Komponen</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x000</td>
+                        <td>446 bytes</td>
+                        <td><strong>Bootstrap Code</strong></td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>0x1BE</td>
+                        <td>4 × 16 bytes</td>
+                        <td><strong>Partition Table</strong> (4 entri)</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>0x1FE</td>
+                        <td>2 bytes</td>
+                        <td><strong>Boot Signature</strong> (0x55AA)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 9: MBR PARTITION ENTRY ==================== -->
+            <section>
+                <h2>📊 Struktur Partition Entry MBR</h2>
+                <p class="medium-text">Setiap entri partisi = 16 bytes:</p>
+                <table class="small">
+                    <tr>
+                        <th>Offset</th>
+                        <th>Ukuran</th>
+                        <th>Field</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x00</td>
+                        <td>1 byte</td>
+                        <td>Status (0x80 = bootable)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x04</td>
+                        <td>1 byte</td>
+                        <td>Partition type (0x07=NTFS, 0x0B=FAT32)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x08</td>
+                        <td>4 bytes</td>
+                        <td>LBA of first sector</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x0C</td>
+                        <td>4 bytes</td>
+                        <td>Number of sectors</td>
+                    </tr>
+                </table>
+                <div class="fragment box-warning small content-margin">
+                    ⚠️ <strong>Keterbatasan MBR:</strong> Maks 4 partisi primer | Maks 2 TB | Single point of failure
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 10: GPT ==================== -->
+            <section>
+                <h2>🛡️ GUID Partition Table (GPT)</h2>
+                <div class="box-definition">
+                    <strong>GPT</strong> adalah standar partisi modern (bagian spesifikasi UEFI), menggunakan GUID untuk identifikasi partisi.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Lokasi</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Protective MBR</td>
+                        <td>LBA 0</td>
+                        <td>Kompatibilitas mundur</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>GPT Header</td>
+                        <td>LBA 1</td>
+                        <td>Metadata tabel partisi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Partition Entries</td>
+                        <td>LBA 2-33</td>
+                        <td>Hingga 128 partisi</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>Backup Header + Entries</td>
+                        <td>LBA akhir</td>
+                        <td>Redundansi penuh</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 11: MBR vs GPT ==================== -->
+            <section>
+                <h2>⚖️ MBR vs GPT</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>MBR</th>
+                        <th>GPT</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Kapasitas maks</td>
+                        <td class="text-red">2 TB</td>
+                        <td class="text-success">9,4 ZB</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Partisi maks</td>
+                        <td class="text-red">4 primer</td>
+                        <td class="text-success">128</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Redundansi</td>
+                        <td class="text-red">Tidak ada</td>
+                        <td class="text-success">Backup header & entries</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>CRC check</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-success">Ya (CRC32)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Boot</td>
+                        <td>BIOS</td>
+                        <td>UEFI</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 12: FAT FILE SYSTEM ==================== -->
+            <section>
+                <h2>📂 Keluarga File Allocation Table (FAT)</h2>
+                <div class="box-definition">
+                    <strong>FAT</strong> menggunakan tabel alokasi untuk melacak lokasi file — seperti daftar berantai (<em>linked list</em>).
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Sistem File</th>
+                        <th>Entri FAT</th>
+                        <th>Kapasitas Maks</th>
+                        <th>File Maks</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>FAT12</td>
+                        <td>12 bit</td>
+                        <td>32 MB</td>
+                        <td>32 MB</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>FAT16</td>
+                        <td>16 bit</td>
+                        <td>2 GB</td>
+                        <td>2 GB</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td><strong>FAT32</strong></td>
+                        <td>32 bit</td>
+                        <td>2 TB</td>
+                        <td class="text-red">4 GB</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>exFAT</strong></td>
+                        <td>32 bit</td>
+                        <td>128 PB</td>
+                        <td>16 EB</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 13: FAT MECHANISM ==================== -->
+            <section>
+                <h2>🔗 Cara Kerja FAT</h2>
+                <p class="medium-text">FAT bekerja sebagai <strong>linked list</strong> cluster:</p>
+                <div class="grid-2x2 small content-margin">
+                    <div class="step-box fragment">
+                        <strong>1️⃣ Directory Entry</strong><br>
+                        Menunjuk ke cluster pertama file
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>2️⃣ FAT Entry</strong><br>
+                        Setiap entri menunjuk ke cluster berikutnya
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>3️⃣ Cluster Chain</strong><br>
+                        Rantai cluster membentuk file utuh
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>4️⃣ EOF Marker</strong><br>
+                        Nilai khusus menandai akhir file
+                    </div>
+                </div>
+                <div class="fragment box-warning small content-margin">
+                    ⚠️ <strong>FAT32:</strong> Batas file 4 GB — file video/image forensik besar tidak bisa disimpan utuh!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 14: FAT VALUES ==================== -->
+            <section>
+                <h2>🔢 Nilai Entri FAT32</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Nilai</th>
+                        <th>Arti</th>
+                        <th>Relevansi Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>0x00000000</code></td>
+                        <td>Cluster kosong (free)</td>
+                        <td>Mungkin berisi data lama</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><code>0x00000002–0x0FFFFFEF</code></td>
+                        <td>Cluster berikutnya</td>
+                        <td>Rantai file</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><code>0x0FFFFFF7</code></td>
+                        <td>Bad cluster</td>
+                        <td>Bisa digunakan menyembunyikan data</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><code>0x0FFFFFF8–0x0FFFFFFF</code></td>
+                        <td>End of File (EOF)</td>
+                        <td>Akhir rantai cluster</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 15: NTFS OVERVIEW ==================== -->
+            <section>
+                <h2>🏗️ NTFS — Sistem File Utama Windows</h2>
+                <div class="box-definition">
+                    <strong>NTFS</strong> (New Technology File System) menyediakan journaling, MFT, ADS, enkripsi, dan metadata kaya — sistem file paling sering ditemui dalam forensik.
+                </div>
+                <div class="grid-2x2 small content-margin">
+                    <div class="step-box fragment">
+                        <strong>📓 Journaling</strong><br>
+                        Recovery & timeline analysis
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📊 MFT</strong><br>
+                        Database metadata semua file
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🔒 ADS</strong><br>
+                        Alternate Data Streams
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🕐 MACE</strong><br>
+                        4 timestamps per atribut
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 16: NTFS VOLUME STRUCTURE ==================== -->
+            <section>
+                <h2>🗂️ Struktur Volume NTFS</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Area</th>
+                        <th>Deskripsi</th>
+                        <th>Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Boot Sector</strong></td>
+                        <td>VBR, BPB, bootstrap</td>
+                        <td>Info volume & cluster size</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>MFT</strong></td>
+                        <td>Master File Table</td>
+                        <td>Database utama metadata</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>MFT Mirror</strong></td>
+                        <td>Salinan parsial MFT</td>
+                        <td>Backup recovery</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>System Files</strong></td>
+                        <td>$Bitmap, $LogFile, $Volume</td>
+                        <td>Info file system</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Data Area</strong></td>
+                        <td>File & direktori user</td>
+                        <td>Konten file</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 17: MFT STRUCTURE ==================== -->
+            <section>
+                <h2>📊 Master File Table (MFT)</h2>
+                <p class="medium-text">Setiap file dan direktori memiliki <strong>minimal 1 entri MFT</strong> (biasanya 1024 bytes):</p>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Offset</th>
+                        <th>Field</th>
+                        <th>Nilai Penting</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x00</td>
+                        <td>Signature</td>
+                        <td>"FILE" (0x454C4946)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0x08</td>
+                        <td>$LogFile Seq Number</td>
+                        <td>Nomor urut transaksi</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>0x16</td>
+                        <td>Flags</td>
+                        <td>0x01=In use, 0x02=Directory</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 File yang dihapus: flag berubah dari 0x01 → 0x00, tapi data MFT entry masih ada!</p>
+            </section>
+
+            <!-- ==================== SLIDE 18: MFT METAFILES ==================== -->
+            <section>
+                <h2>🗃️ MFT System Files (Metafiles)</h2>
+                <table class="small">
+                    <tr>
+                        <th>Record</th>
+                        <th>Nama</th>
+                        <th>Fungsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>0</td>
+                        <td><strong>$MFT</strong></td>
+                        <td>Master File Table itu sendiri</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>1</td>
+                        <td><strong>$MFTMirr</strong></td>
+                        <td>Mirror dari 4 record pertama</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>2</td>
+                        <td><strong>$LogFile</strong></td>
+                        <td>Journal transaksi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>5</td>
+                        <td><strong>. (root)</strong></td>
+                        <td>Direktori root</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>6</td>
+                        <td><strong>$Bitmap</strong></td>
+                        <td>Peta alokasi cluster</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>8</td>
+                        <td><strong>$BadClus</strong></td>
+                        <td>Daftar cluster rusak</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 19: NTFS ATTRIBUTES ==================== -->
+            <section>
+                <h2>🏷️ Atribut NTFS</h2>
+                <p class="medium-text">Setiap MFT entry terdiri dari atribut-atribut:</p>
+                <table class="small">
+                    <tr>
+                        <th>Atribut</th>
+                        <th>Type</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>$STANDARD_INFORMATION</strong></td>
+                        <td>0x10</td>
+                        <td>Timestamps MACE, flags</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td><strong>$FILE_NAME</strong></td>
+                        <td>0x30</td>
+                        <td>Nama file, timestamps alternatif</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>$SECURITY_DESCRIPTOR</strong></td>
+                        <td>0x50</td>
+                        <td>ACL dan permission</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td><strong>$DATA</strong></td>
+                        <td>0x80</td>
+                        <td>Konten aktual file</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>$INDEX_ROOT</strong></td>
+                        <td>0x90</td>
+                        <td>Struktur direktori (B-tree)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 20: MACE TIMESTAMPS ==================== -->
+            <section>
+                <h2>🕐 NTFS Timestamps — MACE</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>$STANDARD_INFO</th>
+                        <th>$FILE_NAME</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>M</strong> — Modified</td>
+                        <td>Terakhir konten diubah</td>
+                        <td>Diset saat file dibuat</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>A</strong> — Accessed</td>
+                        <td>Terakhir diakses</td>
+                        <td>Diset saat file dibuat</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>C</strong> — Created</td>
+                        <td>Waktu pembuatan</td>
+                        <td>Waktu pembuatan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>E</strong> — Entry Modified</td>
+                        <td>Terakhir MFT diubah</td>
+                        <td>Diset saat file dibuat</td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger small content-margin">
+                    🚨 <strong>Penting:</strong> $STANDARD_INFORMATION <span class="text-red">dapat dimanipulasi</span> (timestomping), $FILE_NAME <span class="text-success">hanya diubah kernel</span> — lebih reliable!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 21: TIMESTOMPING ==================== -->
+            <section>
+                <h2>🔍 Deteksi Timestomping</h2>
+                <p class="medium-text"><strong>Skenario:</strong> Analis BSSN menemukan anomali timestamp:</p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Atribut</th>
+                        <th>Created</th>
+                        <th>Dapat Dimanipulasi?</th>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>$STANDARD_INFO</td>
+                        <td>2020-01-15</td>
+                        <td class="text-red">Ya ⚠️</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>$FILE_NAME</td>
+                        <td>2025-11-20</td>
+                        <td class="text-success">Tidak ✓</td>
+                    </tr>
+                </table>
+                <div class="fragment box-danger content-margin">
+                    <strong>Kesimpulan:</strong> $SI Created <strong>lebih lama</strong> dari $FN Created — secara logis tidak mungkin natural. Ini bukti <span class="text-red">timestomping</span> (anti-forensik)!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 22: LOGFILE vs USNJRNL ==================== -->
+            <section>
+                <h2>📓 $LogFile vs $UsnJrnl</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>$LogFile</th>
+                        <th>$UsnJrnl</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Tujuan</td>
+                        <td>Recovery setelah crash</td>
+                        <td>Tracking perubahan file</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Level</td>
+                        <td>File system level rendah</td>
+                        <td>File level tinggi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Data</td>
+                        <td>Operasi MFT</td>
+                        <td>Nama file, alasan, timestamp</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>Forensik</td>
+                        <td>Rekonstruksi operasi teknis</td>
+                        <td><strong>Timeline aktivitas user</strong></td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 Keduanya saling melengkapi: $LogFile untuk "bagaimana", $UsnJrnl untuk "siapa, kapan, apa"</p>
+            </section>
+
+            <!-- ==================== SLIDE 23: ADS ==================== -->
+            <section>
+                <h2>🔒 Alternate Data Streams (ADS)</h2>
+                <div class="box-definition">
+                    <strong>ADS</strong> memungkinkan file NTFS memiliki beberapa stream data — <em>tidak terlihat</em> melalui Windows Explorer atau <code>dir</code> standar.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div>
+                        <h4 class="text-success">Legitimate</h4>
+                        <ul class="small">
+                            <li class="fragment">Zone.Identifier (sumber download)</li>
+                            <li class="fragment">Thumbnail cache</li>
+                            <li class="fragment">Summary information</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-red">Malicious</h4>
+                        <ul class="small">
+                            <li class="fragment">Menyembunyikan malware</li>
+                            <li class="fragment">Exfiltration channel</li>
+                            <li class="fragment">Konfigurasi C2</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 24: ADS DETECTION ==================== -->
+            <section>
+                <h2>🔎 Membuat & Mendeteksi ADS</h2>
+                <p class="medium-text"><strong>Membuat ADS:</strong></p>
+                <pre><code class="language-cmd">echo "data rahasia" > file.txt:hidden_stream</code></pre>
+                <p class="medium-text content-margin"><strong>Mendeteksi ADS:</strong></p>
+                <pre><code class="language-cmd">dir /R
+streams.exe file.txt    (Sysinternals)</code></pre>
+                <div class="fragment box-danger small content-margin">
+                    🚨 <strong>Kasus:</strong> File <code>laporan.docx</code> berukuran 15 KB di Explorer, tetapi FTK Imager menunjukkan 2,3 MB → kemungkinan data rahasia disembunyikan dalam ADS!
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 25: CLUSTER ==================== -->
+            <section>
+                <h2>📦 Cluster — Unit Alokasi Terkecil</h2>
+                <div class="box-definition">
+                    <strong>Cluster</strong> (allocation unit) adalah unit terkecil yang dialokasikan sistem file. 1 cluster = 1 atau lebih sektor berurutan.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Ukuran Volume</th>
+                        <th>NTFS Default</th>
+                        <th>FAT32 Default</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>≤ 2 GB</td>
+                        <td>2 KB</td>
+                        <td>4 KB</td>
+                    </tr>
+                    <tr class="fragment highlight-row-info">
+                        <td>2 – 16 GB</td>
+                        <td>4 KB</td>
+                        <td>4 KB</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>16 – 32 GB</td>
+                        <td>4 KB</td>
+                        <td>8 KB</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>32 GB – 2 TB</td>
+                        <td>4 KB</td>
+                        <td>16 KB</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 26: SLACK SPACE ==================== -->
+            <section>
+                <h2>🧩 Slack Space</h2>
+                <div class="box-definition">
+                    <strong>Slack Space</strong> adalah area tidak terpakai dalam cluster yang sudah dialokasikan — berpotensi menyimpan data dari file sebelumnya.
+                </div>
+                <div class="two-columns medium-text content-margin">
+                    <div class="step-box fragment">
+                        <strong>RAM Slack</strong><br>
+                        <span class="small">Antara akhir data file dan akhir sektor terakhir. Biasanya diisi nol (Windows modern).</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Drive Slack</strong><br>
+                        <span class="small">Antara akhir sektor terakhir file dan akhir cluster. <span class="text-gold">Dapat berisi data lama!</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 27: SLACK SPACE CALCULATION ==================== -->
+            <section>
+                <h2>🧮 Perhitungan Slack Space</h2>
+                <p class="medium-text"><strong>Contoh:</strong> File 5.000 bytes pada NTFS (cluster 4 KB):</p>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Ukuran</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Cluster dialokasikan</td>
+                        <td>⌈5.000/4.096⌉ = <strong>2 cluster</strong></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Ruang teralokasi</td>
+                        <td>2 × 4.096 = <strong>8.192 bytes</strong></td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>Slack space</td>
+                        <td>8.192 − 5.000 = <strong class="text-gold">3.192 bytes</strong></td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 Slack space 3.192 bytes ini berpotensi menyimpan fragmen data dari file sebelumnya!</p>
+            </section>
+
+            <!-- ==================== SLIDE 28: UNALLOCATED SPACE ==================== -->
+            <section>
+                <h2>🕳️ Unallocated Space</h2>
+                <div class="box-definition">
+                    <strong>Unallocated Space</strong> adalah area pada disk yang tidak ditempati partisi/file aktif — target utama <strong>file carving</strong>.
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Lokasi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Volume slack</strong></td>
+                        <td>Antara akhir file system dan akhir partisi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Partition gap</strong></td>
+                        <td>Antara dua partisi</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td><strong>Unpartitioned space</strong></td>
+                        <td>Setelah partisi terakhir (data tersembunyi!)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Deleted file space</strong></td>
+                        <td>Cluster yang dirilis setelah file dihapus</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 29: FILE DELETION ==================== -->
+            <section>
+                <h2>🗑️ Proses Penghapusan File</h2>
+                <p class="medium-text">Mengapa file yang dihapus masih bisa dipulihkan?</p>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Tahap</th>
+                        <th>Aksi</th>
+                        <th>Data di Disk</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>File aktif</td>
+                        <td>Entry MFT/FAT aktif</td>
+                        <td class="text-success">Data utuh ✓</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Hapus ke Recycle Bin</td>
+                        <td>Pindah ke $Recycle.Bin</td>
+                        <td class="text-success">Data utuh ✓</td>
+                    </tr>
+                    <tr class="fragment highlight-row-warning">
+                        <td>Kosongkan Recycle Bin</td>
+                        <td>MFT ditandai "not in use"</td>
+                        <td class="text-gold">Data masih ada!</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>Cluster ditimpa</td>
+                        <td>File baru pakai cluster</td>
+                        <td class="text-red">Data hilang ✗</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 30: LINUX FILE SYSTEMS ==================== -->
+            <section>
+                <h2>🐧 Sistem File Linux: ext2/3/4</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Fitur</th>
+                        <th>ext2</th>
+                        <th>ext3</th>
+                        <th>ext4</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Tahun</td>
+                        <td>1993</td>
+                        <td>2001</td>
+                        <td>2008</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Journaling</td>
+                        <td class="text-red">Tidak</td>
+                        <td class="text-success">Ya</td>
+                        <td class="text-success">Ya</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>File maks</td>
+                        <td>2 TB</td>
+                        <td>2 TB</td>
+                        <td>16 TB</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>Timestamps</td>
+                        <td>Detik</td>
+                        <td>Detik</td>
+                        <td><strong>Nanosecond</strong></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 31: INODE ==================== -->
+            <section>
+                <h2>📋 Inode — Metadata File Linux</h2>
+                <div class="box-definition">
+                    <strong>Inode</strong> (Index Node) menyimpan metadata file pada ext — setara MFT entry pada NTFS. Setiap file memiliki tepat 1 inode.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Field</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Mode, UID, GID</td>
+                        <td>Tipe file, permission, pemilik</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>atime, mtime, ctime</td>
+                        <td>Timestamps akses, modifikasi, change</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td><strong>dtime</strong></td>
+                        <td><strong>Deletion time</strong> — tidak ada di NTFS!</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Block pointers</td>
+                        <td>Direct, indirect, double indirect</td>
+                    </tr>
+                </table>
+                <p class="fragment small box-info">💡 ext4 menyimpan deletion time (dtime) — sangat berguna mengetahui kapan file dihapus!</p>
+            </section>
+
+            <!-- ==================== SLIDE 32: NTFS vs EXT4 ==================== -->
+            <section>
+                <h2>⚖️ MFT (NTFS) vs Inode (ext4)</h2>
+                <table class="small">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>NTFS (MFT)</th>
+                        <th>ext4 (Inode)</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Ukuran entry</td>
+                        <td>1024 bytes</td>
+                        <td>256 bytes</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Timestamps</td>
+                        <td class="text-success"><strong>8</strong> (4×SI + 4×FN)</td>
+                        <td>4 (a/m/c/dtime)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Deletion time</td>
+                        <td class="text-red">Tidak ada</td>
+                        <td class="text-success"><strong>dtime ✓</strong></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>ADS</td>
+                        <td class="text-success">Didukung</td>
+                        <td class="text-red">Tidak</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Timestomping detection</td>
+                        <td class="text-success">SI vs FN</td>
+                        <td class="text-red">Lebih sulit</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 33: MAC FILE SYSTEMS ==================== -->
+            <section>
+                <h2>🍎 Sistem File Mac: HFS+ & APFS</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <div class="box-info">
+                            <strong>HFS+</strong> (1998)
+                        </div>
+                        <ul class="small">
+                            <li class="fragment">Journaling opsional</li>
+                            <li class="fragment">Catalog file (B-tree)</li>
+                            <li class="fragment">Epoch: 1 Jan 1904</li>
+                            <li class="fragment">Perangkat Mac lama</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="box-success">
+                            <strong>APFS</strong> (2017)
+                        </div>
+                        <ul class="small">
+                            <li class="fragment">Optimisasi SSD</li>
+                            <li class="fragment">Snapshots & cloning</li>
+                            <li class="fragment">Enkripsi native</li>
+                            <li class="fragment">Space sharing</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="fragment box-warning small content-margin">
+                    ⚠️ <strong>Tantangan APFS:</strong> Enkripsi native, cloning berbagi blocks, snapshot tersembunyi, dukungan tool terbatas
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 34: JOURNALING ==================== -->
+            <section>
+                <h2>📓 File System Journaling</h2>
+                <div class="box-definition">
+                    <strong>Journaling</strong> mencatat perubahan sebelum diterapkan — menjamin konsistensi setelah crash dan menyediakan "sejarah" untuk forensik.
+                </div>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Sistem File</th>
+                        <th>Journal</th>
+                        <th>Info Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>NTFS</td>
+                        <td>$LogFile</td>
+                        <td>Operasi metadata MFT</td>
+                    </tr>
+                    <tr class="fragment highlight-row-success">
+                        <td>NTFS</td>
+                        <td>$UsnJrnl</td>
+                        <td>Change journal: create, delete, rename</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>ext3/ext4</td>
+                        <td>jbd/jbd2</td>
+                        <td>Transaksi file system</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>HFS+</td>
+                        <td>.journal</td>
+                        <td>Metadata transactions</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 35: SSD FORENSICS TRIM ==================== -->
+            <section>
+                <h2>⚡ Forensik SSD — TRIM</h2>
+                <div class="box-danger">
+                    <strong>TRIM</strong> memberitahu SSD bahwa blok data tidak lagi digunakan — SSD menghapus data secara <strong>fisik</strong>, menghancurkan bukti!
+                </div>
+                <table class="medium-text content-margin">
+                    <tr>
+                        <th>Tahap</th>
+                        <th>HDD</th>
+                        <th>SSD + TRIM</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>File dihapus</td>
+                        <td>Cluster ditandai free</td>
+                        <td>Cluster ditandai free</td>
+                    </tr>
+                    <tr class="fragment highlight-row-danger">
+                        <td>TRIM dieksekusi</td>
+                        <td>—</td>
+                        <td class="text-red">Page dihapus fisik!</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Recovery?</td>
+                        <td class="text-success">Mungkin ✓</td>
+                        <td class="text-red">Tidak mungkin ✗</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 36: WEAR LEVELING & GC ==================== -->
+            <section>
+                <h2>🔄 Wear Leveling & Garbage Collection</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <div class="box-warning">
+                            <strong>Wear Leveling</strong>
+                        </div>
+                        <ul class="small">
+                            <li class="fragment">Distribusi penulisan merata</li>
+                            <li class="fragment">Memperpanjang umur SSD</li>
+                            <li class="fragment">Data tersebar di lokasi berbeda</li>
+                            <li class="fragment">Recovery lebih sulit</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="box-danger">
+                            <strong>Garbage Collection</strong>
+                        </div>
+                        <ul class="small">
+                            <li class="fragment">Proses internal otomatis SSD</li>
+                            <li class="fragment">Menggabungkan halaman valid</li>
+                            <li class="fragment">Menghapus halaman invalid</li>
+                            <li class="fragment">Berjalan tanpa perintah user</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 37: SSD CASE STUDY ==================== -->
+            <section>
+                <h2>📋 Studi Kasus: Recovery SSD</h2>
+                <p class="medium-text"><strong>Skenario:</strong> Laptop SSD NVMe tersangka disita, file dihapus 2 jam lalu, TRIM aktif.</p>
+                <table class="small content-margin">
+                    <tr>
+                        <th>Faktor</th>
+                        <th>Status</th>
+                        <th>Dampak</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>Media</td>
+                        <td>SSD NVMe</td>
+                        <td class="text-red">Recovery sangat sulit</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>TRIM</td>
+                        <td>Aktif</td>
+                        <td class="text-red">Data kemungkinan sudah terhapus fisik</td>
+                    </tr>
+                </table>
+                <div class="fragment box-info small content-margin">
+                    💡 <strong>Strategi alternatif:</strong> RAM dump, $UsnJrnl (bukti eksistensi), MFT metadata, cloud backup, over-provisioned area
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 38: QUIZ 1 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 1:</strong></p>
+                <p>Berapa kapasitas maksimal partisi pada skema MBR?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. 1 TB</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. 2 TB ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. 4 TB</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. 8 TB</div>
+                <p class="fragment small box-info">💡 MBR menggunakan 4 bytes untuk jumlah sektor: 2³² × 512 bytes ≈ 2 TB</p>
+            </section>
+
+            <!-- ==================== SLIDE 39: QUIZ 2 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 2:</strong></p>
+                <p>Atribut NTFS mana yang <strong>TIDAK DAPAT</strong> dimanipulasi oleh user untuk timestomping?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. $STANDARD_INFORMATION</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="2">B. $FILE_NAME ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="3">C. $DATA</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. $SECURITY_DESCRIPTOR</div>
+                <p class="fragment small box-warning">⚠️ $FILE_NAME timestamps hanya dapat diubah oleh kernel Windows!</p>
+            </section>
+
+            <!-- ==================== SLIDE 40: QUIZ 3 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 3:</strong></p>
+                <p>Fitur unik ext4 yang TIDAK dimiliki NTFS dan sangat berguna untuk forensik adalah?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. Journaling</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. Access time</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. Deletion time (dtime) ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. File compression</div>
+                <p class="fragment small box-success">✅ ext4 menyimpan kapan file dihapus langsung di inode — informasi berharga!</p>
+            </section>
+
+            <!-- ==================== SLIDE 41: QUIZ 4 ==================== -->
+            <section>
+                <h2>🧠 Quiz Time!</h2>
+                <p><strong>Pertanyaan 4:</strong></p>
+                <p>Mengapa file yang dihapus pada SSD dengan TRIM aktif hampir tidak mungkin dipulihkan?</p>
+                <div class="quiz-option fragment" data-fragment-index="1">A. File dienkripsi oleh SSD</div>
+                <div class="quiz-option fragment" data-fragment-index="2">B. MFT entry dihapus permanen</div>
+                <div class="quiz-option fragment quiz-correct" data-fragment-index="3">C. TRIM menghapus data secara fisik dari flash ✅</div>
+                <div class="quiz-option fragment" data-fragment-index="4">D. SSD memformat ulang seluruh drive</div>
+            </section>
+
+            <!-- ==================== SLIDE 42: SUMMARY ==================== -->
+            <section>
+                <h2>📝 Ringkasan</h2>
+                <table class="small">
+                    <tr>
+                        <th>Konsep</th>
+                        <th>Poin Kunci</th>
+                    </tr>
+                    <tr>
+                        <td><strong>HDD vs SSD</strong></td>
+                        <td>HDD = recovery mudah; SSD = TRIM, wear leveling, GC</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MBR vs GPT</strong></td>
+                        <td>MBR: 4 partisi/2TB; GPT: 128 partisi, redundansi</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FAT vs NTFS</strong></td>
+                        <td>FAT: linked list sederhana; NTFS: MFT, ADS, journal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MFT & MACE</strong></td>
+                        <td>8 timestamps, deteksi timestomping via $SI vs $FN</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Slack & Unallocated</strong></td>
+                        <td>Sumber data residual, target file carving</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ext4</strong></td>
+                        <td>Inode dengan dtime, journaling, nanosecond timestamp</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tools</strong></td>
+                        <td>FTK Imager, MFTExplorer, Autopsy, HxD</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 43: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 04: Akuisisi dan Duplikasi Data Forensik</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Prinsip akuisisi forensik dan write-blocking</li>
+                    <li class="fragment">Metode akuisisi: physical, logical, sparse</li>
+                    <li class="fragment">Format image forensik: raw (dd), E01, AFF4</li>
+                    <li class="fragment">Verifikasi integritas: MD5, SHA-1, SHA-256</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 44: REFERENCES ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Carrier, B. (2005). <em>File System Forensic Analysis</em>. Addison-Wesley. <strong>Chapter 3-11</strong></li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em> (4th Ed.). Academic Press. Chapter 8.</li>
+                    <li>Phillips, A., et al. (2022). <em>Guide to Computer Forensics and Investigations</em> (6th Ed.). Cengage. Chapter 4-5.</li>
+                    <li>Nikkel, B. (2021). <em>Practical Forensic Imaging</em> (2nd Ed.). No Starch Press. Chapter 4-6.</li>
+                    <li>Microsoft (2024). <em>NTFS Technical Reference</em>. Microsoft Docs.</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 45: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 03: Hard Disk dan Sistem File</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
