@@ -1,0 +1,1098 @@
+/**
+ * Universitas Pertahanan RI - Reveal.js Custom Theme
+ * ===================================================
+ * 
+ * Version: 1.1.0 (2025)
+ * 
+ * Warna diambil dari logo resmi Universitas Pertahanan RI
+ * Dapat digunakan untuk semua slide presentasi mata kuliah
+ * 
+ * Penggunaan:
+ *   <link rel="stylesheet" href="css/unhan-theme.css">
+ * 
+ * Changelog v1.1:
+ *   - Added quiz interactive elements (.quiz-option, .quiz-correct, .quiz-incorrect)
+ *   - Added complexity indicators (.complexity-badge, .o1, .on, .on2, etc.)
+ *   - Added data structure visualizations (stack, queue, linked list)
+ *   - Added formula-box and step-box
+ *   - Added comparison-grid layout
+ *   - Added additional animations (pulse, slideIn)
+ * 
+ * Ãƒâ€šÃ‚Â© 2025 Universitas Pertahanan RI
+ */
+
+/* ============================================
+   COLOR PALETTE - UNHAN OFFICIAL COLORS
+   ============================================ */
+:root {
+    /* Primary Colors */
+    --unhan-navy: #1a3a6e;           /* Biru tua - border logo */
+    --unhan-navy-light: #2a5298;     /* Biru lebih terang */
+    --unhan-navy-dark: #0f2444;      /* Biru sangat gelap */
+    
+    /* Secondary Colors */
+    --unhan-red: #c41e3a;            /* Merah - bendera & pita */
+    --unhan-red-light: #e63950;      /* Merah terang */
+    --unhan-red-dark: #8b1528;       /* Merah gelap */
+    
+    /* Accent Colors */
+    --unhan-gold: #d4a84b;           /* Emas - Garuda & senjata */
+    --unhan-gold-light: #e8c36b;     /* Emas terang */
+    --unhan-gold-dark: #b8922f;      /* Emas gelap */
+    
+    /* Neutral Colors */
+    --unhan-white: #ffffff;
+    --unhan-gray-light: #f5f5f5;
+    --unhan-gray: #6b7280;
+    --unhan-gray-dark: #374151;
+    --unhan-black: #1a1a1a;
+    
+    /* Functional Colors */
+    --color-success: #22c55e;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+    
+    /* Typography */
+    --font-heading: 'Segoe UI', 'Arial', sans-serif;
+    --font-body: 'Segoe UI', 'Arial', sans-serif;
+    --font-code: 'Consolas', 'Courier New', monospace;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+.reveal {
+    font-family: var(--font-body);
+}
+
+.reveal .slides {
+    text-align: left;
+}
+
+.reveal .slides section {
+    padding: 20px;
+}
+
+/* ============================================
+   BACKGROUNDS
+   ============================================ */
+
+/* Default dark navy background */
+.reveal {
+    background: linear-gradient(135deg, var(--unhan-navy-dark) 0%, var(--unhan-navy) 100%);
+}
+
+/* Alternative backgrounds - add class to section */
+.reveal section.bg-navy {
+    background: linear-gradient(135deg, var(--unhan-navy-dark) 0%, var(--unhan-navy) 100%);
+}
+
+.reveal section.bg-red {
+    background: linear-gradient(135deg, var(--unhan-red-dark) 0%, var(--unhan-red) 100%);
+}
+
+.reveal section.bg-light {
+    background: var(--unhan-gray-light);
+    color: var(--unhan-navy-dark);
+}
+
+.reveal section.bg-white {
+    background: var(--unhan-white);
+    color: var(--unhan-navy-dark);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+/* Headings */
+.reveal h1, 
+.reveal h2, 
+.reveal h3, 
+.reveal h4, 
+.reveal h5, 
+.reveal h6 {
+    font-family: var(--font-heading);
+    text-transform: none;
+    font-weight: 600;
+    color: var(--unhan-white);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 0.5em;
+}
+
+.reveal h1 {
+    font-size: 2.2em;
+    color: var(--unhan-gold);
+}
+
+.reveal h2 {
+    font-size: 1.6em;
+    border-bottom: 3px solid var(--unhan-gold);
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.reveal h3 {
+    font-size: 1.3em;
+    color: var(--unhan-gold-light);
+}
+
+/* Body text */
+.reveal p,
+.reveal li {
+    color: var(--unhan-white);
+    line-height: 1.6;
+}
+
+/* Links */
+.reveal a {
+    color: var(--unhan-gold);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.reveal a:hover {
+    color: var(--unhan-gold-light);
+    text-decoration: underline;
+}
+
+/* ============================================
+   TEXT UTILITIES
+   ============================================ */
+
+/* Highlight classes */
+.reveal .highlight,
+.reveal .text-gold {
+    color: var(--unhan-gold);
+    font-weight: bold;
+}
+
+.reveal .text-red,
+.reveal .warning {
+    color: var(--unhan-red-light);
+    font-weight: bold;
+}
+
+.reveal .text-success,
+.reveal .success {
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+.reveal .text-navy {
+    color: var(--unhan-navy-light);
+    font-weight: bold;
+}
+
+.reveal .text-white {
+    color: var(--unhan-white);
+}
+
+/* Size utilities */
+.reveal .small {
+    font-size: 0.7em;
+}
+
+.reveal .smaller {
+    font-size: 0.6em;
+}
+
+.reveal .large {
+    font-size: 1.2em;
+}
+
+/* Alignment */
+.reveal .text-center {
+    text-align: center;
+}
+
+.reveal .text-left {
+    text-align: left;
+}
+
+.reveal .text-right {
+    text-align: right;
+}
+
+/* ============================================
+   LISTS
+   ============================================ */
+.reveal ul,
+.reveal ol {
+    text-align: left;
+    display: block;
+    margin-left: 1em;
+}
+
+.reveal li {
+    margin-bottom: 0.5em;
+}
+
+.reveal ul li::marker {
+    color: var(--unhan-gold);
+}
+
+.reveal ol li::marker {
+    color: var(--unhan-gold);
+    font-weight: bold;
+}
+
+/* Nested lists */
+.reveal ul ul,
+.reveal ol ol,
+.reveal ul ol,
+.reveal ol ul {
+    margin-top: 0.3em;
+    font-size: 0.9em;
+}
+
+/* ============================================
+   BLOCKQUOTES
+   ============================================ */
+.reveal blockquote {
+    background: rgba(26, 58, 110, 0.5);
+    border-left: 5px solid var(--unhan-gold);
+    padding: 20px 25px;
+    margin: 20px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: var(--unhan-white);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.reveal blockquote p {
+    margin: 0;
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+.reveal table {
+    font-size: 0.7em;
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: auto;
+}
+
+.reveal table th {
+    background: var(--unhan-navy);
+    color: var(--unhan-gold);
+    font-weight: bold;
+    padding: 12px 16px;
+    border: 1px solid var(--unhan-navy-light);
+}
+
+.reveal table td {
+    padding: 10px 16px;
+    border: 1px solid var(--unhan-navy-light);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--unhan-white);
+}
+
+.reveal table tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.reveal table tr:hover td {
+    background: rgba(212, 168, 75, 0.2);
+}
+
+/* Table with red header variant */
+.reveal table.table-red th {
+    background: var(--unhan-red);
+    border-color: var(--unhan-red-dark);
+}
+
+/* ============================================
+   CODE BLOCKS
+   ============================================ */
+.reveal pre {
+    width: 100%;
+    font-size: 0.55em;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    border: 1px solid var(--unhan-navy-light);
+}
+
+.reveal code {
+    font-family: var(--font-code);
+}
+
+.reveal pre code {
+    padding: 15px 20px;
+    max-height: 450px;
+    border-radius: 8px;
+}
+
+/* Inline code */
+.reveal p code,
+.reveal li code,
+.reveal td code {
+    background: rgba(212, 168, 75, 0.2);
+    color: var(--unhan-gold-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+/* ============================================
+   IMAGES & FIGURES
+   ============================================ */
+.reveal img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.reveal figure {
+    margin: 0;
+    text-align: center;
+}
+
+.reveal figcaption {
+    margin-top: 10px;
+    color: var(--unhan-gray);
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+/* Image fallback when image not loaded */
+.reveal .img-fallback {
+    display: none;
+    padding: 40px;
+    border: 2px dashed var(--unhan-gold);
+    border-radius: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(26, 58, 110, 0.3);
+}
+
+.reveal .img-fallback p {
+    margin: 5px 0;
+}
+
+.reveal .img-fallback .icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.reveal .img-fallback .title {
+    color: var(--unhan-gold);
+    font-weight: bold;
+}
+
+.reveal .img-fallback .description {
+    font-size: 0.8em;
+    color: var(--unhan-gray);
+}
+
+/* ============================================
+   LAYOUT UTILITIES
+   ============================================ */
+
+/* Two columns */
+.reveal .two-columns {
+    display: flex;
+    gap: 2em;
+    align-items: flex-start;
+}
+
+.reveal .two-columns > div,
+.reveal .two-columns > section {
+    flex: 1;
+}
+
+/* Three columns */
+.reveal .three-columns {
+    display: flex;
+    gap: 1.5em;
+}
+
+.reveal .three-columns > div {
+    flex: 1;
+}
+
+/* Grid layout */
+.reveal .grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+}
+
+/* Centering */
+.reveal .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   SPECIAL BOXES
+   ============================================ */
+
+/* Info box */
+.reveal .box-info {
+    background: rgba(59, 130, 246, 0.2);
+    border-left: 4px solid var(--color-info);
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 15px 0;
+}
+
+/* Warning box */
+.reveal .box-warning {
+    background: rgba(245, 158, 11, 0.2);
+    border-left: 4px solid var(--color-warning);
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 15px 0;
+}
+
+/* Error/Danger box */
+.reveal .box-danger {
+    background: rgba(196, 30, 58, 0.2);
+    border-left: 4px solid var(--unhan-red);
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 15px 0;
+}
+
+/* Success box */
+.reveal .box-success {
+    background: rgba(34, 197, 94, 0.2);
+    border-left: 4px solid var(--color-success);
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 15px 0;
+}
+
+/* Definition box */
+.reveal .box-definition {
+    background: rgba(212, 168, 75, 0.15);
+    border: 2px solid var(--unhan-gold);
+    padding: 20px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+/* ============================================
+   TITLE SLIDE STYLES
+   ============================================ */
+.reveal .title-slide {
+    text-align: center;
+}
+
+.reveal .title-slide h1 {
+    font-size: 2.5em;
+    margin-bottom: 0.3em;
+}
+
+.reveal .title-slide h3 {
+    font-size: 1.4em;
+    color: var(--unhan-white);
+    margin-bottom: 1em;
+}
+
+.reveal .title-slide .logo {
+    width: 150px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.reveal .title-slide .instructor {
+    font-size: 0.9em;
+    color: var(--unhan-gray-light);
+    margin-top: 1.5em;
+}
+
+.reveal .title-slide .institution {
+    font-size: 0.85em;
+    color: var(--unhan-gold);
+    font-weight: bold;
+}
+
+/* ============================================
+   FRAGMENT ANIMATIONS
+   ============================================ */
+.reveal .fragment.highlight-gold.visible {
+    color: var(--unhan-gold);
+}
+
+.reveal .fragment.highlight-red.visible {
+    color: var(--unhan-red-light);
+}
+
+.reveal .fragment.highlight-current-gold.current-fragment {
+    color: var(--unhan-gold);
+}
+
+.reveal .fragment.highlight-current-red.current-fragment {
+    color: var(--unhan-red-light);
+}
+
+/* Box highlight on fragment */
+.reveal .fragment.box-highlight.visible {
+    background: rgba(212, 168, 75, 0.2);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+.reveal .progress {
+    background: rgba(255, 255, 255, 0.2);
+    height: 4px;
+}
+
+.reveal .progress span {
+    background: linear-gradient(90deg, var(--unhan-gold) 0%, var(--unhan-red) 100%);
+}
+
+/* ============================================
+   SLIDE NUMBER
+   ============================================ */
+.reveal .slide-number {
+    background: var(--unhan-navy);
+    color: var(--unhan-gold);
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 4px 0 0 0;
+}
+
+/* ============================================
+   CONTROLS (Navigation Arrows)
+   ============================================ */
+.reveal .controls {
+    color: var(--unhan-gold);
+}
+
+.reveal .controls button {
+    color: var(--unhan-gold);
+}
+
+.reveal .controls button:hover {
+    color: var(--unhan-gold-light);
+}
+
+/* ============================================
+   QUIZ/INTERACTIVE ELEMENTS
+   ============================================ */
+.reveal .quiz-question {
+    background: rgba(26, 58, 110, 0.5);
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid var(--unhan-gold);
+    margin: 20px 0;
+}
+
+.reveal .quiz-answer {
+    background: rgba(34, 197, 94, 0.2);
+    border-left: 4px solid var(--color-success);
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 0 8px 8px 0;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+    .reveal {
+        background: white !important;
+    }
+    
+    .reveal h1, .reveal h2, .reveal h3,
+    .reveal p, .reveal li {
+        color: black !important;
+        text-shadow: none !important;
+    }
+    
+    .reveal h2 {
+        border-bottom-color: var(--unhan-navy) !important;
+    }
+    
+    .reveal table th {
+        background: var(--unhan-navy) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media screen and (max-width: 768px) {
+    .reveal h1 { font-size: 1.8em; }
+    .reveal h2 { font-size: 1.4em; }
+    .reveal h3 { font-size: 1.2em; }
+    
+    .reveal .two-columns,
+    .reveal .three-columns {
+        flex-direction: column;
+    }
+    
+    .reveal table {
+        font-size: 0.6em;
+    }
+    
+    .reveal pre {
+        font-size: 0.5em;
+    }
+}
+
+/* ============================================
+   CUSTOM ANIMATION KEYFRAMES
+   ============================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-gold {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(212, 168, 75, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(212, 168, 75, 0);
+    }
+}
+
+.reveal .animate-pulse {
+    animation: pulse-gold 2s infinite;
+}
+
+/* ============================================
+   ADDITIONAL COMPONENTS (v1.1)
+   Commonly used styles across slides
+   ============================================ */
+
+/* Formula/Math Box */
+.reveal .formula-box {
+    background: rgba(212, 168, 75, 0.15);
+    border: 2px solid var(--unhan-gold);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.reveal .formula-box p {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+/* Alternative Quiz Styling */
+.reveal .quiz-box {
+    background: rgba(59, 130, 246, 0.2);
+    border-left: 5px solid var(--color-info);
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 0 10px 10px 0;
+}
+
+.reveal .answer-reveal {
+    background: rgba(34, 197, 94, 0.2);
+    border-left: 5px solid var(--color-success);
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Comparison Grid */
+.reveal .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Step Box for procedures */
+.reveal .step-box {
+    background: rgba(26, 58, 110, 0.5);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+/* Large Icon */
+.reveal .icon-large {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+/* ============================================
+   INTERACTIVE QUIZ ELEMENTS
+   ============================================ */
+
+.reveal .quiz-option {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--unhan-navy-light);
+    padding: 15px 20px;
+    margin: 10px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.reveal .quiz-option:hover {
+    background: rgba(212, 168, 75, 0.2);
+    border-color: var(--unhan-gold);
+}
+
+.reveal .quiz-correct {
+    background: rgba(34, 197, 94, 0.3) !important;
+    border-left: 4px solid var(--color-success);
+}
+
+.reveal .quiz-incorrect {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-left: 4px solid var(--color-error);
+}
+
+/* ============================================
+   COMPLEXITY INDICATORS
+   ============================================ */
+
+.reveal .complexity-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.reveal .o1 { 
+    background: var(--color-success); 
+    color: white; 
+}
+
+.reveal .ologn { 
+    background: #10b981; 
+    color: white; 
+}
+
+.reveal .on { 
+    background: var(--color-warning); 
+    color: white; 
+}
+
+.reveal .onlogn { 
+    background: #f97316; 
+    color: white; 
+}
+
+.reveal .on2 { 
+    background: var(--color-error); 
+    color: white; 
+}
+
+.reveal .complexity-good { 
+    color: var(--color-success); 
+    font-weight: bold;
+}
+
+.reveal .complexity-ok { 
+    color: var(--color-warning); 
+    font-weight: bold;
+}
+
+.reveal .complexity-bad { 
+    color: var(--unhan-red-light); 
+    font-weight: bold;
+}
+
+/* ============================================
+   DATA STRUCTURE VISUALIZATIONS
+   ============================================ */
+
+/* Generic Node Diagram */
+.reveal .node-diagram {
+    display: inline-block;
+    border: 2px solid var(--unhan-gold);
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 5px;
+    background: rgba(212, 168, 75, 0.1);
+}
+
+.reveal .node-diagram.highlight {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--color-success);
+}
+
+.reveal .arrow {
+    color: var(--unhan-gold);
+    font-size: 1.5em;
+    margin: 0 10px;
+}
+
+/* Linked List Visualization */
+.reveal .linked-list-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.reveal .ll-node {
+    display: flex;
+    border: 2px solid var(--unhan-gold);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.reveal .ll-node .data {
+    background: rgba(37, 99, 235, 0.3);
+    padding: 10px 15px;
+    font-weight: bold;
+}
+
+.reveal .ll-node .prev,
+.reveal .ll-node .next {
+    background: rgba(212, 168, 75, 0.3);
+    padding: 8px 12px;
+    font-size: 0.6em;
+}
+
+/* Stack Visualization */
+.reveal .stack-visual {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    background: rgba(30, 64, 175, 0.3);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #60a5fa;
+    min-height: 200px;
+    width: 150px;
+    margin: 0 auto;
+}
+
+.reveal .stack-element {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 15px 30px;
+    margin: 5px 0;
+    border-radius: 5px;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+
+.reveal .stack-element.new {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.reveal .stack-element.removing {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.reveal .top-pointer {
+    color: var(--color-warning);
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+/* Queue Visualization */
+.reveal .queue-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin: 20px 0;
+}
+
+.reveal .queue-cell {
+    width: 60px;
+    height: 60px;
+    border: 3px solid var(--unhan-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--unhan-white);
+    background: rgba(37, 99, 235, 0.3);
+    border-radius: 8px;
+}
+
+.reveal .queue-cell.empty {
+    background: rgba(107, 114, 128, 0.2);
+    border-color: var(--unhan-navy-light);
+}
+
+.reveal .queue-cell.highlight {
+    background: rgba(34, 197, 94, 0.3);
+    border-color: var(--color-success);
+    animation: pulse 1s infinite;
+}
+
+.reveal .queue-pointer {
+    text-align: center;
+    font-size: 0.8em;
+    color: var(--unhan-gold);
+    margin-top: 5px;
+}
+
+.reveal .arrow-label {
+    padding: 10px 15px;
+    font-size: 0.9em;
+    color: var(--unhan-white);
+}
+
+.reveal .arrow-in {
+    color: var(--color-success);
+}
+
+.reveal .arrow-out {
+    color: var(--unhan-red-light);
+}
+
+/* ============================================
+   COMPACT TABLE VARIANT
+   ============================================ */
+
+.reveal .time-table td,
+.reveal .time-table th {
+    font-size: 0.6em !important;
+    padding: 5px 10px !important;
+}
+
+.reveal .comparison-table td {
+    font-size: 0.65em !important;
+}
+
+/* ============================================
+   ADDITIONAL ANIMATIONS
+   ============================================ */
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1); 
+    }
+    50% { 
+        transform: scale(1.05); 
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.reveal .animate-slide-left {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+.reveal .animate-slide-right {
+    animation: slideInRight 0.5s ease-out;
+}
+
+/* ============================================
+   FRAGMENT HIGHLIGHT FOR CURRENT BLUE
+   ============================================ */
+
+.reveal .slides section .fragment.highlight-current-blue.current-fragment {
+    color: #60a5fa;
+}
+
+/* ============================================
+   END OF UNHAN THEME
+   ============================================ */
+/* ============================================
+   ADDITIONAL UTILITY CLASSES (v1.2)
+   Added for inline style replacement
+   ============================================ */
+
+/* Title slide metadata spacing */
+.reveal .title-meta {
+    margin-top: 50px;
+}
+
+/* Content margin utility */
+.reveal .content-margin {
+    margin-top: 20px;
+}
+
+/* Content margin large utility */
+.reveal .content-margin-lg {
+    margin-top: 30px;
+}
+
+/* Image size classes */
+.reveal .img-small {
+    max-height: 200px;
+}
+
+.reveal .img-medium {
+    max-height: 300px;
+}
+
+.reveal .img-large {
+    max-height: 400px;
+}
+
+.reveal .img-xlarge {
+    max-height: 450px;
+}
+
+/* Highlight row colors for tables */
+.reveal table tr.highlight-row-success td {
+    background: rgba(34, 197, 94, 0.3) !important;
+}
+
+.reveal table tr.highlight-row-danger td {
+    background: rgba(196, 30, 58, 0.3) !important;
+}
+
+.reveal table tr.highlight-row-warning td {
+    background: rgba(212, 168, 75, 0.3) !important;
+}
+
+.reveal table tr.highlight-row-info td {
+    background: rgba(42, 82, 152, 0.3) !important;
+}
+
+/* Additional text colors using UNHAN palette */
+.reveal .text-success {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+/* Medium text class alias */
+.reveal .medium-text {
+    font-size: 0.8em;
+}
+
+/* Small text class */
+.reveal .small-text {
+    font-size: 0.7em;
+}
