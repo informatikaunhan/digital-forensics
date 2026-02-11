@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 10: Forensik Jaringan</title>
+    
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/league.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../css/unhan-theme.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- ==================== SLIDE 1: TITLE ==================== -->
+            <section class="center">
+                <h1>Forensik Digital</h1>
+                <h3>Pertemuan 10</h3>
+                <h2>Forensik Jaringan</h2>
+                <p class="small title-meta">
+                    Mata Kuliah: Digital Forensic for Military Purposes | 3 SKS
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 2: LEARNING OUTCOMES ==================== -->
+            <section>
+                <h2>🎯 Capaian Pembelajaran</h2>
+                <p>Setelah pertemuan ini, mahasiswa mampu:</p>
+                <ol class="medium-text">
+                    <li class="fragment">Menjelaskan prinsip dasar forensik jaringan dan metodologi traffic analysis</li>
+                    <li class="fragment">Mengidentifikasi jenis-jenis bukti jaringan (PCAP, flow data, logs)</li>
+                    <li class="fragment">Melakukan analisis protokol TCP/IP, HTTP, DNS, dan SMTP</li>
+                    <li class="fragment">Menganalisis artefak IDS/IPS dan firewall logs</li>
+                    <li class="fragment">Menerapkan teknik wireless network forensics</li>
+                    <li class="fragment">Melakukan rekonstruksi serangan dan deteksi covert channels</li>
+                    <li class="fragment">Memahami tantangan encrypted traffic dan aspek hukum</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 3: AGENDA ==================== -->
+            <section>
+                <h2>📋 Agenda Hari Ini</h2>
+                <div class="two-columns">
+                    <div>
+                        <h4>Bagian 1 — Teori</h4>
+                        <ul class="medium-text">
+                            <li>Prinsip Forensik Jaringan</li>
+                            <li>Network Evidence: PCAP, Flow, Logs</li>
+                            <li>Analisis Protokol (TCP, DNS, HTTP)</li>
+                            <li>IDS/IPS & Firewall Logs</li>
+                            <li>Wireless Forensics</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Bagian 2 — Teknik & Praktik</h4>
+                        <ul class="medium-text">
+                            <li>Rekonstruksi Serangan</li>
+                            <li>Covert Channels & Exfiltration</li>
+                            <li>Encrypted Traffic Analysis</li>
+                            <li>Tools Forensik Jaringan</li>
+                            <li>Studi Kasus Militer</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 4: DEFINISI ==================== -->
+            <section>
+                <h2>🌐 Apa itu Forensik Jaringan?</h2>
+                <div class="box-definition">
+                    <strong>Forensik Jaringan (Network Forensics)</strong> adalah cabang forensik digital yang berfokus pada pemantauan, penangkapan, pencatatan, dan analisis lalu lintas jaringan untuk tujuan pengumpulan bukti, deteksi intrusi, dan investigasi insiden keamanan.
+                </div>
+                <p class="fragment">Dua pendekatan utama (Marcus Ranum):</p>
+                <ul class="medium-text">
+                    <li class="fragment">📹 <strong>"Catch-it-as-you-can"</strong> — Tangkap semua paket, analisis nanti</li>
+                    <li class="fragment">👁️ <strong>"Stop, look, and listen"</strong> — Analisis real-time, simpan yang relevan</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 5: KONTEKS MILITER ==================== -->
+            <section>
+                <h2>🎖️ Relevansi Militer</h2>
+                <p>Forensik jaringan dalam konteks pertahanan Indonesia:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>🔍 Deteksi Intrusi</strong><br>
+                        <span class="small">Monitoring jaringan Kodam, Lantamal, Mabes TNI</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>📤 Investigasi Kebocoran</strong><br>
+                        <span class="small">Analisis egress traffic untuk data exfiltration</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🎯 Atribusi Serangan</strong><br>
+                        <span class="small">Identifikasi aktor ancaman pada infrastruktur kritis</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>🛡️ Intelijen Siber</strong><br>
+                        <span class="small">Operasi Cyber Intelligence dan Information Operations</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 6: PERBANDINGAN ==================== -->
+            <section>
+                <h2>Forensik Komputer vs Forensik Jaringan</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Forensik Komputer</th>
+                        <th>Forensik Jaringan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Sumber Data</strong></td>
+                        <td>Hard disk, memori, registry</td>
+                        <td>Packet captures, logs, flow data</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Sifat Data</strong></td>
+                        <td>Statis (data at rest)</td>
+                        <td>Dinamis (data in motion)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Volatilitas</strong></td>
+                        <td>Rendah-sedang</td>
+                        <td>Sangat tinggi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Cakupan</strong></td>
+                        <td>Satu sistem/perangkat</td>
+                        <td>Seluruh segmen jaringan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Waktu</strong></td>
+                        <td>Post-mortem analysis</td>
+                        <td>Real-time / near real-time</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 7: ARSITEKTUR CAPTURE ==================== -->
+            <section>
+                <h2>🏗️ Arsitektur Pengumpulan Bukti</h2>
+                <p class="medium-text">Komponen kunci infrastruktur forensik jaringan:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Komponen</th>
+                        <th>Fungsi</th>
+                        <th>Kelebihan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Network TAP</strong></td>
+                        <td>Perangkat inline, kopi semua traffic</td>
+                        <td>Passive, full-duplex, fail-safe</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SPAN/Mirror Port</strong></td>
+                        <td>Fitur switch, mirror traffic ke port monitoring</td>
+                        <td>Tanpa biaya tambahan, mudah dikonfigurasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Inline IDS/IPS</strong></td>
+                        <td>Deteksi dan pencegahan intrusi</td>
+                        <td>Alert otomatis, real-time protection</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 8: POSISI SENSOR ==================== -->
+            <section>
+                <h2>📍 Posisi Strategis Sensor</h2>
+                <pre><code class="language-plaintext">[Internet] ── [Firewall] ── [DMZ] ── [IDS/IPS] ── [Core Switch] ── [Endpoints]
+                   │                         │                │
+                 TAP #1                    TAP #2          SPAN Port
+             (Perimeter)             (Pre-Firewall)    (Internal Traffic)</code></pre>
+                <div class="box-info fragment">
+                    <p class="small"><strong>Konteks Militer:</strong> Pada jaringan pangkalan, sensor wajib dipasang minimal di gateway internet (semua traffic eksternal), antara DMZ dan LAN (lateral movement), dan segmen classified (full audit).</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 9: JENIS BUKTI JARINGAN ==================== -->
+            <section>
+                <h2>📦 Tiga Jenis Bukti Jaringan</h2>
+                <div class="three-columns medium-text">
+                    <div class="step-box fragment">
+                        <strong>Full Packet Capture</strong><br>
+                        <span class="small">
+                            ✅ Informasi paling lengkap<br>
+                            ❌ ~10 TB/hari (1 Gbps)<br>
+                            📄 Format: PCAP/PCAPNG
+                        </span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Flow Data</strong><br>
+                        <span class="small">
+                            ✅ Ringan, metadata saja<br>
+                            ✅ ~20 GB/hari (1 Gbps)<br>
+                            📄 NetFlow, sFlow, IPFIX
+                        </span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Log Files</strong><br>
+                        <span class="small">
+                            ✅ Sudah ada di perangkat<br>
+                            ⚠️ Detail bervariasi<br>
+                            📄 Syslog, JSON, CSV
+                        </span>
+                    </div>
+                </div>
+                <div class="box-warning fragment">
+                    <p class="small"><strong>💡 Tips:</strong> Untuk anggaran terbatas, prioritaskan flow data — fitur bawaan router, storage minimal, cakupan memadai.</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 10: FULL PCAP ==================== -->
+            <section>
+                <h2>📼 Full Packet Capture (PCAP)</h2>
+                <p class="medium-text"><strong>Gold standard</strong> forensik jaringan — merekam keseluruhan paket termasuk header dan payload.</p>
+                <p class="medium-text">Informasi yang dapat diekstrak:</p>
+                <ul class="medium-text">
+                    <li class="fragment">Konten komunikasi HTTP yang tidak terenkripsi</li>
+                    <li class="fragment">File yang ditransfer melalui jaringan</li>
+                    <li class="fragment">Kredensial yang dikirim dalam plain text</li>
+                    <li class="fragment">Query DNS dan respons</li>
+                    <li class="fragment">Metadata komunikasi terenkripsi (TLS handshake, certificate info)</li>
+                </ul>
+                <div class="box-danger fragment">
+                    <p class="small"><strong>⚠️ Estimasi Storage:</strong> Jaringan 100 Mbps, utilisasi 30% → ~325 GB/hari. Gunakan retention policy!</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 11: FLOW DATA ==================== -->
+            <section>
+                <h2>📊 Flow Data (NetFlow/sFlow/IPFIX)</h2>
+                <div class="box-definition">
+                    <strong>Flow Data</strong> — ringkasan metadata komunikasi: siapa berkomunikasi dengan siapa, kapan, protokol apa, berapa banyak data — <em>tanpa</em> isi komunikasi.
+                </div>
+                <pre class="fragment"><code class="language-plaintext">Source IP       : 192.168.1.100
+Destination IP  : 203.0.113.50
+Source Port     : 49152
+Destination Port: 443
+Protocol        : TCP (6)
+Bytes           : 1,245,678
+Packets         : 847
+Start Time      : 2025-01-15 08:23:45
+TCP Flags       : SYN, ACK, PSH, FIN</code></pre>
+                <p class="small fragment">Rasio storage PCAP vs Flow ≈ <strong>500:1</strong> — sangat efisien untuk monitoring jangka panjang.</p>
+            </section>
+
+            <!-- ==================== SLIDE 12: LOG FILES ==================== -->
+            <section>
+                <h2>📝 Sumber Log Jaringan</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Sumber</th>
+                        <th>Informasi Kunci</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Firewall</strong></td>
+                        <td>Koneksi allow/deny, rule terpicu</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>IDS/IPS</strong></td>
+                        <td>Alert keamanan, signature match</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Proxy Server</strong></td>
+                        <td>URL diakses, user agent, response code</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DNS Server</strong></td>
+                        <td>Query & response, NXDOMAIN</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>DHCP Server</strong></td>
+                        <td>IP assignment, MAC address</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>VPN Gateway</strong></td>
+                        <td>Koneksi VPN, autentikasi user</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 13: PRESERVASI ==================== -->
+            <section>
+                <h2>🔒 Preservasi Bukti Jaringan</h2>
+                <p class="medium-text">Chain of custody tetap berlaku (Pertemuan 2) dengan adaptasi khusus:</p>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Hitung hash</strong> file PCAP segera setelah capture selesai</li>
+                    <li class="fragment"><strong>Buat salinan forensik</strong> (min 2 copy pada media terpisah)</li>
+                    <li class="fragment"><strong>Dokumentasikan metadata</strong>: tool, versi, filter, interface</li>
+                    <li class="fragment"><strong>Simpan dengan aman</strong> di media write-protected</li>
+                    <li class="fragment"><strong>Catat setiap akses</strong> terhadap file bukti</li>
+                </ol>
+                <pre class="fragment"><code class="language-plaintext">Nomor Bukti   : NF-2025-001
+Jenis         : Full Packet Capture (PCAP)
+Sumber        : TAP pada gateway utama Kodam IX/Udayana
+Hash SHA-256  : 1234abcd5678efgh...
+Tool Capture  : tcpdump 4.9.3 / libpcap 1.10.1</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 14: TCP/IP FORENSIK ==================== -->
+            <section>
+                <h2>🔬 Analisis Protokol: TCP/IP</h2>
+                <p class="medium-text">Setiap layer TCP/IP memberikan informasi forensik yang berbeda:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Layer</th>
+                        <th>Protokol</th>
+                        <th>Informasi Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Application (7)</strong></td>
+                        <td>HTTP, DNS, SMTP, FTP</td>
+                        <td>Konten, URL, email, file transfer</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Transport (4)</strong></td>
+                        <td>TCP, UDP</td>
+                        <td>Port number, session, flags</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Internet (3)</strong></td>
+                        <td>IP, ICMP</td>
+                        <td>IP sumber/tujuan, TTL, routing</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Network Access (2)</strong></td>
+                        <td>Ethernet, Wi-Fi</td>
+                        <td>MAC address, VLAN tags</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 15: TCP HANDSHAKE ==================== -->
+            <section>
+                <h2>🤝 TCP Three-Way Handshake</h2>
+                <pre><code class="language-plaintext">Client (192.168.1.100)          Server (10.0.0.1:80)
+         |                              |
+         |---- SYN (seq=1000) -------->|    ← Inisiasi
+         |                              |
+         |<--- SYN-ACK (seq=2000, ------|    ← Konfirmasi
+         |     ack=1001)                |
+         |                              |
+         |---- ACK (seq=1001, -------->|    ← Established
+         |     ack=2001)                |</code></pre>
+                <div class="box-info fragment">
+                    <p class="small"><strong>Implikasi Forensik:</strong> Banyak SYN tanpa ACK = <span class="text-red">SYN scan/SYN flood</span>. SYN+SYN-ACK+RST = <span class="text-red">stealth port scanning</span>.</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 16: TCP FLAGS ==================== -->
+            <section>
+                <h2>🚩 TCP Flags & Signifikansi Forensik</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Flag</th>
+                        <th>Signifikansi Forensik</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>SYN</strong></td>
+                        <td>Inisiasi koneksi; banyak SYN tanpa ACK = SYN scan/flood</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>ACK</strong></td>
+                        <td>Koneksi established; ACK scan untuk bypass firewall</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>FIN</strong></td>
+                        <td>Terminasi normal; FIN scan untuk stealth scanning</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>RST</strong></td>
+                        <td>Koneksi direset; port tertutup atau filtered</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PSH</strong></td>
+                        <td>Push data; indikasi transfer data aktif</td>
+                    </tr>
+                </table>
+                <pre class="fragment"><code class="language-bash"># Wireshark: Deteksi SYN scan
+tcp.flags.syn == 1 && tcp.flags.ack == 0</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 17: PORT SCAN DETECTION ==================== -->
+            <section>
+                <h2>🔎 Contoh: Deteksi Port Scanning</h2>
+                <pre><code class="language-plaintext">203.0.113.50 → 10.0.0.5:22   [SYN] → [RST,ACK]      Port TERTUTUP
+203.0.113.50 → 10.0.0.5:80   [SYN] → [SYN,ACK] → RST Port TERBUKA ⚠️
+203.0.113.50 → 10.0.0.5:443  [SYN] → [SYN,ACK] → RST Port TERBUKA ⚠️
+203.0.113.50 → 10.0.0.5:3389 [SYN] → [RST,ACK]      Port TERTUTUP
+203.0.113.50 → 10.0.0.5:3306 [SYN] → [SYN,ACK] → RST Port TERBUKA ⚠️</code></pre>
+                <div class="box-danger fragment">
+                    <p class="small"><strong>⚠️ Temuan Kritis:</strong> Port MySQL (3306) terbuka dan dapat diakses dari luar — risiko keamanan tinggi pada jaringan Kodam!</p>
+                </div>
+                <p class="small fragment">Pola: Satu IP sumber → banyak port pada satu target = <strong>TCP SYN Scan</strong></p>
+            </section>
+
+            <!-- ==================== SLIDE 18: DNS FORENSIK ==================== -->
+            <section>
+                <h2>🌍 Forensik DNS</h2>
+                <div class="box-definition">
+                    <strong>DNS</strong> — salah satu sumber bukti paling berharga karena hampir semua aktivitas internet dimulai dengan query DNS.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Elemen DNS</th>
+                        <th>Nilai Forensik</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Query name</strong></td>
+                        <td>Domain yang diakses oleh host</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NXDOMAIN</strong></td>
+                        <td>Domain tidak ada — banyak NXDOMAIN = DGA malware</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TXT records</strong></td>
+                        <td>Sering digunakan untuk DNS tunneling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TTL rendah</strong></td>
+                        <td>Indikator C2 fast-flux</td>
+                    </tr>
+                </table>
+                <pre class="fragment"><code class="language-bash"># Wireshark: DNS response NXDOMAIN
+dns.flags.rcode == 3
+# DNS TXT records (potential tunneling)
+dns.qry.type == 16</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 19: DNS TUNNELING ==================== -->
+            <section>
+                <h2>🚇 DNS Tunneling</h2>
+                <div class="box-definition">
+                    <strong>DNS Tunneling</strong> — menyalahgunakan protokol DNS untuk mengirim data melalui query/response, sering digunakan untuk data exfiltration karena DNS jarang diblokir.
+                </div>
+                <pre class="fragment"><code class="language-plaintext">Query DNS Normal:
+  www.example.com                        → 15 karakter
+
+Query DNS Tunneling:
+  dGhpcyBpcyBhIHRlc3Q.data.evil.com     → 34 karakter
+  (Base64 "this is a test" sebagai subdomain)</code></pre>
+                <p class="small fragment">Indikator: ✅ Query name panjang (>30 char) ✅ Volume tinggi ke satu domain ✅ Tipe TXT/NULL ✅ Entropy tinggi ✅ Pola periodik</p>
+            </section>
+
+            <!-- ==================== SLIDE 20: CONTOH DNS TUNNELING ==================== -->
+            <section>
+                <h2>🔍 Analisis DNS: Mana yang Mencurigakan?</h2>
+                <pre><code class="language-plaintext">Query 1: www.google.com                              (A record) ✅
+Query 2: mail.kemhan.go.id                            (MX record) ✅
+Query 3: dGhpcyBpcyBhIHRlc3Q.data.xyz123.net          (TXT)      ❌
+Query 4: c2VjcmV0IGZpbGUgY29udGVudA.data.xyz123.net   (TXT)      ❌
+Query 5: www.bing.com                                 (A record) ✅
+Query 6: ZW5jcnlwdGVkIGRhdGEgaGVyZQ.data.xyz123.net   (TXT)      ❌</code></pre>
+                <div class="box-danger fragment">
+                    <p class="small"><strong>Temuan:</strong> Query 3, 4, 6 = <strong>DNS Tunneling</strong>. Base64-encoded data dalam subdomain, semua menuju xyz123.net via TXT record. Decode: "this is a test", "secret file content", "encrypted data here".</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 21: HTTP FORENSIK ==================== -->
+            <section>
+                <h2>🌐 Forensik HTTP</h2>
+                <p class="medium-text">HTTP (clear-text) memberikan informasi sangat kaya:</p>
+                <pre><code class="language-http">POST /upload.php HTTP/1.1
+Host: file-share.suspicious-site.net
+Content-Type: multipart/form-data
+Content-Length: 15728640
+User-Agent: curl/7.68.0
+filename="laporan_operasi_q4.xlsx"</code></pre>
+                <div class="box-danger fragment">
+                    <p class="small">
+                        <strong>🚨 Data Exfiltration terdeteksi!</strong><br>
+                        • <code>curl</code> (bukan browser) → transfer disengaja<br>
+                        • File: "laporan_operasi_q4.xlsx" → dokumen operasional militer<br>
+                        • 15 MB ke domain eksternal mencurigakan
+                    </p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 22: HTTPS TANTANGAN ==================== -->
+            <section>
+                <h2>🔐 HTTPS: Tantangan & Apa yang Tersisa</h2>
+                <div class="two-columns medium-text">
+                    <div>
+                        <h4 class="success">✅ Masih Tersedia</h4>
+                        <ul class="small">
+                            <li>IP sumber & tujuan</li>
+                            <li>SNI (domain tujuan)</li>
+                            <li>Certificate details</li>
+                            <li>Ukuran data transfer</li>
+                            <li>Pola timing koneksi</li>
+                            <li>TLS version & cipher</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-red">❌ Terenkripsi</h4>
+                        <ul class="small">
+                            <li>URL lengkap (path)</li>
+                            <li>Konten request/response</li>
+                            <li>Header HTTP</li>
+                            <li>Cookie & kredensial</li>
+                            <li>Body payload</li>
+                            <li>Query string</li>
+                        </ul>
+                    </div>
+                </div>
+                <pre class="fragment"><code class="language-bash"># Wireshark: SNI (domain yang diakses via HTTPS)
+tls.handshake.extensions_server_name
+# Certificate info
+tls.handshake.certificate</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 23: IDS ARTIFACTS ==================== -->
+            <section>
+                <h2>🚨 Analisis IDS/IPS Artifacts</h2>
+                <p class="medium-text">Jenis IDS berdasarkan metode deteksi:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Metode</th>
+                        <th>Pro/Con</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Signature-based</strong></td>
+                        <td>Cocokkan pola yang diketahui</td>
+                        <td>✅ Akurat, ❌ Tidak deteksi zero-day</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Anomaly-based</strong></td>
+                        <td>Deteksi penyimpangan dari baseline</td>
+                        <td>✅ Deteksi serangan baru, ❌ False positive tinggi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Hybrid</strong></td>
+                        <td>Kombinasi signature + anomaly</td>
+                        <td>✅ Cakupan luas, ❌ Kompleksitas tinggi</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 24: SNORT ALERT ==================== -->
+            <section>
+                <h2>📢 Contoh: Snort/Suricata Alert</h2>
+                <pre><code class="language-plaintext">[**] [1:2024217:3] ET MALWARE Trickbot CnC Beacon [**]
+[Classification: A Network Trojan was Detected] [Priority: 1]
+01/15/2025-08:23:45.123456
+192.168.1.100:49152 -> 203.0.113.50:443
+TCP TTL:128 TOS:0x0 ID:12345</code></pre>
+                <div class="box-warning fragment">
+                    <p class="small">
+                        <strong>Interpretasi:</strong><br>
+                        • <strong>ET MALWARE Trickbot CnC Beacon</strong> — komunikasi C2 malware Trickbot<br>
+                        • <strong>Priority: 1</strong> — level kritis<br>
+                        • Host internal <code>192.168.1.100</code> berkomunikasi dengan C2 server eksternal
+                    </p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 25: LOG KORELASI ==================== -->
+            <section>
+                <h2>🔗 Korelasi Log: Rekonstruksi Serangan</h2>
+                <pre><code class="language-plaintext">08:20:00 [DNS]     192.168.1.100 → exploit-kit.malware.net
+08:20:01 [FW]      ALLOW → 203.0.113.50:80 (HTTP)
+08:20:02 [IDS]     ET EXPLOIT Kit Landing Page detected
+08:20:05 [Proxy]   GET /payload.exe → 200 OK
+08:20:10 [FW]      ALLOW → 198.51.100.25:443 (HTTPS)
+08:20:11 [IDS]     ET MALWARE CnC Beacon Activity
+08:21:00 [FW]      ALLOW → 198.51.100.25:443 (5.2 MB)
+08:21:30 [IDS]     ET POLICY Large Outbound Data Transfer</code></pre>
+                <p class="small fragment"><strong>Kill Chain:</strong> Delivery → Exploitation → Installation → C2 → Exfiltration — dalam <strong>~90 detik!</strong></p>
+            </section>
+
+            <!-- ==================== SLIDE 26: CYBER KILL CHAIN MAPPING ==================== -->
+            <section>
+                <h2>⚔️ Mapping Cyber Kill Chain</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Event</th>
+                        <th>Kill Chain</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:20:00</td>
+                        <td>DNS resolve exploit kit</td>
+                        <td><span class="text-gold">Delivery</span></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:20:02</td>
+                        <td>Exploit kit landing page</td>
+                        <td><span class="text-red">Exploitation</span></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:20:05</td>
+                        <td>Download payload.exe</td>
+                        <td><span class="text-red">Installation</span></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:20:10</td>
+                        <td>Koneksi HTTPS ke C2</td>
+                        <td><span class="warning">Command & Control</span></td>
+                    </tr>
+                    <tr class="fragment">
+                        <td>08:21:00</td>
+                        <td>Transfer 5.2 MB keluar</td>
+                        <td><span class="text-red">Actions on Objectives</span></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 27: WIRELESS FORENSICS ==================== -->
+            <section>
+                <h2>📶 Wireless Network Forensics</h2>
+                <p class="medium-text">Tantangan khusus forensik jaringan nirkabel:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tantangan</th>
+                        <th>Penjelasan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Broadcast medium</strong></td>
+                        <td>Sinyal bisa ditangkap siapa saja dalam jangkauan</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Encryption</strong></td>
+                        <td>WPA2/WPA3 mengenkripsi payload</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Attribution</strong></td>
+                        <td>MAC address dapat di-spoof</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Legal issues</strong></td>
+                        <td>Intersepsi wireless perlu otorisasi</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 28: PROBE REQUESTS ==================== -->
+            <section>
+                <h2>📡 Probe Requests: Tracking Perangkat</h2>
+                <div class="box-definition">
+                    <strong>Probe Request</strong> — frame yang dikirim perangkat untuk mencari jaringan yang pernah terhubung. Mengandung SSID dan MAC address.
+                </div>
+                <pre class="fragment"><code class="language-plaintext">Device MAC: 11:22:33:44:55:66
+Probe for SSID: "HOTEL-WIFI-FREE"
+Probe for SSID: "AIRPORT-GUEST"
+Probe for SSID: "KODAM-INTERNAL"    ← Pernah di jaringan militer
+Probe for SSID: "HOME-NETWORK-Admin"</code></pre>
+                <div class="box-info fragment">
+                    <p class="small"><strong>Implikasi:</strong> Probe request mengungkap riwayat koneksi perangkat — pernah di hotel, bandara, Kodam, dan rumah. Informasi pergerakan pemilik!</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 29: ROGUE AP ==================== -->
+            <section>
+                <h2>👿 Rogue Access Point Detection</h2>
+                <pre><code class="language-plaintext">Scan Wi-Fi di area markas:
+============================================================
+SSID                 BSSID              CH  Encryption
+KODAM-WIFI-SECURE    AA:BB:CC:DD:EE:FF   6  WPA2-Enterprise ✅
+KODAM-WIFI-SECURE    11:22:33:44:55:66   1  WPA2-PSK        ⚠️ ROGUE!
+GUEST-NETWORK        AA:BB:CC:DD:EE:01  11  WPA2-PSK        ✅
+FREE-WIFI-KODAM      99:88:77:66:55:44   6  Open            ⚠️ ROGUE!</code></pre>
+                <div class="box-danger fragment">
+                    <p class="small">
+                        <strong>Indikator Rogue AP:</strong><br>
+                        • SSID sama tapi BSSID berbeda ← Evil Twin<br>
+                        • Enkripsi berbeda (PSK vs Enterprise)<br>
+                        • AP Open di area keamanan ← Honeypot
+                    </p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 30: REKONSTRUKSI SERANGAN ==================== -->
+            <section>
+                <h2>🔄 Metodologi Rekonstruksi Serangan</h2>
+                <ol class="medium-text">
+                    <li class="fragment"><strong>Collection</strong> — Kumpulkan semua PCAP, logs, flow data</li>
+                    <li class="fragment"><strong>Filtering</strong> — Filter noise; fokus IP/port/timeframe relevan</li>
+                    <li class="fragment"><strong>Correlation</strong> — Korelasikan event dari berbagai sumber</li>
+                    <li class="fragment"><strong>Timeline</strong> — Susun timeline kronologis</li>
+                    <li class="fragment"><strong>Analysis</strong> — Identifikasi teknik dan taktik penyerang</li>
+                    <li class="fragment"><strong>Attribution</strong> — Kaitkan dengan aktor ancaman yang dikenal</li>
+                    <li class="fragment"><strong>Reporting</strong> — Dokumentasi temuan dan rekomendasi</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 31: WIRESHARK TECHNIQUES ==================== -->
+            <section>
+                <h2>🦈 Teknik Wireshark untuk Rekonstruksi</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Teknik</th>
+                        <th>Menu/Filter</th>
+                        <th>Kegunaan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Follow TCP Stream</strong></td>
+                        <td>Klik kanan → Follow → TCP</td>
+                        <td>Lihat keseluruhan sesi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Export Objects</strong></td>
+                        <td>File → Export Objects</td>
+                        <td>Ekstrak file yang ditransfer</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Conversations</strong></td>
+                        <td>Statistics → Conversations</td>
+                        <td>Ringkasan semua komunikasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>IO Graph</strong></td>
+                        <td>Statistics → I/O Graph</td>
+                        <td>Visualisasi volume traffic</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Expert Info</strong></td>
+                        <td>Analyze → Expert Info</td>
+                        <td>Warning & error otomatis</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 32: DETEKSI SERANGAN ==================== -->
+            <section>
+                <h2>⚡ Deteksi Serangan Umum via Wireshark</h2>
+                <pre><code class="language-bash"># Port Scanning (SYN Scan)
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+
+# SSH Brute Force
+tcp.dstport == 22 && tcp.flags.syn == 1
+
+# HTTP Login Brute Force
+http.request.method == "POST" && http.request.uri contains "login"
+
+# DNS Exfiltration
+dns.qry.name.len > 50
+
+# ICMP Tunneling
+icmp.type == 8 && data.len > 64
+
+# C2 Beaconing (HTTP)
+http.user_agent == "" || http.user_agent contains "curl"</code></pre>
+            </section>
+
+            <!-- ==================== SLIDE 33: COVERT CHANNELS ==================== -->
+            <section>
+                <h2>🕵️ Covert Channels</h2>
+                <div class="box-definition">
+                    <strong>Covert Channel</strong> — metode komunikasi menggunakan saluran/protokol yang tidak dimaksudkan untuk transfer data, untuk menyembunyikan komunikasi dari deteksi.
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Metode</th>
+                        <th>Teknik</th>
+                        <th>Deteksi</th>
+                    </tr>
+                    <tr>
+                        <td><strong>DNS Tunneling</strong></td>
+                        <td>Data encoded dalam subdomain</td>
+                        <td>Query panjang, volume tinggi</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ICMP Tunneling</strong></td>
+                        <td>Data dalam payload ping</td>
+                        <td>Payload > 64 bytes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HTTP Tunneling</strong></td>
+                        <td>Data dalam header/URL kustom</td>
+                        <td>Header non-standar</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Steganography</strong></td>
+                        <td>Data dalam gambar/file</td>
+                        <td>Analisis statistik file</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 34: ICMP TUNNELING EXAMPLE ==================== -->
+            <section>
+                <h2>🏓 Contoh: Deteksi ICMP Tunneling</h2>
+                <div class="box-warning">
+                    <p class="small"><strong>Temuan:</strong> Host 192.168.1.50 mengirim 200 ICMP echo request/menit ke 203.0.113.100, payload rata-rata 512 bytes.</p>
+                </div>
+                <table class="medium-text fragment">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Normal Ping</th>
+                        <th>Temuan Ini</th>
+                    </tr>
+                    <tr>
+                        <td>Frekuensi</td>
+                        <td>1-4/siklus</td>
+                        <td class="text-red">200/menit</td>
+                    </tr>
+                    <tr>
+                        <td>Payload</td>
+                        <td>32-64 bytes</td>
+                        <td class="text-red">512 bytes</td>
+                    </tr>
+                    <tr>
+                        <td>Durasi</td>
+                        <td>Beberapa detik</td>
+                        <td class="text-red">24 jam terus-menerus</td>
+                    </tr>
+                </table>
+                <div class="box-danger fragment">
+                    <p class="small"><strong>Estimasi Exfiltration:</strong> 512 bytes × 200/menit × 60 × 24 = <strong>~140.6 MB dalam 24 jam!</strong></p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 35: ENCRYPTED TRAFFIC ==================== -->
+            <section>
+                <h2>🔑 Analisis Encrypted Traffic</h2>
+                <p class="medium-text">Meskipun payload terenkripsi, metadata tetap bernilai:</p>
+                <div class="grid-2x2 medium-text">
+                    <div class="step-box fragment">
+                        <strong>TLS SNI</strong><br>
+                        <span class="small">Domain yang diakses (dari Client Hello)</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Certificate</strong><br>
+                        <span class="small">Identitas server; self-signed = mencurigakan</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>JA3 Hash</strong><br>
+                        <span class="small">TLS fingerprint — identifikasi malware family</span>
+                    </div>
+                    <div class="step-box fragment">
+                        <strong>Traffic Pattern</strong><br>
+                        <span class="small">Timing & volume — deteksi beaconing</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 36: JA3 FINGERPRINTING ==================== -->
+            <section>
+                <h2>🔏 JA3 TLS Fingerprinting</h2>
+                <div class="box-definition">
+                    <strong>JA3</strong> — fingerprinting TLS berdasarkan Client Hello parameters, menghasilkan hash MD5 unik per implementasi TLS.
+                </div>
+                <pre class="fragment"><code class="language-plaintext">JA3 Hash Examples:
+Malware Trickbot  : e7d705a3286e19ea42f587b344ee6865
+Cobalt Strike     : 72a589da586844d7f0818ce684948eea
+Chrome Browser    : b32309a26951912be7dba376398abc3b
+Firefox Browser   : 839bbe3ed07fed922ded5aaf714d6842
+curl tool         : 456523fc94726331a4d5a2e1d40b2cd7</code></pre>
+                <div class="box-info fragment">
+                    <p class="small"><strong>Kegunaan:</strong> Identifikasi malware yang menyamar sebagai browser, deteksi tool otomatis, dan membedakan tipe klien berdasarkan implementasi TLS.</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 37: STUDI KASUS ==================== -->
+            <section>
+                <h2>📋 Studi Kasus: C2 di Jaringan Kodam</h2>
+                <p class="medium-text"><strong>Latar Belakang:</strong> Anomali terdeteksi di jaringan Kodam XII/Tanjungpura — IDS alert berkala dari satu workstation, outbound traffic meningkat di luar jam kerja.</p>
+                <pre class="fragment"><code class="language-plaintext">[IDS] 02:00:03 ET MALWARE CnC Activity 192.168.10.45 → 185.100.87.XXX
+[IDS] 02:05:02 ET MALWARE CnC Activity 192.168.10.45 → 185.100.87.XXX
+[IDS] 02:10:04 ET MALWARE CnC Activity 192.168.10.45 → 185.100.87.XXX</code></pre>
+                <div class="box-danger fragment">
+                    <p class="small"><strong>Pola Beaconing:</strong> Alert setiap ~5 menit pada jam 02:00 dini hari → komunikasi C2 terjadwal.</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 38: STUDI KASUS TEMUAN ==================== -->
+            <section>
+                <h2>🔎 Temuan Investigasi</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Temuan</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Malware</strong></td>
+                        <td>Cobalt Strike beacon (JA3 match)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>C2 Server</strong></td>
+                        <td>185.100.87.XXX (cloud-sync[.]net)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Beaconing</strong></td>
+                        <td>Interval 5 menit via HTTPS</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Exfiltration</strong></td>
+                        <td>~45 MB data pada jam 02:30</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Host</strong></td>
+                        <td>WS-INTEL-007 (unit Intelijen Kodam)</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Certificate</strong></td>
+                        <td>Self-signed, CN=localhost ← Red flag!</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 39: TOOLS ==================== -->
+            <section>
+                <h2>🛠️ Tools Forensik Jaringan</h2>
+                <table class="medium-text">
+                    <tr>
+                        <th>Tool</th>
+                        <th>Tipe</th>
+                        <th>Keunggulan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Wireshark</strong></td>
+                        <td>GUI Analyzer</td>
+                        <td>Visual, interaktif, fitur lengkap</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>tcpdump</strong></td>
+                        <td>CLI Capture</td>
+                        <td>Ringan, cepat, semua Linux</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>TShark</strong></td>
+                        <td>CLI Analyzer</td>
+                        <td>Scriptable, automatable</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>NetworkMiner</strong></td>
+                        <td>NFAT</td>
+                        <td>Auto-extract files & credentials</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>Zeek</strong></td>
+                        <td>NSM Framework</td>
+                        <td>Log terstruktur, analisis mendalam</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== SLIDE 40: WORKFLOW TOOLS ==================== -->
+            <section>
+                <h2>🔄 Workflow Investigasi</h2>
+                <pre><code class="language-plaintext">tcpdump          → Capture (ringan, cepat)
+     ↓
+NetworkMiner     → Quick Triage (auto-extract)
+     ↓
+Zeek             → Automated Logs (conn, dns, http, ssl)
+     ↓
+TShark           → Scripted Extraction (batch processing)
+     ↓
+Wireshark        → Deep Analysis (per-paket, Follow Stream)</code></pre>
+                <div class="box-info fragment">
+                    <p class="small"><strong>💡 Pro Tip:</strong> Untuk PCAP besar (>1 GB), jangan langsung buka di Wireshark! Gunakan Zeek/TShark terlebih dahulu untuk filtering, baru analisis subset di Wireshark.</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 41: PERTIMBANGAN HUKUM ==================== -->
+            <section>
+                <h2>⚖️ Pertimbangan Hukum</h2>
+                <p class="medium-text">Regulasi monitoring jaringan di Indonesia:</p>
+                <table class="medium-text">
+                    <tr>
+                        <th>Regulasi</th>
+                        <th>Ketentuan</th>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>UU No. 1/2024 (ITE)</strong></td>
+                        <td>Intersepsi perlu perintah pengadilan/penegak hukum</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>UU No. 3/2002</strong></td>
+                        <td>Wewenang pertahanan dalam pengamanan informasi</td>
+                    </tr>
+                    <tr class="fragment">
+                        <td><strong>PP No. 71/2019</strong></td>
+                        <td>Kewajiban logging pada penyelenggaraan sistem elektronik</td>
+                    </tr>
+                </table>
+                <div class="box-warning fragment">
+                    <p class="small"><strong>Konteks Militer:</strong> Monitoring pada jaringan TNI memerlukan otorisasi komandan, prinsip proporsionalitas, banner login yang menginformasikan monitoring, dan penyimpanan sesuai tingkat klasifikasi.</p>
+                </div>
+            </section>
+
+            <!-- ==================== SLIDE 42: KEY TAKEAWAYS ==================== -->
+            <section>
+                <h2>📌 Key Takeaways</h2>
+                <ol class="medium-text">
+                    <li class="fragment">Forensik jaringan fokus pada <strong>data in motion</strong> — sangat volatile, perlu capture segera</li>
+                    <li class="fragment"><strong>Tiga jenis bukti</strong>: Full PCAP (lengkap), Flow Data (efisien), Log Files (tersedia)</li>
+                    <li class="fragment"><strong>DNS adalah goldmine</strong> — hampir semua aktivitas dimulai dari DNS query</li>
+                    <li class="fragment"><strong>Korelasi multi-sumber</strong> menghasilkan gambaran serangan yang lengkap</li>
+                    <li class="fragment"><strong>Encrypted traffic</strong> tetap mengandung metadata yang berharga (SNI, JA3, certificate)</li>
+                    <li class="fragment"><strong>Wireshark + Zeek + tcpdump</strong> = toolkit inti forensik jaringan</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 43: NEXT WEEK ==================== -->
+            <section>
+                <h2>📅 Pertemuan Berikutnya</h2>
+                <div class="box-info">
+                    <h3>Pertemuan 11: Forensik Malware</h3>
+                </div>
+                <ul class="medium-text">
+                    <li class="fragment">Klasifikasi malware: virus, worm, trojan, ransomware, APT</li>
+                    <li class="fragment">Static analysis: file properties, strings, imports</li>
+                    <li class="fragment">Dynamic analysis: sandbox dan behavioral monitoring</li>
+                    <li class="fragment">Memory forensics untuk malware detection</li>
+                    <li class="fragment">Indicators of Compromise (IOC) documentation</li>
+                </ul>
+            </section>
+
+            <!-- ==================== SLIDE 44: REFERENSI ==================== -->
+            <section>
+                <h2>📚 Referensi</h2>
+                <ol class="small">
+                    <li>Davidoff, S. & Ham, J. (2022). <em>Network Forensics: Tracking Hackers through Cyberspace</em>. 2nd Ed. Prentice Hall. <strong>Chapter 1-8</strong></li>
+                    <li>Sanders, C. (2023). <em>Practical Packet Analysis</em>. 4th Ed. No Starch Press. <strong>Chapter 1-8</strong></li>
+                    <li>Casey, E. (2022). <em>Digital Evidence and Computer Crime</em>. 4th Ed. Academic Press. Chapter 11.</li>
+                    <li>NIST SP 800-86: Guide to Integrating Forensic Techniques into Incident Response</li>
+                    <li>Bejtlich, R. (2013). <em>The Practice of Network Security Monitoring</em>. No Starch Press.</li>
+                    <li>RFC 3227: Guidelines for Evidence Collection and Archiving</li>
+                </ol>
+            </section>
+
+            <!-- ==================== SLIDE 45: Q&A ==================== -->
+            <section>
+                <h2>❓ Sesi Tanya Jawab</h2>
+                <div class="quiz-question">
+                    <p class="medium-text"><strong>Quick Quiz:</strong> Sebutkan tiga jenis covert channel yang dapat digunakan untuk data exfiltration, dan jelaskan bagaimana masing-masing dapat dideteksi menggunakan Wireshark!</p>
+                </div>
+                <p class="small fragment">
+                    <strong>Hint:</strong> Pikirkan tentang DNS tunneling, ICMP tunneling, dan HTTP tunneling — masing-masing memiliki pola anomali yang unik.
+                </p>
+            </section>
+
+            <!-- ==================== SLIDE 46: CLOSING ==================== -->
+            <section class="center">
+                <h1>Terima Kasih</h1>
+                <h3>🔍 Forensik Digital untuk Keperluan Militer</h3>
+                <p>Pertemuan 10: Forensik Jaringan</p>
+                <br>
+                <p class="small">Ada pertanyaan?</p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/math/math.min.js"></script>
+    
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            pdfSeparateFragments: false,
+            plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+        });
+    </script>
+</body>
+</html>
