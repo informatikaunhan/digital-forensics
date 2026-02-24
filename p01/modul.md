@@ -693,7 +693,7 @@ Attribution adalah proses mengidentifikasi pelaku serangan siber dengan tingkat 
 
 ![Tim Forensik Digital](images/p01-08-forensic-team-structure.png)
 
-*Gambar 1.8: Struktur tim forensik digital militer*
+*Gambar 1.8: Struktur tim forensik digital militer* 
 
 ### 6.2 Kompetensi yang Diperlukan
 
